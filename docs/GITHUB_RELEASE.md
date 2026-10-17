@@ -1,5 +1,15 @@
 # GitHub 公开发布记录
 
+## v0.2.1
+
+[v0.2.1 Windows 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.1) 已公开发布，标签指向 `140c974f5ee8193af1246447f1527f5b93983c77`，应用实现为 `249c0c5`。设置窗口使用与页面一致的暖白原生标题栏和深绿文字，系统窗口按钮保持原生；macOS 下载沿用 v0.2.0。
+
+五个附件（Windows 安装器、试用 ZIP、复测说明、原生截图、SHA256SUMS）已从未登录公开 URL 重新下载，并逐字节及 SHA-256 核对一致。包哈希见 [WINDOWS_TITLEBAR.md](WINDOWS_TITLEBAR.md)，证据在 `.local/titlebar-021/download/verification.json`。附件无真实小说或用户数据，安装器仍未正式签名。
+
+源码检查 `39037365528` 的两端各 27 项 Rust / 7 项浏览器测试及类型/格式/Clippy 通过；macOS job 成功，Windows 普通 NSIS 构建通过，但原生测试脚本等待窗口失败，整轮状态如实保留为失败。修正脚本后，[39040506097](https://github.com/jlau-ice/floatleaf/actions/runs/39040506097) 成功：Windows Server 2025、100% 缩放、深色应用偏好下实际安装公开候选 EXE，43 项显隐/焦点/窗口控制/标题栏像素检查全部通过，真实截图核对通过。最终 v0.2.1 与候选版 `v0.2.1-rc.1` 使用同一 EXE，CI 始终保持 `contents: read`。
+
+云端合成输入与截图验证不等于 Windows 11 物理键鼠、按钮悬停、不同缩放和贴靠已验收；这些项目仍等待用户设备反馈。公开候选页已指向完整的 v0.2.1 试用发布。
+
 ## v0.2.0
 
 [v0.2.0 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.0) 已公开发布，标签指向 `56858631992bcb56676aff2effd660c122292e14`，应用实现提交为 `a566296`。新增 EPUB 2/3、TXT 章节识别、目录搜索和选章，原书库自动升级并保留进度。

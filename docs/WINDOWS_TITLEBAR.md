@@ -23,8 +23,16 @@
 
 ## 交付
 
-v0.2.1 Windows 试用安装器、含合成 EPUB/TXT 的试用 ZIP、复测说明、真实 Windows 截图及 SHA256SUMS 已准备；公开下载核验待补。macOS 安装包沿用 v0.2.0。
+[v0.2.1 Windows 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.1) 已公开发布，标签 `140c974`。安装器、含合成 EPUB/TXT 的试用 ZIP、复测说明、真实 Windows 截图及 SHA256SUMS 五个附件经未登录公开 URL 重新下载，逐字节及 SHA-256 与本地一致，报告在 `.local/titlebar-021/download/verification.json`。macOS 安装包沿用 v0.2.0。
 
 工作流保持 `contents: read`，通过公开候选版 `v0.2.1-rc.1` 验证安装器，没有扩大 CI 写权限。正式 v0.2.1 与候选版使用同一个已验证 EXE。
 
 参考：[微软 DWM 标题栏颜色与系统版本要求](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute)、[DwmSetWindowAttribute](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmsetwindowattribute)。
+
+| 附件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| FloatLeaf_0.2.1_windows-x64_trial.zip | 2,975,861 | `58665e62787fa9a01a3f6d405fbcc28e53c214f0e7db5d160c65264dce31c373` |
+| FloatLeaf_0.2.1_x64-setup.exe | 2,987,232 | `d4357be5b6c6eb810f488a8a386ab0aef721eb23eed56046d14e382382536e48` |
+| Retest-Guide.txt | 912 | `03b55310e00e6bd177e1c5325bca920eb73cbc25392fcf97ca49705d413af192` |
+| SHA256SUMS.txt | 370 | `b2ebc5dd97775d8ce50391fcfdaeb229deed68f9bb4658121aa64e5b6e3cfd43` |
+| Windows-Titlebar.png | 25,451 | `5ac71a7b4890770b3d8144dbef155303ea26c1b7010daf5634b79d611930e78e` |
