@@ -24,8 +24,27 @@ TXT 上限 20 MiB；EPUB 压缩文件上限 100 MiB，单个正文/索引与总�
 - 27 项 Rust 测试通过：EPUB 2/3、嵌套目录、同文件片段、百分号路径、emoji 偏移、正文顺序、无目录回退、加密与展开大小拒绝；旧书库升级、重复导入、源文件移除及重启、目录级联清理；跳章计时和旧分页回报隔离。
 - 7 项浏览器测试通过：分页、异步编码预览、模态错误、隐藏时章节导航、搜索结果仍使用原目录索引。
 - macOS 27.0.1 arm64 debug 程序的真实 WKWebView → IPC → SQLite 流程通过，导入 UTF-8/GBK TXT、EPUB 2、EPUB 3，实际点击搜索结果和上一章，隐藏不显示/不计时，字号重排保留章节锚点。`scripts/native-chapter-smoke.mjs`，证据 `.local/chapters-020/native/ui-result.json`。首次启动方式未保留测试进程导致脚本等待超时，保持进程运行后完整复跑通过。
-- 最终界面真实重启后，已移走源文件，仍恢复 EPUB 3 的 3 个章节、第二章锚点 937，启动保持隐藏。设置页和悬浮正文截图检查通过，正文从“第二章 山路”开始。最终目录按需渲染后再次完成真实点击回归。两端安装包与 Windows CI 结果待补；不将当前 macOS 结果外推为 Windows 用户设备通过。
+- 最终界面真实重启后，已移走源文件，仍恢复 EPUB 3 的 3 个章节、第二章锚点 937，启动保持隐藏。设置页和悬浮正文截图检查通过，正文从“第二章 山路”开始。最终目录按需渲染后再次完成真实点击回归。两端安装包已构建并核验；Windows CI 与用户设备结果单独记录，不将当前 macOS 结果外推。
 
-所有测试使用 `scripts/create-chapter-fixtures.py` 生成的原创合成文本，不使用真实小说或用户书库。普通发布包不带探针。
+原生功能回归使用 `scripts/create-chapter-fixtures.py` 生成的原创合成文本，未接触用户书库。另在隔离测试数据库检查 [W3C/IDPF 公开样例](https://github.com/IDPF/epub3-samples/releases/tag/20230704)：`moby-dick.epub` 141 个目录项、1,210,831 UTF-16 单元；`epub30-spec.epub` 314 个目录项、316,959 单元。两者均导入成功、目录锚点位于正文内、隐藏时选章成功，无导入警告。样例与临时数据库仅在 `.local/`，不提交、不随试用包分发；试用包只附原创合成示例。证据 `.local/chapters-020/native/official-sample-result.json`。
+
+## 构建与交付
+
+实现提交 `a566296`；CI [39035419034](https://github.com/jlau-ice/floatleaf/actions/runs/39035419034) 运行中。
+
+- Windows 普通 release/NSIS 交叉构建及目标 Clippy all-targets（`-D warnings`）通过；`7zz t`、解包、0.2.0 版本字段核验通过。
+- macOS 普通 app/DMG 构建通过，`codesign --verify --deep --strict`、`hdiutil verify` 通过。版本 0.2.0、正式应用标识一致。
+- 两端普通 release 均确认不包含测试探针/测试数据目录入口。macOS ad-hoc，未公证；Windows 未正式签名。
+- Windows ZIP 包含安装器、完整试用说明、先读我、MIT 协议和四份合成章节示例；独立 `Chapter-Samples.zip` 方便 macOS 使用。ZIP CRC 校验通过。
+- 本地附件目录 `.local/github-release-0.2.0/`；本轮未重新测量性能目标，不把构建或合成输入结果视为用户设备完整验收。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| Chapter-Samples.zip | 2,797 | `9610a3c801556b679a140abeabbbaa3367b10da3cda309e3e2434f0e683b45f3` |
+| FloatLeaf_0.2.0_aarch64.dmg | 3,746,467 | `8a4a3e4bfaedb59e9a91767678a4c59f8ab61e2bea8a41054b93180dfc1da585` |
+| FloatLeaf_0.2.0_windows-x64_trial.zip | 2,974,658 | `b97e04f303c1244f9960f84be40745adac9ebb5275f3e326fe63c46bc98c93a1` |
+| FloatLeaf_0.2.0_x64-setup.exe | 2,986,121 | `6838713576311e3a746574b2c61b00aa26d4414deefb12ba6ae51c9c55a92f3a` |
+| Retest-Guide.txt | 994 | `8be828bc3328896eababd93a69dc924ebbc9b7fa0e859023e712dec18f505e3e` |
+| SHA256SUMS.txt | 463 | `093df256d5c58b27454ea545629f32c44a5da3a13a32c976243063ff062564bd` |
 
 参考：[EPUB 3.3 目录](https://www.w3.org/TR/epub-33/#sec-nav-toc)、[EPUB 3.3 阅读顺序](https://www.w3.org/TR/epub-33/#sec-spine-elem)。解析依赖版本纳入 Cargo.lock。
