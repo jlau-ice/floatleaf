@@ -154,8 +154,11 @@ def capture_settings(main, path):
     gdi.GetDIBits.argtypes = [w.HDC, w.HBITMAP, w.UINT, w.UINT, w.LPVOID, w.LPVOID, w.UINT]
     gdi.DeleteObject.argtypes = [w.HANDLE]
     gdi.DeleteDC.argtypes = [w.HDC]
+    dwm = c.WinDLL("dwmapi")
+    dwm.DwmGetWindowAttribute.argtypes = [w.HWND, w.DWORD, w.LPVOID, w.DWORD]
     rect = w.RECT()
-    u.GetWindowRect(main, c.byref(rect))
+    if dwm.DwmGetWindowAttribute(main, 9, c.byref(rect), c.sizeof(rect)) != 0:
+        raise RuntimeError("Settings visible frame bounds unavailable")
     width, height = rect.right - rect.left, rect.bottom - rect.top
     screen = u.GetDC(None)
     canvas = gdi.CreateCompatibleDC(screen)
@@ -185,17 +188,15 @@ def capture_settings(main, path):
     path.write_bytes(b"\x89PNG\r\n\x1a\n" +
                      chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)) +
                      chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
+    return rgb, width
 
 
 def check_settings(main):
     dwm = c.WinDLL("dwmapi")
     dwm.DwmGetWindowAttribute.argtypes = [w.HWND, w.DWORD, w.LPVOID, w.DWORD]
-    for name, attribute, expected in [("caption", 35, 0xE9F2F4),
-                                       ("text", 36, 0x323B20), ("light-controls", 20, 0)]:
-        value = w.DWORD()
-        result = dwm.DwmGetWindowAttribute(main, attribute, c.byref(value), c.sizeof(value))
-        print(f"DWM {name}: result={result:#x}, value={value.value:#x}", flush=True)
-        check(f"settings-{name}", result == 0 and value.value == expected)
+    value = w.DWORD()
+    result = dwm.DwmGetWindowAttribute(main, 20, c.byref(value), c.sizeof(value))
+    check("settings-light-controls", result == 0 and value.value == 0)
     style = u.GetWindowLongW(main, -16)
     check("settings-native-caption-resize-min-max", style & 0x00CF0000 == 0x00CF0000)
     u.ShowWindowAsync(main, 6)
@@ -211,7 +212,13 @@ def check_settings(main):
         # Keep the test window unobscured by the runner's terminal for the screenshot.
         u.SetWindowPos(main, -1, 20, 20, 920, 640, 0x0050)
         wait(1)
-        capture_settings(main, args.screenshot)
+        rgb, width = capture_settings(main, args.screenshot)
+        # Caption/text color attributes are set-only on this Windows DWM version.
+        center = (16 * width + width // 2) * 3
+        check("settings-caption-pixels", rgb[center:center + 3] == bytes((244, 242, 233)))
+        check("settings-title-text-pixels", any(
+            rgb[(y * width + x) * 3:(y * width + x) * 3 + 3] == bytes((32, 59, 50))
+            for y in range(2, 28) for x in range(32, 180)))
 
 
 app = subprocess.Popen([str(args.exe.resolve())])
