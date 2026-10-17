@@ -47,4 +47,4 @@ CI=true pnpm desktop:build
 
 诊断版才接受 `FLOATLEAF_DATA_DIR` 和 `FLOATLEAF_PROBE_DIR`；使用隔离目录、合成文本，不运行在真实书库上。性能脚本用 macOS `ps` 统计主进程及两个本应用 WebContent 进程的 CPU/RSS，未包含共享 GPU/网络服务，RSS 可能重复计算共享内存。文件探针的开销包含在结果里。
 
-CI 工作流只定义两端自动检查，尚未创建远端或运行云端 CI。版本发布、推送、正式签名和公证均需后续授权。
+CI 工作流定义 macOS 与 Windows 两端自动检查；云端检查结果应与本机结果分开记录。用户已授权 GitHub 仓库创建、推送与公开试用发布，发布说明见 RELEASE_v0.1.0.md。正式签名和公证仍需签名账号及额外授权。

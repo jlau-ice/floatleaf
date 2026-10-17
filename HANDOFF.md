@@ -4,7 +4,7 @@
 
 ## 仓库与环境
 
-目录 `/Users/ice/jlau-ice/floatleaf`，当前分支 `main`，仅本地 Git，无远端、推送或发布。按功能阶段提交，提交号见 `git log`。
+目录 `/Users/ice/jlau-ice/floatleaf`，当前分支 `main`。用户已授权创建 `jlau-ice/floatleaf` 公开仓库、推送源码并发布两端试用安装包，采用 MIT 协议。公开 README、发布说明和附件已准备；GitHub 插件已确认账号，但没有建仓库和上传 Release 的工具，本机 GitHub CLI 尚需登录后执行。按功能阶段提交，提交号见 `git log`。
 
 Node 22.22.3（nvm）、pnpm 10.33.4；Rust 1.99.1（rustup），rustfmt 与 Clippy。macOS 27.0.1 (26A434)，Apple Silicon arm64。已核对项目工具链；不改全局 shell 配置。
 
@@ -64,7 +64,7 @@ Windows 新产物见 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip`（2,
 
 下一步由用户转发 Windows ZIP，同学在 Windows 11 x64 安装并试用；用户继续 macOS 手工验收。按 `docs/TRIAL_GUIDE.md` 的检查项先确认 P0 核心场景，收到异常后修复，再补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。仅在正式分发时才需要签名账号和额外授权。
 
-保持实现直接、简单：rusqlite bundled，无 ORM、额外仓储框架或独立小说文件。不得将当前本机程序验证外推为双平台通过。没有远端操作；阶段提交依次为 `e6072f7`、`de1c7ed`、`ee339ed` 及随后 P3 提交（用 `git log` 查看）。
+保持实现直接、简单：rusqlite bundled，无 ORM、额外仓储框架或独立小说文件。不得将当前本机程序验证外推为双平台通过。公开发布准备见 `docs/RELEASE_v0.1.0.md`，附件在 `.local/github-release/`，包含两端安装器、Windows 试用 ZIP、Word 说明、MIT 协议和 SHA-256 清单，不进入 Git。历史提交已检查，未包含依赖目录、编译缓存、真实小说、用户书库或已知凭据模式。当前发布尚待 GitHub CLI 登录，不能视为已推送。阶段提交见 `git log`。
 ```bash
 nvm use
 pnpm desktop:dev
