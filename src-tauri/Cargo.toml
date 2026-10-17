@@ -1,6 +1,6 @@
 [package]
 name = "floatleaf"
-version = "0.2.0"
+version = "0.2.1"
 description = "FloatLeaf offline floating text reader"
 edition = "2024"
 rust-version = "1.99.1"

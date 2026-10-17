@@ -56,13 +56,19 @@ jobs:
           if ($install.ExitCode -ne 0) { throw "Installer exited $($install.ExitCode)" }
           Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\FloatLeaf' | Select-Object DisplayVersion, InstallLocation
           Get-ChildItem $installDirectory
-          python scripts/windows-package-smoke.py (Join-Path $installDirectory 'floatleaf.exe') --output .local/windows-fixed.json
+          # Exercise the light settings caption even when this ephemeral runner prefers dark apps.
+          $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+          New-Item -Path $themeKey -Force | Out-Null
+          Set-ItemProperty -Path $themeKey -Name AppsUseLightTheme -Type DWord -Value 0
+          python scripts/windows-package-smoke.py (Join-Path $installDirectory 'floatleaf.exe') --output .local/windows-fixed.json --screenshot .local/windows-settings.png
       - uses: actions/upload-artifact@v4
         if: always() && runner.os == 'Windows'
         with:
           name: windows-native-evidence
           include-hidden-files: true
-          path: .local/windows-*.json
+          path: |
+            .local/windows-*.json
+            .local/windows-settings.png
       - uses: actions/upload-artifact@v4
         if: always() && runner.os == 'Windows'
         with:

@@ -5,6 +5,18 @@
 #include <stdbool.h>
 #include <commdlg.h>
 #include <stdlib.h>
+#include <dwmapi.h>
+
+// Match the settings page while keeping the native caption and window controls.
+long fl_style_settings(void *raw) {
+    COLORREF background = RGB(244, 242, 233); // App.vue #f4f2e9
+    COLORREF foreground = RGB(32, 59, 50);    // App.vue #203b32
+    HRESULT result = DwmSetWindowAttribute((HWND)raw, DWMWA_CAPTION_COLOR,
+                                          &background, sizeof(background));
+    if (FAILED(result)) return result;
+    return DwmSetWindowAttribute((HWND)raw, DWMWA_TEXT_COLOR,
+                                 &foreground, sizeof(foreground));
+}
 
 static void (*hide_callback)(void);
 static void (*displays_callback)(void);

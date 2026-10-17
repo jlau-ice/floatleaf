@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("exe", type=Path)
 parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--expect-stuck", action="store_true")
+parser.add_argument("--screenshot", type=Path)
 args = parser.parse_args()
 
 u = c.WinDLL("user32", use_last_error=True)
@@ -29,6 +30,11 @@ u.GetForegroundWindow.restype = w.HWND
 u.SetForegroundWindow.argtypes = [w.HWND]
 u.GetWindowLongW.argtypes = [w.HWND, c.c_int]
 u.ShowWindow.argtypes = [w.HWND, c.c_int]
+u.IsIconic.argtypes = [w.HWND]
+u.IsZoomed.argtypes = [w.HWND]
+u.GetWindowRect.argtypes = [w.HWND, c.POINTER(w.RECT)]
+u.SendMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
+u.SetProcessDPIAware()
 u.DestroyWindow.argtypes = [w.HWND]
 u.CreateWindowExW.argtypes = [w.DWORD, w.LPCWSTR, w.LPCWSTR, w.DWORD,
                             c.c_int, c.c_int, c.c_int, c.c_int,
@@ -86,7 +92,7 @@ def press_display():
     wait()
 
 
-def find_overlay(pid):
+def find_window(pid, name):
     found = []
 
     @enum_proc
@@ -95,7 +101,7 @@ def find_overlay(pid):
         u.GetWindowThreadProcessId(hwnd, c.byref(owner))
         title = c.create_unicode_buffer(256)
         u.GetWindowTextW(hwnd, title, len(title))
-        if owner.value == pid and title.value == "FloatLeaf 阅读":
+        if owner.value == pid and title.value == name:
             found.append(hwnd)
         return True
 
@@ -110,11 +116,48 @@ def check(name, value):
     checks.append({"name": name, "passed": bool(value)})
 
 
+def check_settings(main):
+    dwm = c.WinDLL("dwmapi")
+    dwm.DwmGetWindowAttribute.argtypes = [w.HWND, w.DWORD, w.LPVOID, w.DWORD]
+    for name, attribute, expected in [("caption", 35, 0xE9F2F4),
+                                       ("text", 36, 0x323B20), ("light-controls", 20, 0)]:
+        value = w.DWORD()
+        result = dwm.DwmGetWindowAttribute(main, attribute, c.byref(value), c.sizeof(value))
+        check(f"settings-{name}", result == 0 and value.value == expected)
+    style = u.GetWindowLongW(main, -16)
+    check("settings-native-caption-resize-min-max", style & 0x00CF0000 == 0x00CF0000)
+    u.ShowWindow(main, 6)
+    wait()
+    check("settings-minimize", u.IsIconic(main))
+    u.ShowWindow(main, 3)
+    wait()
+    check("settings-maximize", u.IsZoomed(main))
+    u.ShowWindow(main, 9)
+    wait()
+    check("settings-restore", not u.IsZoomed(main) and not u.IsIconic(main))
+    if args.screenshot:
+        u.SetForegroundWindow(main)
+        wait(1)
+        rect = w.RECT()
+        u.GetWindowRect(main, c.byref(rect))
+        args.screenshot.parent.mkdir(parents=True, exist_ok=True)
+        path = str(args.screenshot.resolve()).replace("'", "''")
+        subprocess.run(["powershell", "-NoProfile", "-Command", f"""
+            Add-Type -AssemblyName System.Drawing
+            $image = [Drawing.Bitmap]::new({rect.right - rect.left}, {rect.bottom - rect.top})
+            $graphics = [Drawing.Graphics]::FromImage($image)
+            $graphics.CopyFromScreen({rect.left}, {rect.top}, 0, 0, $image.Size)
+            $image.Save('{path}', [Drawing.Imaging.ImageFormat]::Png)
+            $graphics.Dispose()
+            $image.Dispose()
+        """], check=True)
+
+
 app = subprocess.Popen([str(args.exe.resolve())])
 fixture = None
 try:
     for _ in range(300):
-        overlay = find_overlay(app.pid)
+        overlay = find_window(app.pid, "FloatLeaf 阅读")
         if overlay:
             break
         if app.poll() is not None:
@@ -123,6 +166,11 @@ try:
     else:
         raise RuntimeError("Overlay HWND not found")
     wait(2)
+    main = find_window(app.pid, "浮页 FloatLeaf")
+    if not args.expect_stuck:
+        if not main:
+            raise RuntimeError("Settings HWND not found")
+        check_settings(main)
     fixture = u.CreateWindowExW(0, "STATIC", "FloatLeaf regression input fixture",
                                 0x00CF0000, 50, 50, 640, 480, None, None, None, None)
     u.ShowWindow(fixture, 5)
@@ -163,6 +211,11 @@ try:
     check("fresh-chord-recovers", u.IsWindowVisible(overlay))
     release_all()
     check("fresh-chord-release-hides", not u.IsWindowVisible(overlay))
+
+    if not args.expect_stuck:
+        u.SendMessageW(main, 0x0010, 0, 0)  # WM_CLOSE must hide settings, not exit the reader.
+        wait()
+        check("settings-close-hides-keeps-app", not u.IsWindowVisible(main) and app.poll() is None)
 
     failures = [item["name"] for item in checks if not item["passed"]]
     reproduced = "emergency-hides" in failures and any(x.startswith("release-hides-") for x in failures)

@@ -19,6 +19,21 @@ fn raw_window(window: &WebviewWindow) -> Result<*mut c_void, String> {
     }
 }
 
+#[cfg(windows)]
+pub fn style_settings(window: &WebviewWindow) -> Result<(), String> {
+    unsafe extern "C" {
+        fn fl_style_settings(window: *mut c_void) -> i32;
+    }
+    window
+        .set_theme(Some(tauri::Theme::Light))
+        .map_err(|e| e.to_string())?;
+    let result = unsafe { fl_style_settings(raw_window(window)?) };
+    if result < 0 {
+        return Err(format!("设置窗口标题栏配色失败：0x{result:08X}"));
+    }
+    Ok(())
+}
+
 /// Must run on the event thread. Never calls activate/set_focus.
 pub fn show(window: &WebviewWindow) -> Result<(), String> {
     unsafe {

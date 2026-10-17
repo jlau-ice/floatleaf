@@ -175,6 +175,16 @@ extern "C" fn session_interrupted() {
 pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let _ = APP.set(app.clone());
     commands::setup(app)?;
+    #[cfg(windows)]
+    {
+        let main = app.get_webview_window("main").ok_or("main missing")?;
+        let result = platform::style_settings(&main);
+        logging::record(
+            app,
+            "settings-appearance",
+            serde_json::json!({ "applied": result.is_ok(), "error": result.err() }),
+        );
+    }
     let window = app.get_webview_window("overlay").ok_or("overlay missing")?;
     window.set_ignore_cursor_events(true)?;
     platform::watch_session(&window, session_interrupted, displays_changed)?;
