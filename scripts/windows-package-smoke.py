@@ -194,6 +194,7 @@ def check_settings(main):
                                        ("text", 36, 0x323B20), ("light-controls", 20, 0)]:
         value = w.DWORD()
         result = dwm.DwmGetWindowAttribute(main, attribute, c.byref(value), c.sizeof(value))
+        print(f"DWM {name}: result={result:#x}, value={value.value:#x}", flush=True)
         check(f"settings-{name}", result == 0 and value.value == expected)
     style = u.GetWindowLongW(main, -16)
     check("settings-native-caption-resize-min-max", style & 0x00CF0000 == 0x00CF0000)
@@ -207,13 +208,9 @@ def check_settings(main):
     wait()
     check("settings-restore", not u.IsZoomed(main) and not u.IsIconic(main))
     if args.screenshot:
-        u.SetWindowPos(main, 0, 0, 0, 0, 0, 0x0053)  # Top, no activation/move/resize.
-        rect = w.RECT()
-        u.GetWindowRect(main, c.byref(rect))
-        click(rect.left + 80, rect.top + 16)
+        # Keep the test window unobscured by the runner's terminal for the screenshot.
+        u.SetWindowPos(main, -1, 20, 20, 920, 640, 0x0050)
         wait(1)
-        if u.GetForegroundWindow() != main:
-            raise RuntimeError("Settings window is not foreground for screenshot")
         capture_settings(main, args.screenshot)
 
 
