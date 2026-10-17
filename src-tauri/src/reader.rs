@@ -148,6 +148,26 @@ mod tests {
         assert!(!r.turn(true, true));
     }
     #[test]
+    fn interval_changes_restart_countdown_but_hidden_controls_never_turn_pages() {
+        let mut r = reader();
+        r.toggle_auto();
+        r.tick(500, true, false);
+        r.set_interval(9);
+        assert_eq!(r.remaining_ms, 9000);
+        assert!(r.auto_running);
+        assert!(!r.tick(20_000, false, false));
+        assert_eq!((r.anchor, r.remaining_ms), (0, 9000));
+        r.toggle_auto();
+        r.set_interval(3);
+        assert!(!r.auto_running);
+        assert!(!r.tick(10_000, true, false));
+        assert_eq!((r.anchor, r.remaining_ms), (0, 3000));
+        r.toggle_auto();
+        assert!(!r.tick(10_000, false, false));
+        assert!(r.tick(3000, true, false));
+        assert_eq!(r.anchor, 4);
+    }
+    #[test]
     fn stale_layout_after_book_switch_or_reflow_is_ignored() {
         let mut r = reader();
         let old = r.layout_version;

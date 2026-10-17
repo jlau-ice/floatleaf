@@ -210,8 +210,7 @@ const ranges: {
     | 'lineHeight'
     | 'letterSpacing'
     | 'width'
-    | 'lines'
-    | 'intervalSeconds';
+    | 'lines';
   label: string;
   min: number;
   max: number;
@@ -225,7 +224,6 @@ const ranges: {
   { key: 'letterSpacing', label: '字间距', min: -1, max: 8, step: 0.1, unit: 'px' },
   { key: 'textOpacity', label: '文字不透明度', min: 0.1, max: 1, step: 0.05, unit: '' },
   { key: 'backgroundOpacity', label: '背景不透明度', min: 0, max: 0.8, step: 0.05, unit: '' },
-  { key: 'intervalSeconds', label: '自动翻页间隔', min: 2, max: 60, step: 1, unit: '秒' },
 ];
 </script>
 <template>
@@ -326,15 +324,26 @@ const ranges: {
           >
             下一页 →</button
           ><button
-            :disabled="
-              !state?.visible || !state.reader.ready || state.reader.end >= state.reader.total
-            "
+            :disabled="!desktop || !state?.reader.bookId || state.reader.end >= state.reader.total"
             @click="action('auto')"
           >
             {{ state?.reader.autoRunning ? '暂停自动翻页' : '自动翻页' }}</button
+          ><label v-if="draft" class="auto-interval"
+            >间隔
+            <input
+              v-model.number="draft.intervalSeconds"
+              type="range"
+              min="2"
+              max="60"
+              step="1"
+              aria-label="自动翻页间隔（秒）"
+              :disabled="!desktop || busy"
+              @change="save()"
+            />
+            <output>{{ draft.intervalSeconds }} 秒</output></label
           ><span class="timer">{{
             state?.reader.autoRunning
-              ? `${Math.ceil(state.reader.remainingMs / 1000)} 秒`
+              ? `${!state.visible || state.editingLayout ? '显示后继续 · ' : ''}剩余 ${Math.ceil(state.reader.remainingMs / 1000)} 秒`
               : state?.reader.end === state?.reader.total
                 ? '已到结尾'
                 : '已暂停'
@@ -345,7 +354,7 @@ const ranges: {
           {{ keyLabel(state?.settings.shortcuts.next || '') }} 翻页；{{
             keyLabel(state?.settings.shortcuts.auto || '')
           }}
-          暂停或继续。隐藏期间不会改变进度。
+          暂停或继续。可在隐藏时开启或暂停；仅在显示时计时。调整间隔后重新计时，隐藏期间不会改变进度。
         </p>
       </div>
     </section>
@@ -661,6 +670,10 @@ h3 {
 .reading-controls {
   padding: 6px 0 20px;
 }
+.reading-controls .actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
 .current-heading {
   display: flex;
   justify-content: space-between;
@@ -678,6 +691,21 @@ progress {
   font-size: 11px;
   align-self: center;
   color: #58665b;
+}
+.auto-interval {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #58665b;
+  white-space: nowrap;
+}
+.auto-interval input[type='range'] {
+  width: 110px;
+}
+.auto-interval output {
+  min-width: 34px;
+  font-variant-numeric: tabular-nums;
 }
 .style-grid {
   display: grid;

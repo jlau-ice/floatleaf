@@ -281,6 +281,7 @@ mod tests {
         let settings = ReadingSettings {
             font_size: 36.0,
             lines: 12,
+            interval_seconds: 17,
             ..ReadingSettings::default()
         };
         store.set_settings(settings.clone()).unwrap();

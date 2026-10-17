@@ -313,7 +313,7 @@ pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
                 state.controller.revision += 1;
             }
         }
-        "auto" if state.controller.visible => {
+        "auto" => {
             state.reader.toggle_auto();
             state.controller.revision += 1;
         }

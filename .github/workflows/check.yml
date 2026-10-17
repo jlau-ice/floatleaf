@@ -51,9 +51,12 @@ jobs:
         shell: pwsh
         run: |
           $installer = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
-          $install = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$env:RUNNER_TEMP/floatleaf-installed" -Wait -PassThru
+          $installDirectory = Join-Path $env:RUNNER_TEMP 'floatleaf-installed'
+          $install = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$installDirectory" -Wait -PassThru
           if ($install.ExitCode -ne 0) { throw "Installer exited $($install.ExitCode)" }
-          python scripts/windows-package-smoke.py "$env:RUNNER_TEMP/floatleaf-installed/floatleaf.exe" --output .local/windows-fixed.json
+          Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\FloatLeaf' | Select-Object DisplayVersion, InstallLocation
+          Get-ChildItem $installDirectory
+          python scripts/windows-package-smoke.py (Join-Path $installDirectory 'floatleaf.exe') --output .local/windows-fixed.json
       - uses: actions/upload-artifact@v4
         if: always() && runner.os == 'Windows'
         with:

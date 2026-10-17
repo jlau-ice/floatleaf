@@ -4,6 +4,8 @@
 
 ## v0.1.1 Windows 修复与日志
 
+最新接续：v0.1.2 修复按住模式下无法开关自动翻页，将间隔滑块移到阅读按钮旁，隐藏时开启只改变阅读意图，不推进计时或进度。19 项 Rust / 5 项浏览器测试和真实 macOS WebView/IPC/SQLite 回归通过，见 `docs/AUTO_READING_FIX.md`。正在生成两端新包。上一轮 Windows CI 的新包启动步骤因指定目录找不到 EXE 中断，不能视为新包验收通过；已调整工作流安装路径并增加路径证据输出，待复跑。
+
 `platform::hide` 在 Windows 调用原生 `SW_HIDE`，覆盖普通、紧急及错误路径；macOS 原隐藏实现保留。日志按窗口实际状态记录显隐结果，只采集应用快捷键和窗口诊断，不采集小说正文/书名/普通输入；设置页显示版本和路径，可打开日志文件夹。两个日志文件共约 2 MiB 上限，轮转测试已加入。
 
 本机类型、rustfmt、Clippy、18 项 Rust / 5 项浏览器测试、前端构建和 Windows 普通 release/NSIS 构建通过。新增 Windows 安装包回归脚本及 CI 步骤，对旧包复现和新包实际 HWND 显隐进行检查；云端结果待补。复测说明见 `docs/RELEASE_v0.1.1.md`，根因/验证见 `docs/WINDOWS_HIDE_FIX.md`。下方 v0.1.0 阶段记录作为历史保留。

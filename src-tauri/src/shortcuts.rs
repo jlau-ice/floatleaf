@@ -114,7 +114,7 @@ pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
                     state.reader.turn(index == 3, true);
                     state.controller.revision += 1;
                 }
-                4 if state.controller.visible => {
+                4 => {
                     state.reader.toggle_auto();
                     state.controller.revision += 1;
                 }
