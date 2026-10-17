@@ -7,6 +7,7 @@ fn main() {
             .flag("-fobjc-arc")
             .compile("floatleaf_native");
         println!("cargo:rustc-link-lib=framework=AppKit");
+        println!("cargo:rustc-link-lib=framework=Carbon");
         println!("cargo:rustc-link-lib=framework=ApplicationServices");
     } else if target == "windows" {
         println!("cargo:rerun-if-changed=native/windows.c");

@@ -16,6 +16,7 @@ pub struct ReadingSettings {
     pub interval_seconds: u32,
     pub mode: DisplayMode,
     pub position_locked: bool,
+    pub shortcuts: crate::shortcuts::Bindings,
 }
 impl Default for ReadingSettings {
     fn default() -> Self {
@@ -32,6 +33,7 @@ impl Default for ReadingSettings {
             interval_seconds: 8,
             mode: DisplayMode::Hold,
             position_locked: true,
+            shortcuts: Default::default(),
         }
     }
 }
@@ -64,6 +66,7 @@ impl ReadingSettings {
         {
             return Err("文字颜色必须是 #RRGGBB".into());
         }
+        self.shortcuts.parse()?;
         Ok(())
     }
     pub fn height(&self) -> f64 {

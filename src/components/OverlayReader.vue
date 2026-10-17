@@ -88,6 +88,47 @@ async function drag(event: MouseEvent) {
     }
   }
 }
+function resize(event: PointerEvent) {
+  if (event.button !== 0 || !state.value) return;
+  const handle = event.currentTarget as HTMLElement;
+  handle.setPointerCapture(event.pointerId);
+  const initial = { ...state.value.settings };
+  const x = event.screenX,
+    y = event.screenY;
+  let width = initial.width,
+    lines = initial.lines;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const send = async (persist: boolean) => {
+    try {
+      await invoke('resize_overlay', { width, lines, persist });
+    } catch (e) {
+      error.value = String(e);
+    }
+  };
+  const move = (e: PointerEvent) => {
+    width = Math.round(Math.max(200, Math.min(1600, initial.width + e.screenX - x)));
+    lines = Math.max(
+      1,
+      Math.min(
+        12,
+        Math.round(initial.lines + (e.screenY - y) / (initial.fontSize * initial.lineHeight)),
+      ),
+    );
+    if (!timer)
+      timer = setTimeout(() => {
+        timer = undefined;
+        void send(false);
+      }, 60);
+  };
+  const finish = () => {
+    clearTimeout(timer);
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('lostpointercapture', finish);
+    void send(true);
+  };
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('lostpointercapture', finish, { once: true });
+}
 </script>
 <template>
   <section
@@ -103,10 +144,32 @@ async function drag(event: MouseEvent) {
     <div v-else class="empty-text">
       {{ state?.reader.bookId ? '已到末尾，可返回上一页。' : '请在浮页设置中导入 TXT 小说。' }}
     </div>
+    <button
+      v-if="state?.editingLayout"
+      class="resize-handle"
+      aria-label="拖动调整宽度和行数"
+      title="拖动调整宽度和完整行数"
+      @pointerdown="resize"
+    >
+      ◢
+    </button>
     <span v-if="error" class="overlay-error">{{ error }}</span>
   </section>
 </template>
 <style scoped>
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: #f4f2e9;
+  color: #203b32;
+  cursor: nwse-resize;
+  touch-action: none;
+  font-size: 14px;
+}
 .overlay {
   width: 100vw;
   height: 100vh;

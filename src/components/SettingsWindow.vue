@@ -2,13 +2,54 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { desktop, useReader, type Book, type Library, type ReadingSettings } from '../lib/desktop';
+import {
+  desktop,
+  useReader,
+  type Book,
+  type Library,
+  type ReadingSettings,
+  type Bindings,
+} from '../lib/desktop';
 const { state, error, action } = useReader();
 const shelf = ref<Library>();
 const busy = ref(false);
-const activeTab = ref<'library' | 'appearance'>('library');
+const activeTab = ref<'library' | 'appearance' | 'shortcuts'>('library');
 const draft = ref<ReadingSettings>();
 const saved = ref('');
+const shortcutDraft = ref<Bindings>();
+const shortcutLabels = {
+  display: '显示 / 隐藏',
+  emergency: '紧急隐藏',
+  previous: '上一页',
+  next: '下一页',
+  auto: '自动翻页暂停 / 恢复',
+};
+function keyLabel(value: string) {
+  return value
+    .replaceAll('Control', 'Ctrl')
+    .replaceAll('Key', '')
+    .replaceAll('ArrowLeft', '←')
+    .replaceAll('ArrowRight', '→')
+    .replaceAll('Space', '空格')
+    .replaceAll('Escape', 'Esc')
+    .replaceAll('+', ' + ');
+}
+function recordShortcut(event: KeyboardEvent, key: keyof Bindings) {
+  event.preventDefault();
+  if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key) || !shortcutDraft.value) return;
+  shortcutDraft.value[key] = [
+    event.ctrlKey && 'Control',
+    event.altKey && 'Alt',
+    event.shiftKey && 'Shift',
+    event.metaKey && 'Super',
+    event.code,
+  ]
+    .filter(Boolean)
+    .join('+');
+}
+async function saveShortcuts() {
+  if (shortcutDraft.value) await save({ shortcuts: { ...shortcutDraft.value } });
+}
 const removing = ref('');
 const dataDirectory = ref('');
 const importPath = ref('');
@@ -46,6 +87,7 @@ watch(
     const key = JSON.stringify(value);
     if (key !== lastSettings) {
       draft.value = { ...value };
+      shortcutDraft.value = { ...value.shortcuts };
       lastSettings = key;
     }
   },
@@ -134,7 +176,7 @@ async function save(patch: Partial<ReadingSettings> = {}) {
   if (!draft.value) return;
   const settings = { ...draft.value, ...patch };
   await task(async () => {
-    await invoke('save_settings', { settings });
+    await invoke('save_settings', { settings, selectMode: patch.mode !== undefined });
     saved.value = '已保存';
   });
 }
@@ -169,14 +211,18 @@ const ranges: {
     <header>
       <span class="wordmark">FLOATLEAF <span class="cn-mark">浮页</span></span
       ><button class="secondary compact" :disabled="!desktop" @click="action('hide')">
-        紧急隐藏 <span class="key-hint">Ctrl Alt Esc</span>
+        紧急隐藏
+        <span class="key-hint">{{
+          keyLabel(state?.settings.shortcuts.emergency || 'Control+Alt+Escape')
+        }}</span>
       </button>
     </header>
     <section class="intro">
       <p class="eyebrow">留一点空间，给文字。</p>
       <h1>阅读，在一旁<span>。</span></h1>
       <p class="description">
-        按住 <kbd>Ctrl</kbd> + <kbd>Alt / ⌥</kbd> + <kbd>空格</kbd>，松手回到手边的事。
+        <kbd>{{ keyLabel(state?.settings.shortcuts.display || 'Control+Alt+Space') }}</kbd>
+        显示文字，阅读与手边的事自在切换。
       </p>
     </section>
     <p v-if="!desktop" class="notice">
@@ -190,6 +236,8 @@ const ranges: {
         我的书架 <span>{{ shelf?.books.length ?? 0 }}</span></button
       ><button :aria-selected="activeTab === 'appearance'" @click="activeTab = 'appearance'">
         文字与布局</button
+      ><button :aria-selected="activeTab === 'shortcuts'" @click="activeTab = 'shortcuts'">
+        快捷键</button
       ><span class="save-status" role="status">{{ saved }}</span>
     </nav>
     <section v-if="activeTab === 'library'" class="library">
@@ -271,11 +319,15 @@ const ranges: {
           }}</span>
         </div>
         <p class="hint">
-          Ctrl + Alt + ← / → 翻页，Ctrl + Alt + P 暂停或继续。隐藏期间不会改变进度。
+          {{ keyLabel(state?.settings.shortcuts.previous || '') }} /
+          {{ keyLabel(state?.settings.shortcuts.next || '') }} 翻页；{{
+            keyLabel(state?.settings.shortcuts.auto || '')
+          }}
+          暂停或继续。隐藏期间不会改变进度。
         </p>
       </div>
     </section>
-    <section v-else-if="draft" class="appearance">
+    <section v-else-if="activeTab === 'appearance' && draft" class="appearance">
       <div class="section-heading">
         <div>
           <h2>适合你的阅读方式</h2>
@@ -313,6 +365,28 @@ const ranges: {
         /></label>
       </div>
     </section>
+    <section v-else-if="shortcutDraft" class="shortcut-settings">
+      <h2>按下要使用的组合键</h2>
+      <p class="hint">
+        先点输入框，再按组合键。须包含 Ctrl、Alt 或 Super；支持字母、空格、方向键、Esc、F1～F12。Alt
+        在 Mac 上是 ⌥，Super 是 ⌘ / Win。
+      </p>
+      <label v-for="(label, key) in shortcutLabels" :key="key" class="shortcut-field">
+        {{ label
+        }}<input
+          :value="keyLabel(shortcutDraft[key])"
+          readonly
+          :disabled="busy"
+          :aria-label="label"
+          @keydown="recordShortcut($event, key)"
+        />
+      </label>
+      <button :disabled="busy" @click="saveShortcuts">保存快捷键</button>
+      <p class="hint">
+        系统报告占用时会提示，原快捷键继续可用。macOS
+        允许部分共享快捷键；如与其他应用同时响应，请换一组。保存后重新触发即可显示。
+      </p>
+    </section>
     <section class="controls">
       <div class="row">
         <div>
@@ -338,7 +412,7 @@ const ranges: {
       <div class="row">
         <div>
           <h2>阅读区域</h2>
-          <p>阅读时鼠标穿透，编辑时可拖动。</p>
+          <p>阅读时鼠标穿透，编辑时可拖动和调整尺寸。</p>
         </div>
         <div class="actions">
           <button
@@ -351,7 +425,9 @@ const ranges: {
             :disabled="!desktop || state?.positionLocked"
             @click="action(state?.editingLayout ? 'finish' : 'edit')"
           >
-            {{ state?.editingLayout ? '完成布局' : '编辑布局' }}
+            {{ state?.editingLayout ? '完成布局' : '编辑布局' }}</button
+          ><button class="secondary" :disabled="!desktop" @click="action('reset-position')">
+            找回位置
           </button>
         </div>
       </div>
@@ -393,6 +469,26 @@ const ranges: {
   </main>
 </template>
 <style scoped>
+.shortcut-settings {
+  padding: 26px 0;
+}
+.shortcut-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 14px 0;
+  font-size: 13px;
+}
+.shortcut-field input {
+  width: 300px;
+  padding: 10px;
+  font: inherit;
+  color: inherit;
+  border: 1px solid #a7b4a5;
+  border-radius: 4px;
+  background: #fffdf4;
+}
 .cn-mark {
   letter-spacing: 0.1em;
   margin-left: 16px;

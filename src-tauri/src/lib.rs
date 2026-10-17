@@ -1,9 +1,11 @@
 mod commands;
 mod controller;
+mod geometry;
 mod platform;
 mod reader;
 mod reading_settings;
 mod runtime;
+mod shortcuts;
 mod storage;
 mod text_import;
 
@@ -34,9 +36,22 @@ fn drag_overlay(app: tauri::AppHandle) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .manage(runtime::Shared::default())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(shortcuts::handle)
+                .build(),
+        )
         .setup(|app| runtime::setup(app.handle()))
         .on_window_event(|window, event| {
+            if window.label() == "overlay" {
+                match event {
+                    tauri::WindowEvent::Moved(_) => geometry::capture(window.app_handle()),
+                    tauri::WindowEvent::ScaleFactorChanged { .. } => {
+                        geometry::recover(window.app_handle(), false)
+                    }
+                    _ => {}
+                }
+            }
             if window.label() == "main"
                 && let tauri::WindowEvent::CloseRequested { api, .. } = event
             {
@@ -57,6 +72,7 @@ pub fn run() {
             commands::remove_book,
             commands::book_text,
             commands::save_settings,
+            commands::resize_overlay,
             commands::report_layout
         ])
         .build(tauri::generate_context!())

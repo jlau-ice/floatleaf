@@ -7,6 +7,7 @@ use crate::{
 };
 use std::{path::Path, sync::Mutex};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
 pub type SharedStore = Mutex<Result<Store, String>>;
 pub fn with_store<T>(
@@ -41,12 +42,14 @@ pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             .current_book_id
             .map(|id| Ok::<_, String>((store.book(&id)?, store.content(&id)?)))
             .transpose()?;
-        Ok((library.settings, current))
+        Ok((library.settings, current, store.placement()))
     });
     let shared = app.state::<runtime::Shared>();
     let mut state = shared.lock().unwrap();
     match restored {
-        Ok((settings, current)) => {
+        Ok((settings, current, placement)) => {
+            state.bindings = settings.shortcuts.parse()?;
+            state.placement = placement;
             state.controller.mode = settings.mode;
             state.controller.position_locked = settings.position_locked;
             if let Some((book, text)) = current {
@@ -168,19 +171,38 @@ pub async fn save_settings(
     app: AppHandle,
     window: WebviewWindow,
     settings: ReadingSettings,
+    select_mode: Option<bool>,
 ) -> Result<(), String> {
     main_only(&window)?;
     settings.validate()?;
     tauri::async_runtime::spawn_blocking(move || {
-        with_store(&app, |s| s.set_settings(settings.clone()))?;
+        let keys = settings.shortcuts.parse()?;
+        let old_keys = app.state::<runtime::Shared>().lock().unwrap().bindings;
+        let added = crate::shortcuts::add(&app, &keys)?;
+        if let Err(error) = with_store(&app, |s| s.set_settings(settings.clone())) {
+            let _ = app.global_shortcut().unregister_multiple(added);
+            return Err(error);
+        }
+        let removed: Vec<_> = old_keys.into_iter().filter(|k| !keys.contains(k)).collect();
+        let unregister_error = app
+            .global_shortcut()
+            .unregister_multiple(removed)
+            .err()
+            .map(|e| format!("旧快捷键释放失败，请退出后重开：{e}"));
         runtime::change(&app, move |state| {
-            if state.controller.mode != settings.mode {
+            if state.controller.mode != settings.mode || select_mode.unwrap_or(false) {
                 state.controller.set_mode(settings.mode);
             }
             state.controller.set_locked(settings.position_locked);
             state.reader.set_interval(settings.interval_seconds);
             state.reader.relayout();
+            if state.bindings != keys {
+                state.controller.emergency_hide();
+                state.action_held = [false; 4];
+            }
+            state.bindings = keys;
             state.settings = settings;
+            state.error = unregister_error;
             state.controller.revision += 1;
         });
         Ok(())
@@ -188,6 +210,36 @@ pub async fn save_settings(
     .await
     .map_err(|e| e.to_string())?
 }
+#[tauri::command]
+pub fn resize_overlay(
+    app: AppHandle,
+    window: WebviewWindow,
+    width: f64,
+    lines: u8,
+    persist: bool,
+) -> Result<(), String> {
+    let state = runtime::snapshot(&app);
+    if window.label() != "overlay"
+        || !state.controller.editing_layout
+        || state.controller.position_locked
+    {
+        return Err("请在编辑布局状态调整尺寸".into());
+    }
+    let mut settings = state.settings;
+    settings.width = width;
+    settings.lines = lines;
+    settings.validate()?;
+    if persist {
+        with_store(&app, |s| s.set_settings(settings.clone()))?;
+    }
+    runtime::change(&app, move |state| {
+        state.settings = settings;
+        state.reader.relayout();
+        state.controller.revision += 1;
+    });
+    Ok(())
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayoutReport {
@@ -223,8 +275,10 @@ pub fn report_layout(
 }
 
 pub fn save_progress(app: &AppHandle, flush: bool) -> Result<(), String> {
-    let reader = runtime::snapshot(app).reader;
+    let snapshot = runtime::snapshot(app);
+    let reader = snapshot.reader;
     with_store(app, |store| {
+        store.update_placement(snapshot.placement);
         if let Some(id) = reader.book_id.as_deref() {
             store.progress(id, reader.anchor);
         }

@@ -1,6 +1,7 @@
 #import <AppKit/AppKit.h>
 #import <ApplicationServices/ApplicationServices.h>
 #import <WebKit/WebKit.h>
+#import <Carbon/Carbon.h>
 
 // No key/frontmost activation, including when FloatLeaf is not the active app.
 void fl_show(void *raw) {
@@ -12,10 +13,11 @@ bool fl_key_down(unsigned short code) {
     return CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, code);
 }
 
-void fl_watch_session(void *raw, void (*hide)(void)) {
+void fl_watch_session(void *raw, void (*hide)(void), void (*displays)(void)) {
     (void)raw;
     static NSMutableArray *tokens;
     tokens = [NSMutableArray new];
+    [tokens addObject:[[NSNotificationCenter defaultCenter] addObserverForName:NSApplicationDidChangeScreenParametersNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) { (void)note; displays(); }]];
     NSNotificationCenter *workspace = [[NSWorkspace sharedWorkspace] notificationCenter];
     for (NSString *name in @[NSWorkspaceWillSleepNotification, NSWorkspaceDidWakeNotification,
                             NSWorkspaceScreensDidSleepNotification, NSWorkspaceSessionDidResignActiveNotification]) {
@@ -66,4 +68,14 @@ void fl_snapshot(void *raw, const char *path) {
         NSBitmapImageRep *rep = [NSBitmapImageRep imageRepWithData:image.TIFFRepresentation];
         [[rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:destination atomically:YES];
     }];
+}
+
+// Carbon's shared registration can succeed even when an exclusive owner exists.
+// Check that case explicitly before the plugin installs its shared registration.
+int fl_check_hotkey(unsigned short code, unsigned int modifiers) {
+    EventHotKeyRef key;
+    EventHotKeyID identity = { .signature = 'FLCK', .id = 1 };
+    OSStatus result = RegisterEventHotKey(code, modifiers, identity, GetApplicationEventTarget(), kEventHotKeyExclusive, &key);
+    if (result == noErr) UnregisterEventHotKey(key);
+    return result;
 }

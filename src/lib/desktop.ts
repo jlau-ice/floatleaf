@@ -2,6 +2,13 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { onMounted, onUnmounted, ref } from 'vue';
 
+export interface Bindings {
+  display: string;
+  emergency: string;
+  previous: string;
+  next: string;
+  auto: string;
+}
 export interface ReadingSettings {
   fontFamily: string;
   fontSize: number;
@@ -15,6 +22,7 @@ export interface ReadingSettings {
   intervalSeconds: number;
   mode: 'hold' | 'toggle' | 'pinned';
   positionLocked: boolean;
+  shortcuts: Bindings;
 }
 export interface Book {
   id: string;
@@ -36,7 +44,7 @@ export interface ReaderState {
   editingLayout: boolean;
   positionLocked: boolean;
   revision: number;
-  shortcuts: string[];
+  placement: { monitor: string | null; x: number; y: number } | null;
   error: string | null;
   settings: ReadingSettings;
   reader: {

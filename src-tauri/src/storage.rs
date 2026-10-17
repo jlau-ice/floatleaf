@@ -1,5 +1,5 @@
-use crate::{reading_settings::ReadingSettings, text_import};
-use rusqlite::{Connection, Row, params};
+use crate::{geometry::Placement, reading_settings::ReadingSettings, text_import};
+use rusqlite::{Connection, OptionalExtension, Row, params};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -32,6 +32,8 @@ pub struct Store {
     pending_progress: Option<(String, usize)>,
     saved_progress: Option<(String, usize)>,
     last_saved: Instant,
+    saved_placement: Option<Placement>,
+    pending_placement: Option<Placement>,
 }
 fn db_error(error: rusqlite::Error) -> String {
     format!("本地数据库操作失败：{error}")
@@ -67,6 +69,7 @@ impl Store {
                 current_book_id TEXT REFERENCES books(id) ON DELETE SET NULL,
                 settings TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS window_layout (id INTEGER PRIMARY KEY CHECK (id = 1), monitor TEXT, x REAL NOT NULL, y REAL NOT NULL);
             PRAGMA user_version = 1;",
             )
             .map_err(db_error)?;
@@ -78,13 +81,35 @@ impl Store {
                 [settings],
             )
             .map_err(db_error)?;
+        let saved_placement = connection
+            .query_row(
+                "SELECT monitor, x, y FROM window_layout WHERE id = 1",
+                [],
+                |r| {
+                    Ok(Placement {
+                        monitor: r.get(0)?,
+                        x: r.get(1)?,
+                        y: r.get(2)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(db_error)?;
         Ok(Self {
             connection,
             directory,
             pending_progress: None,
             saved_progress: None,
             last_saved: Instant::now(),
+            saved_placement,
+            pending_placement: None,
         })
+    }
+    pub fn placement(&self) -> Option<Placement> {
+        self.saved_placement.clone()
+    }
+    pub fn update_placement(&mut self, placement: Option<Placement>) {
+        self.pending_placement = placement.filter(|p| Some(p) != self.saved_placement.as_ref());
     }
     pub fn directory(&self) -> &Path {
         &self.directory
@@ -170,6 +195,11 @@ impl Store {
         self.pending_progress = (self.saved_progress.as_ref() != Some(&next)).then_some(next);
     }
     pub fn flush(&mut self) -> Result<(), String> {
+        if let Some(p) = &self.pending_placement {
+            self.connection.execute("INSERT INTO window_layout VALUES (1, ?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET monitor=excluded.monitor, x=excluded.x, y=excluded.y", params![p.monitor, p.x, p.y]).map_err(db_error)?;
+            self.saved_placement = self.pending_placement.take();
+            self.last_saved = Instant::now();
+        }
         if let Some((id, anchor)) = &self.pending_progress {
             self.connection
                 .execute(
@@ -300,6 +330,31 @@ mod tests {
             // Dropping an uncommitted transaction rolls back; no orphan body/index pair.
         }
         assert!(store.library().unwrap().books.is_empty());
+    }
+    #[test]
+    fn placement_and_new_settings_defaults_survive_restart() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::open(temp.path().into()).unwrap();
+        let placement = Placement {
+            monitor: Some("external".into()),
+            x: 128.0,
+            y: 64.5,
+        };
+        store.update_placement(Some(placement.clone()));
+        store.flush().unwrap();
+        // Existing P1 databases have no shortcuts field in the settings JSON.
+        store
+            .connection
+            .execute("UPDATE app_state SET settings = '{\"fontSize\":24.0}'", [])
+            .unwrap();
+        drop(store);
+        let store = Store::open(temp.path().into()).unwrap();
+        assert_eq!(store.placement(), Some(placement));
+        assert_eq!(
+            store.library().unwrap().settings.shortcuts,
+            Default::default()
+        );
+        assert_eq!(store.library().unwrap().settings.font_size, 24.0);
     }
     #[test]
     fn surrogate_boundaries_and_end_are_validated() {

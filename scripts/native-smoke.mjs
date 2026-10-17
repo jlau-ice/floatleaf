@@ -16,31 +16,52 @@ async function command(value, predicate) {
   }
   throw Error(`Native action timed out: ${value}`);
 }
-await command('toggle', s => s.state.mode === 'toggle' && !s.visible);
-const initial = await command('hold', s => s.state.mode === 'hold' && !s.visible);
+await command('toggle', (s) => s.state.mode === 'toggle' && !s.visible);
+const initial = await command('hold', (s) => s.state.mode === 'hold' && !s.visible);
 if (initial.state.error) throw Error(initial.state.error);
 const samples = [];
 for (let i = 0; i < 100; i++) {
-  const shown = await command('pinned', s => s.visible && s.state.mode === 'pinned');
-  if (shown.native.keyWindow || !shown.native.clickthrough || shown.native.opaque || shown.native.level < 1) throw Error('Native window invariant failed');
-  if (shown.native.frontmostPid !== initial.native.frontmostPid) throw Error('Foreground application changed; inspect whether this was external input');
-  const hidden = await command('hold', s => !s.visible && s.state.mode === 'hold');
-  samples.push({ showRevision: shown.state.revision, hideRevision: hidden.state.revision, frontmostPid: shown.native.frontmostPid });
+  const shown = await command('pinned', (s) => s.visible && s.state.mode === 'pinned');
+  if (
+    shown.native.keyWindow ||
+    !shown.native.clickthrough ||
+    shown.native.opaque ||
+    shown.native.level < 1
+  )
+    throw Error('Native window invariant failed');
+  if (shown.native.frontmostPid !== initial.native.frontmostPid)
+    throw Error('Foreground application changed; inspect whether this was external input');
+  const hidden = await command('hold', (s) => !s.visible && s.state.mode === 'hold');
+  samples.push({
+    showRevision: shown.state.revision,
+    hideRevision: hidden.state.revision,
+    frontmostPid: shown.native.frontmostPid,
+  });
 }
-await command('hide', s => s.state.emergencyLatched);
-const suppressed = await command('pinned', s => s.state.mode === 'pinned');
+await command('hide', (s) => s.state.emergencyLatched);
+const suppressed = await command('pinned', (s) => s.state.mode === 'pinned');
 if (suppressed.visible) throw Error('Pinned mode bypassed emergency latch');
-await command('unlock', s => !s.state.positionLocked);
-const editing = await command('edit', s => s.state.editingLayout && !s.native.clickthrough);
+await command('unlock', (s) => !s.state.positionLocked);
+const editing = await command('edit', (s) => s.state.editingLayout && !s.native.clickthrough);
 if (editing.native.clickthrough) throw Error('Edit mode still clickthrough');
 await writeFile(join(directory, 'command.tmp'), 'capture');
 await rename(join(directory, 'command.tmp'), join(directory, 'command.txt'));
 await delay(500);
-await command('finish', s => !s.state.editingLayout && s.native.clickthrough);
-await command('hold', s => !s.visible && s.state.mode === 'hold');
-await command('lock', s => s.state.positionLocked);
-const report = { date: new Date().toISOString(), cycles: samples.length, initial, samples,
-  result: 'PASS: native visibility, nonactivation, window properties, emergency priority, edit transition',
-  limitations: ['No physical key input or mouse click was injected', 'No screen-pixel end-to-end latency measurement', 'Window transparency property and own-webview snapshot are not a desktop compositing test'] };
+await command('finish', (s) => !s.state.editingLayout && s.native.clickthrough);
+await command('hold', (s) => !s.visible && s.state.mode === 'hold');
+await command('lock', (s) => s.state.positionLocked);
+const report = {
+  date: new Date().toISOString(),
+  cycles: samples.length,
+  initial,
+  samples,
+  result:
+    'PASS: native visibility, nonactivation, window properties, emergency priority, edit transition',
+  limitations: [
+    'No physical key input or mouse click was injected',
+    'No screen-pixel end-to-end latency measurement',
+    'Window transparency property and own-webview snapshot are not a desktop compositing test',
+  ],
+};
 await writeFile(join(directory, 'native-smoke.json'), JSON.stringify(report, null, 2));
 console.log(report.result, `(${samples.length} cycles)`);

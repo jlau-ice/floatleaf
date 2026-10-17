@@ -5,7 +5,7 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 unsafe extern "C" {
     fn fl_show(window: *mut c_void);
     fn fl_key_down(code: u16) -> bool;
-    fn fl_watch_session(window: *mut c_void, hide: extern "C" fn());
+    fn fl_watch_session(window: *mut c_void, hide: extern "C" fn(), displays: extern "C" fn());
 }
 
 fn raw_window(window: &WebviewWindow) -> Result<*mut c_void, String> {
@@ -27,9 +27,13 @@ pub fn show(window: &WebviewWindow) -> Result<(), String> {
     Ok(())
 }
 
-pub fn watch_session(window: &WebviewWindow, hide: extern "C" fn()) -> Result<(), String> {
+pub fn watch_session(
+    window: &WebviewWindow,
+    hide: extern "C" fn(),
+    displays: extern "C" fn(),
+) -> Result<(), String> {
     unsafe {
-        fl_watch_session(raw_window(window)?, hide);
+        fl_watch_session(raw_window(window)?, hide, displays);
     }
     Ok(())
 }
@@ -226,5 +230,35 @@ pub fn capture(window: &WebviewWindow, path: &std::path::Path) {
         unsafe {
             fl_snapshot(raw_window(window).unwrap(), path.as_ptr());
         }
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub fn check_hotkey(app: &tauri::AppHandle, key: Shortcut) -> Result<(), String> {
+    unsafe extern "C" {
+        fn fl_check_hotkey(code: u16, modifiers: u32) -> i32;
+    }
+    let code = main_code(key.key).ok_or("不支持的按键")?;
+    let mut mods = 0;
+    for (flag, mask) in [
+        (Modifiers::SUPER, 256),
+        (Modifiers::SHIFT, 512),
+        (Modifiers::ALT, 2048),
+        (Modifiers::CONTROL, 4096),
+    ] {
+        if key.mods.contains(flag) {
+            mods |= mask;
+        }
+    }
+    let (tx, rx) = std::sync::mpsc::channel();
+    app.run_on_main_thread(move || {
+        let _ = tx.send(unsafe { fl_check_hotkey(code, mods) });
+    })
+    .map_err(|e| e.to_string())?;
+    let result = rx.recv().map_err(|e| e.to_string())?;
+    if result == 0 {
+        Ok(())
+    } else {
+        Err(format!("系统独占快捷键检查失败（{result}）"))
     }
 }

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 static void (*hide_callback)(void);
+static void (*displays_callback)(void);
 void fl_show(void *raw) {
     HWND window = (HWND)raw;
     ShowWindow(window, SW_SHOWNOACTIVATE);
@@ -20,10 +21,12 @@ static LRESULT CALLBACK session_proc(HWND w, UINT msg, WPARAM wp, LPARAM lp, UIN
             (msg == WM_POWERBROADCAST && (wp == PBT_APMSUSPEND || wp == PBT_APMRESUMEAUTOMATIC)))) {
         hide_callback();
     }
+    if (displays_callback && (msg == WM_DISPLAYCHANGE || msg == WM_SETTINGCHANGE)) displays_callback();
     return DefSubclassProc(w, msg, wp, lp);
 }
-void fl_watch_session(void *raw, void (*hide)(void)) {
+void fl_watch_session(void *raw, void (*hide)(void), void (*displays)(void)) {
     hide_callback = hide;
+    displays_callback = displays;
     SetWindowSubclass((HWND)raw, session_proc, 1, 0);
     WTSRegisterSessionNotification((HWND)raw, NOTIFY_FOR_THIS_SESSION);
 }

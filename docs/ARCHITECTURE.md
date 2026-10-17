@@ -1,25 +1,24 @@
 # FloatLeaf 架构与实现约定
 
-当前已实现原生显示控制器和双平台窗口适配，阅读数据层继续建设；本文包含实现约定。实现进度以 TASKS.md 和 HANDOFF.md 为准。
+当前已实现原生显示控制器、双平台窗口适配、SQLite 阅读数据、实际布局分页及位置/快捷键设置。实现进度和验证范围以 TASKS.md 和 HANDOFF.md 为准。
 
 ## 模块边界
 
 - `src/`：Vue 设置、书架、悬浮阅读界面及浏览器排版逻辑。
-- `src-tauri/src/`：Rust 桌面入口、命令和后续阅读控制器。
-- 后续按需求引入 `reader/`、`hotkeys/`、`storage/`、`platform/`；不提前建立空模块。
+- `src-tauri/src/`：Rust 桌面入口与命令；`controller.rs` 管显隐、`reader.rs` 管阅读，`runtime.rs` 串行应用系统状态；`storage.rs` 使用直接 SQL，`text_import.rs` 负责解码；`geometry.rs` 管工作区坐标，`shortcuts.rs` 管注册，`platform.rs` 和 `native/` 负责系统差异。
 - `scripts/`：跨平台环境检查与 Tauri 启动脚本。
 - `docs/`：产品计划、架构、环境说明、验收矩阵和 Word 计划书。
 - `TASKS.md`：唯一任务状态清单；`HANDOFF.md`：当前验证证据和接续入口。
 
 ## 两个窗口
 
-`main` 是普通设置窗口，可以获取焦点。`overlay` 是后续新增的阅读窗口，默认隐藏、透明、无边框、置顶、不抢焦点。仅在编辑布局模式允许交互。设置与阅读窗口不共用可见性状态。
+`main` 是普通设置窗口，可以获取焦点。`overlay` 是阅读窗口，默认隐藏、透明、无边框、置顶、不抢焦点。仅在编辑布局模式允许交互。设置与阅读窗口不共用可见性状态。
 
 全局快捷键在 Rust 中处理。不要用 Vue 的 keyup、window.blur 或 CSS 透明度单独承担系统级隐藏；隐藏动作直接操作原生窗口。
 
 ## 阅读控制器
 
-计划状态包括：`mode`（hold/toggle/pinned）、`visible`、`heldChord`、`emergencyLatched`、`editingLayout`、`positionLocked`、`autoAdvance`、`remainingMs`、`bookId`、`anchor`。
+核心状态包括：`mode`（hold/toggle/pinned）、`visible`、`held`、`emergencyLatched`、`editingLayout`、`positionLocked`、`autoRunning`、`remainingMs`、`bookId`、`anchor`。
 
 - Rust 持有窗口及阅读会话的权威状态。Vue 组合函数负责展示和设置交互，避免多个窗口分别作出相互冲突的决定。
 - 按下和释放必须配对。重复按下不重新初始化计时。
@@ -31,13 +30,13 @@
 
 以实际字体、可用宽度、行高和行数测量切页，等待字体加载完成后测量。完整行数与窗口高度联动。使用相邻页面缓存，避免整本书 DOM 排版。
 
-阅读锚点与屏幕页码解耦。在实现前确定跨 Rust 和 JavaScript 的统一索引约定，覆盖 UTF-8、UTF-16、emoji 和组合字符测试。书籍内容变化后不得静默复用错误位置。
+阅读锚点与屏幕页码解耦。Rust 和 JavaScript 使用 UTF-16 码元索引，页面在字素簇边界切分；测试覆盖 emoji 和组合字符。内容 SHA-256 作为书籍标识，正文变化不会复用旧进度。
 
 小说正文、书架、配置与进度统一保存在应用数据目录的 `floatleaf.sqlite3`。使用普通 SQL 和事务，进度节流保存，后台解析不阻塞窗口事件循环。
 
 ## 平台适配
 
-macOS 完全透明使用 Tauri 的 macOSPrivateApi 路线，当前发布策略为独立分发。此配置应在 P0 创建透明窗口时启用；初始化骨架不会提前宣称该能力已验收。
+macOS 完全透明已启用 Tauri 的 macOSPrivateApi，当前发布策略为独立分发。系统级验收结果单独记录。
 
 全局快捷键插件 Released 不一定等同任一组合键释放；Windows 要验证主键和修饰键不同释放顺序。若增添底层监听，先确定最小权限和平台行为。
 
@@ -53,4 +52,6 @@ Tauri capabilities 按窗口和实际功能最小化。原生功能由 Rust 命�
 
 按用户要求使用最简单的嵌入式 SQLite：`rusqlite` + bundled SQLite，无数据库服务、ORM 或通用仓储抽象。`books` 表存正文、内容标识、标题、编码和 UTF-16 进度；单行 `app_state` 存当前书籍和设置。导入使用事务，相同内容不重复插入；进度最多每秒刷新，切书和正常退出立即保存。小说正文不另建文件。使用 SQLite 默认回滚日志模式，退出后备份 `floatleaf.sqlite3` 即可。
 
-遵循项目命名和模块边界；保留必要的业务边界和错误提示，不增加假设性的容错框架、重复校验或多余抽象。前一轮未提交的 JSON 存储已替换，不提供无实际数据需求的迁移层。
+`window_layout` 单行保存显示器标识和相对工作区的逻辑坐标；恢复时按目标显示器缩放映射物理坐标，约束宽度/完整行数并收回工作区。macOS 先改变尺寸再恢复顶部位置，避免 AppKit 保留底边造成漂移。快捷键先注册新增组合，成功保存后移除旧组合；失败保留原配置。
+
+遵循项目命名和模块边界；保留必要的业务边界和错误提示，不增加假设性的容错框架、重复校验或多余抽象，不提供无实际数据需求的迁移层。

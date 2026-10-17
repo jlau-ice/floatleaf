@@ -19,7 +19,7 @@
     "test:rust": "node scripts/cargo.mjs test --manifest-path src-tauri/Cargo.toml --locked",
     "test:web": "playwright test",
     "test": "pnpm test:rust && pnpm test:web",
-    "format:check": "prettier --check src tests playwright.config.ts scripts/native-reading-smoke.mjs"
+    "format:check": "prettier --check src tests playwright.config.ts scripts/native-*.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
