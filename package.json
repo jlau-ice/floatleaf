@@ -1,0 +1,38 @@
+{
+  "name": "floatleaf",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "node scripts/tauri.mjs",
+    "typecheck": "vue-tsc --noEmit",
+    "desktop:dev": "node scripts/tauri.mjs dev",
+    "desktop:build": "node scripts/tauri.mjs build",
+    "rust:check": "node scripts/cargo.mjs check --manifest-path src-tauri/Cargo.toml --locked",
+    "rust:fmt": "node scripts/cargo.mjs fmt --manifest-path src-tauri/Cargo.toml -- --check",
+    "rust:clippy": "node scripts/cargo.mjs clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings",
+    "check": "pnpm typecheck && pnpm rust:fmt && pnpm rust:clippy",
+    "env:check": "node scripts/doctor.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "@tauri-apps/api": "^2",
+    "pinia": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16",
+    "vue-tsc": "^3.3.5",
+    "@tauri-apps/cli": "^2"
+  },
+  "description": "FloatLeaf 浮页 — 离线桌面悬浮阅读工具",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=22.22.3 <23",
+    "pnpm": ">=10 <11"
+  }
+}
