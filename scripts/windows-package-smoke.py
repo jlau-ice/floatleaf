@@ -29,7 +29,7 @@ u.GetWindowThreadProcessId.argtypes = [w.HWND, c.POINTER(w.DWORD)]
 u.GetWindowTextW.argtypes = [w.HWND, w.LPWSTR, c.c_int]
 u.IsWindowVisible.argtypes = [w.HWND]
 u.GetForegroundWindow.restype = w.HWND
-u.SetForegroundWindow.argtypes = [w.HWND]
+u.SetWindowPos.argtypes = [w.HWND, w.HWND, c.c_int, c.c_int, c.c_int, c.c_int, w.UINT]
 u.GetWindowLongW.argtypes = [w.HWND, c.c_int]
 u.ShowWindow.argtypes = [w.HWND, c.c_int]
 u.ShowWindowAsync.argtypes = [w.HWND, c.c_int]
@@ -89,6 +89,19 @@ def key(vk, down=True):
 def release_all():
     for vk in [SPACE, ESC, ALT, CTRL]:
         key(vk, False)
+    wait()
+
+
+def click(x, y):
+    events = (Input * 3)(
+        Input(type=0, payload=Payload(mouse=Mouse(
+            dx=round(x * 65535 / (u.GetSystemMetrics(0) - 1)),
+            dy=round(y * 65535 / (u.GetSystemMetrics(1) - 1)), flags=0x8001))),
+        Input(type=0, payload=Payload(mouse=Mouse(flags=0x0002))),
+        Input(type=0, payload=Payload(mouse=Mouse(flags=0x0004))),
+    )
+    if u.SendInput(3, events, c.sizeof(Input)) != 3:
+        raise RuntimeError("SendInput mouse click failed")
     wait()
 
 
@@ -194,7 +207,10 @@ def check_settings(main):
     wait()
     check("settings-restore", not u.IsZoomed(main) and not u.IsIconic(main))
     if args.screenshot:
-        u.SetForegroundWindow(main)
+        u.SetWindowPos(main, 0, 0, 0, 0, 0, 0x0053)  # Top, no activation/move/resize.
+        rect = w.RECT()
+        u.GetWindowRect(main, c.byref(rect))
+        click(rect.left + 80, rect.top + 16)
         wait(1)
         if u.GetForegroundWindow() != main:
             raise RuntimeError("Settings window is not foreground for screenshot")
@@ -217,9 +233,9 @@ try:
     wait(2)
     fixture = u.CreateWindowExW(0, "STATIC", "FloatLeaf regression input fixture",
                                 0x00CF0000, 50, 50, 640, 480, None, None, None, None)
-    u.ShowWindow(fixture, 5)
-    u.SetForegroundWindow(fixture)
-    wait()
+    # A real synthetic click establishes focus without bypassing Windows foreground policy.
+    u.SetWindowPos(fixture, -1, 50, 50, 640, 480, 0x0050)
+    click(100, 110)
     if u.GetForegroundWindow() != fixture:
         raise RuntimeError("Input fixture could not become foreground")
     check("initial-hidden", not u.IsWindowVisible(overlay))
@@ -257,6 +273,7 @@ try:
     check("fresh-chord-release-hides", not u.IsWindowVisible(overlay))
 
     if not args.expect_stuck:
+        u.ShowWindow(fixture, 0)
         check_settings(main)
         u.PostMessageW(main, 0x0010, 0, 0)  # WM_CLOSE must hide settings, not exit the reader.
         wait()
