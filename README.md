@@ -8,13 +8,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前版本为 **v0.2.0 试用版（Pre-release）**：支持 EPUB / TXT 章节目录、搜索和跳转，原有 TXT 书库自动补目录；包含此前的自动翻页控制、Windows 隐藏修复与日志入口。
+当前提供 **Windows v0.2.1 / macOS v0.2.0 试用版（Pre-release）**。Windows 新版将原生标题栏与设置页统一为暖白底、深绿文字，保留系统窗口按钮。两端均支持 EPUB / TXT 章节目录、搜索和跳转，原有 TXT 书库自动补目录；包含自动翻页控制、Windows 隐藏修复与日志入口。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
 | macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 EPUB/TXT 示例 |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.1/FloatLeaf_0.2.1_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.1/FloatLeaf_0.2.1_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 EPUB/TXT 示例 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -69,11 +69,11 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 | 项目 | 当前证据 |
 | --- | --- |
 | macOS Apple Silicon | v0.2.0 debug 桌面 EPUB 2/3、UTF-8/GBK 导入、目录搜索/跳转、重启恢复与截图检查通过；两端完整系统场景仍待用户反馈 |
-| Windows x64 | v0.2.0 在 Windows Server 2025 CI 构建、安装并通过 35 项显隐/焦点断言；Windows 11 用户设备及目录界面复测仍待反馈 |
-| 单元与界面测试 | v0.2.0 本机及双平台 CI 各 27 项 Rust、7 项浏览器测试及类型/格式/Clippy 通过；详细导入边界与验证见章节记录 |
+| Windows x64 | v0.2.1 普通安装包在 Windows Server 2025 CI 实际安装，43 项显隐/焦点/窗口控制与标题栏像素断言通过；Windows 11 用户设备复测仍待反馈 |
+| 单元与界面测试 | v0.2.1 源码双平台 CI 各 27 项 Rust、7 项浏览器测试及类型/格式/Clippy 通过；详细导入边界与验证见章节记录 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
-本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布与 CI 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。[v0.2.0 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39035419034) 两端检查及附件上传通过。
+本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布证据见 [发布记录](docs/GITHUB_RELEASE.md)；[v0.2.1 安装包回归](https://github.com/jlau-ice/floatleaf/actions/runs/39040506097) 通过，源码检查首轮的测试脚本失败与修正如实记录在 [标题栏验证](docs/WINDOWS_TITLEBAR.md)。
 
 ## 开发
 

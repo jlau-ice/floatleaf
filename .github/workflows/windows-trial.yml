@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Release or draft containing the installer to verify
+        description: Published release containing the installer to verify
         required: true
         type: string
 

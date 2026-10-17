@@ -292,7 +292,7 @@ try:
     passed = reproduced if args.expect_stuck else not failures
     report = {"os": platform.platform(), "exe": args.exe.name,
               "expectedOldBug": args.expect_stuck, "passed": passed, "checks": checks,
-              "scope": "Synthetic system shortcuts + HWND visibility/focus/styles; not physical keyboard or pixel tests"}
+              "scope": "Synthetic system shortcuts + HWND visibility/focus/styles and settings controls; optional caption pixel checks; not physical keyboard/mouse acceptance"}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))

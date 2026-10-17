@@ -14,9 +14,17 @@
 ## 验证
 
 - 本机 `pnpm env:check`、`pnpm build`、`pnpm check` 通过；Windows release 目标 Clippy all-targets（警告视为错误）通过。
-- Windows 普通 NSIS 与 macOS debug 构建待完成。
-- 扩展现有 Windows 安装回归：查询实际 DWM 配色、检查原生标题栏/缩放样式，执行最小化、最大化、恢复、关闭驻留；原 35 项悬浮显隐/焦点断言保留。
-- CI 的临时 Windows runner 使用深色应用偏好，截图记录真实设置窗口；不改用户设备的系统主题。Windows CI 结果、截图目视核对及安装包发布待补。
+- Windows 普通 NSIS 与 macOS debug（`pnpm tauri build --debug --no-bundle`）构建通过；NSIS 解包、CRC、0.2.1 版本与普通包不含诊断入口核验通过。安装器 2,987,232 字节，SHA-256 `d4357be5b6c6eb810f488a8a386ab0aef721eb23eed56046d14e382382536e48`。本地日志在 `.local/titlebar-021/`。
+- [源码检查 39037365528](https://github.com/jlau-ice/floatleaf/actions/runs/39037365528) 的两端环境、类型、格式、Clippy、27 项 Rust / 7 项浏览器测试通过；macOS job 成功，Windows 普通 NSIS 构建通过。该轮 Windows 原生测试因设置窗口尚未就绪而失败，整轮状态仍为失败。
+- [安装包原生回归 39040506097](https://github.com/jlau-ice/floatleaf/actions/runs/39040506097) 成功：Windows Server 2025（10.0.26100）、100% 缩放，从公开候选版下载上述普通 EXE 并实际安装启动，43 项断言全部通过。包括原 35 项六种松键顺序、紧急隐藏、旧组合键保护、前台焦点与窗口样式检查，以及浅色原生控件、边框样式、最小化/最大化/恢复、关闭驻留和两项标题栏像素检查。
+- CI 临时 runner 使用深色应用偏好，截图中的标题栏为 `#f4f2e9`，标题存在 `#203b32` 像素；目视核对通过，日志 `settings-appearance.applied=true`。不修改用户设备主题。截图前仅将设置窗口临时移到前方，不能据此声称设置页始终置顶。证据在 `.local/titlebar-021/final-test/`。
+- 测试脚本修复了窗口就绪等待、输入测试窗口聚焦和截图遮挡问题。DWM 的颜色读取接口返回 `E_INVALIDARG`，所以改为检查实际渲染像素；此前失败记录保留。最终测试脚本提交为 `30beba7`，应用实现仍为 `249c0c5`，未因测试调整更改 EXE。该轮报告末尾的旧 scope 文案尚未提到新增像素检查，实际检查列表和截图有效；随后仅纠正了报告说明文字。
 - Windows 11 用户设备的实际标题栏、按钮悬停、拖动贴靠与不同缩放仍需复测。
+
+## 交付
+
+v0.2.1 Windows 试用安装器、含合成 EPUB/TXT 的试用 ZIP、复测说明、真实 Windows 截图及 SHA256SUMS 已准备；公开下载核验待补。macOS 安装包沿用 v0.2.0。
+
+工作流保持 `contents: read`，通过公开候选版 `v0.2.1-rc.1` 验证安装器，没有扩大 CI 写权限。正式 v0.2.1 与候选版使用同一个已验证 EXE。
 
 参考：[微软 DWM 标题栏颜色与系统版本要求](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute)、[DwmSetWindowAttribute](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmsetwindowattribute)。
