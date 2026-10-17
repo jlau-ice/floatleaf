@@ -31,7 +31,7 @@ P0～P3 的功能实现、本机原生回归与 macOS 试用包已完成。分�
 
 ## v0.2.0 章节补充
 
-本机 27 项 Rust / 7 项浏览器测试、类型/格式/Clippy 通过，macOS debug 真实 WebView 导入、目录搜索、隐藏时跳章、前后章和调整字号保留位置通过。移走源文件并重启后，EPUB 目录和锚点 937 恢复；设置与悬浮阅读截图核对正文正确。Windows 交叉构建和 CI 结果见 [CHAPTERS_EPUB.md](CHAPTERS_EPUB.md)。全部使用原创合成文本，不代表所有来源 EPUB 或 Windows 11 用户设备已通过。
+本机 27 项 Rust / 7 项浏览器测试、类型/格式/Clippy 通过，macOS debug 真实 WebView 导入、目录搜索、隐藏时跳章、前后章和调整字号保留位置通过。移走源文件并重启后，EPUB 目录和锚点 937 恢复；设置与悬浮阅读截图核对正文正确。另通过两份 W3C/IDPF 公开样例的导入与选章。Windows 交叉构建和 CI 结果见 [CHAPTERS_EPUB.md](CHAPTERS_EPUB.md)。测试使用原创合成文本和公开样例，不代表所有来源 EPUB 或 Windows 11 用户设备已通过。
 
 ## 性能目标
 

@@ -1,5 +1,13 @@
 # GitHub 公开发布记录
 
+## v0.2.0
+
+[v0.2.0 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.0) 已公开发布，标签指向 `56858631992bcb56676aff2effd660c122292e14`，应用实现提交为 `a566296`。新增 EPUB 2/3、TXT 章节识别、目录搜索和选章，原书库自动升级并保留进度。
+
+macOS Apple Silicon DMG、Windows x64 NSIS 安装器、Windows 试用 ZIP、独立章节示例 ZIP、复测说明及 SHA256SUMS 共六个附件，均从未登录的公开下载 URL 下载并与本地逐字节、SHA-256 核对一致。包哈希、构建与原生测试范围见 [CHAPTERS_EPUB.md](CHAPTERS_EPUB.md)，下载证据在 `.local/chapters-020/download/verification.json`。示例均为原创合成文本，安装包未正式签名/公证，Windows 11 与用户书籍兼容性仍待复测。
+
+实现提交 `a566296` 的 [CI 39035419034](https://github.com/jlau-ice/floatleaf/actions/runs/39035419034) 两端成功，各 27 项 Rust / 7 项浏览器测试、环境/类型/格式/Clippy 通过。macOS debug 桌面构建通过；Windows Server 2025 本机构建并实际安装普通 v0.2.0 NSIS 包，35 项系统合成按键与原生窗口显隐/焦点/样式断言通过，旧包隐藏失败复现通过。报告与日志附件上传成功，原始报告下载在 `.local/chapters-020/windows-native-evidence/`。该结果不代表 Windows 11 物理键鼠或目录界面已完成验收。
+
 ## v0.1.2
 
 [v0.1.2 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.2) 已公开发布，标签指向 `2d17dec299126802606ee41173cdcb6a3bd53b7c`，应用实现提交为 `edb350a`。包含按住模式自动翻页开关、可调间隔、Windows 隐藏修复和日志入口。macOS Apple Silicon DMG、Windows x64 NSIS 安装器、Windows 试用 ZIP、复测说明和 SHA256SUMS 共五个附件已从公开下载 URL 重新下载，逐字节与本地构建一致。
