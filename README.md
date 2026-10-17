@@ -8,13 +8,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前 Windows 版本为 **v0.1.1 复测试用版（Pre-release）**，修复 v0.1.0 隐藏失效并增加日志入口；macOS 安装包保持 v0.1.0。
+当前版本为 **v0.1.2 试用版（Pre-release）**：支持按住模式隐藏时开关自动翻页，按钮旁可调间隔；包含 Windows 隐藏修复与日志入口。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.0/FloatLeaf_0.1.0_aarch64.dmg) | 打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.1/FloatLeaf_0.1.1_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.1/FloatLeaf_0.1.1_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 TXT 示例 |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.2/FloatLeaf_0.1.2_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.2/FloatLeaf_0.1.2_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.2/FloatLeaf_0.1.2_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 TXT 示例 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -38,6 +38,7 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 - **本地书架**：导入 UTF-8、常见 GBK 编码的 TXT，提供预览和手动编码选择；单文件上限 20 MiB。
 - **悬浮阅读**：透明、无边框、置顶；实现按住、切换、固定三种显示模式，位置锁定独立控制。
 - **阅读操作**：上一页、下一页、自动翻页、暂停和恢复。隐藏或编辑布局时暂停计时，手动翻页重置计时，到结尾停止。
+- **翻页间隔**：阅读按钮旁可设 2～60 秒并自动保存；按住模式隐藏时也能开关自动翻页，显示后继续计时。
 - **文字排版**：字体、字号、颜色、文字与背景透明度、行高、字间距、宽度和完整行数可调。
 - **独立进度**：每本书分别保存阅读位置，重排后保留锚点；导入后移动原 TXT 不影响阅读。
 - **桌面控制**：自定义快捷键、紧急隐藏、鼠标穿透、拖动与调整尺寸、托盘找回窗口位置和单实例运行。
@@ -66,9 +67,9 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 
 | 项目 | 当前证据 |
 | --- | --- |
-| macOS Apple Silicon | 已构建并实际启动 DMG 中的应用；原生窗口与阅读流程回归通过 |
-| Windows x64 | v0.1.0 用户设备反馈隐藏失败；v0.1.1 已修复原生隐藏、通过交叉构建与包核验，仍待该设备复测 |
-| 单元与界面测试 | v0.1.1 本机 18 项 Rust、5 项浏览器测试通过；v0.1.0 双平台 CI 通过，新增 Windows 安装包原生回归结果见修复记录 |
+| macOS Apple Silicon | v0.1.2 debug 桌面自动翻页/重启回归通过，普通 app/DMG 构建及校验通过；DMG 安装启动证据来自 v0.1.0 |
+| Windows x64 | v0.1.0 用户设备反馈隐藏失败；v0.1.2 包含原生隐藏修复、通过交叉构建与包核验，仍待该设备复测 |
+| 单元与界面测试 | v0.1.2 本机 19 项 Rust、5 项浏览器测试通过；真实 macOS 界面/IPC/SQLite 验证自动翻页与间隔保存，Windows 安装包原生回归结果见修复记录 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
 本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。公开发布与 [双平台 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39011651513) 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。
