@@ -2,7 +2,7 @@ use crate::{
     commands,
     controller::{Controller, DisplayMode},
     geometry::{self, Placement},
-    platform,
+    logging, platform,
     reader::Reader,
     reading_settings::ReadingSettings,
     shortcuts,
@@ -135,17 +135,31 @@ fn apply(app: &AppHandle, state: &Snapshot) {
         if state.controller.visible {
             platform::show(&window)?;
         } else {
-            window.hide().map_err(|e| e.to_string())?;
+            platform::hide(&window)?;
         }
         Ok(())
     };
     if let Err(error) = apply_window() {
-        let _ = window.hide();
+        logging::record(app, "window-error", serde_json::json!({ "error": error }));
+        let _ = platform::hide(&window);
         let shared = app.state::<Shared>();
         let mut state = shared.lock().unwrap();
         state.controller.emergency_hide();
         state.error = Some(format!("阅读窗口操作失败：{error}"));
     }
+    let actual = snapshot(app);
+    logging::record(
+        app,
+        "window",
+        serde_json::json!({
+            "requestedVisible": actual.controller.visible,
+            "nativeVisible": window.is_visible().ok(),
+            "focused": window.is_focused().ok(),
+            "mode": actual.controller.mode,
+            "emergencyLatched": actual.controller.emergency_latched,
+            "editingLayout": actual.controller.editing_layout,
+        }),
+    );
     let _ = app.emit("reader-state", snapshot(app));
     #[cfg(any(debug_assertions, feature = "diagnostics"))]
     write_probe(app);
@@ -153,6 +167,7 @@ fn apply(app: &AppHandle, state: &Snapshot) {
 
 extern "C" fn session_interrupted() {
     if let Some(app) = APP.get() {
+        logging::record(app, "session-interrupted", serde_json::json!({}));
         change(app, |s| s.controller.emergency_hide());
     }
 }
@@ -235,7 +250,10 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "settings" => open_settings(app),
             "recover" => geometry::recover(app, true),
-            "hide" => change(app, |s| s.controller.emergency_hide()),
+            "hide" => {
+                logging::record(app, "tray-hide", serde_json::json!({}));
+                change(app, |s| s.controller.emergency_hide());
+            }
             "quit" => app.exit(0),
             _ => {}
         });
@@ -272,6 +290,7 @@ pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
     if action == "edit" && snapshot(app).controller.position_locked {
         return Err("请先解除位置锁定。".into());
     }
+    logging::record(app, "action", serde_json::json!({ "action": action }));
     change(app, move |state| match action.as_str() {
         "hide" => {
             state.controller.emergency_hide();

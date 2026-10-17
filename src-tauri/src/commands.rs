@@ -1,5 +1,5 @@
 use crate::{
-    platform,
+    logging, platform,
     reading_settings::ReadingSettings,
     runtime,
     storage::{Book, Library, Store},
@@ -34,6 +34,7 @@ pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let directory = std::env::var_os("FLOATLEAF_DATA_DIR")
         .map(std::path::PathBuf::from)
         .unwrap_or(directory);
+    logging::setup(app, &directory);
     let store = Store::open(directory);
     app.manage(Mutex::new(store));
     let restored = with_store(app, |store| {
@@ -91,6 +92,18 @@ pub async fn library(app: AppHandle, window: WebviewWindow) -> Result<Library, S
 pub fn data_directory(app: AppHandle, window: WebviewWindow) -> Result<String, String> {
     main_only(&window)?;
     with_store(&app, |s| Ok(s.directory().to_string_lossy().into_owned()))
+}
+
+#[tauri::command]
+pub fn log_info(app: AppHandle, window: WebviewWindow) -> Result<logging::LogInfo, String> {
+    main_only(&window)?;
+    Ok(logging::info(&app))
+}
+
+#[tauri::command]
+pub fn open_log_directory(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
+    main_only(&window)?;
+    logging::open_directory(&app)
 }
 
 pub fn select_core(app: &AppHandle, id: &str) -> Result<(), String> {

@@ -1,6 +1,7 @@
 mod commands;
 mod controller;
 mod geometry;
+mod logging;
 mod platform;
 mod reader;
 mod reading_settings;
@@ -70,6 +71,8 @@ pub fn run() {
             commands::inspect_txt,
             commands::library,
             commands::data_directory,
+            commands::log_info,
+            commands::open_log_directory,
             commands::import_txt,
             commands::select_book,
             commands::remove_book,

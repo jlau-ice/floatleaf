@@ -32,4 +32,33 @@ jobs:
       - run: pnpm test:rust
       - run: pnpm exec playwright install chromium
       - run: pnpm test:web
-      - run: pnpm tauri build --debug --no-bundle
+      - if: runner.os == 'macOS'
+        run: pnpm tauri build --debug --no-bundle
+      - name: Reproduce v0.1.0 packaged Windows hide bug
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          curl.exe --fail --location --retry 3 -o "$env:RUNNER_TEMP/old-setup.exe" https://github.com/jlau-ice/floatleaf/releases/download/v0.1.0/FloatLeaf_0.1.0_x64-setup.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          7z x "$env:RUNNER_TEMP/old-setup.exe" "-o$env:RUNNER_TEMP/floatleaf-old" -y
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/windows-package-smoke.py "$env:RUNNER_TEMP/floatleaf-old/floatleaf.exe" --expect-stuck --output .local/windows-old.json
+      - name: Build ordinary Windows installer
+        if: runner.os == 'Windows'
+        run: pnpm tauri build --bundles nsis
+      - name: Install and verify Windows native visibility
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          $install = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$env:RUNNER_TEMP/floatleaf-installed" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installer exited $($install.ExitCode)" }
+          python scripts/windows-package-smoke.py "$env:RUNNER_TEMP/floatleaf-installed/floatleaf.exe" --output .local/windows-fixed.json
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Windows'
+        with:
+          name: windows-native-evidence
+          include-hidden-files: true
+          path: |
+            .local/windows-*.json
+            ~/AppData/Roaming/io.github.jlauice.floatleaf/logs/*.log

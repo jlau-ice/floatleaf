@@ -1,4 +1,4 @@
-use crate::{platform, runtime};
+use crate::{logging, platform, runtime};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{
@@ -85,6 +85,14 @@ pub fn add(app: &AppHandle, keys: &[Shortcut; 5]) -> Result<Vec<Shortcut>, Strin
 }
 
 pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
+    logging::record(
+        app,
+        "shortcut",
+        serde_json::json!({
+            "key": shortcut.to_string(),
+            "pressed": event.state == ShortcutState::Pressed,
+        }),
+    );
     let key = *shortcut;
     runtime::change(app, move |state| {
         let Some(index) = state.bindings.iter().position(|s| *s == key) else {
@@ -122,7 +130,18 @@ pub fn setup(app: &AppHandle) {
     let mut errors = Vec::new();
     for key in keys {
         if let Err(e) = register(app, key) {
+            logging::record(
+                app,
+                "shortcut-register-error",
+                serde_json::json!({ "key": key.to_string(), "error": e }),
+            );
             errors.push(format!("{key}: {e}"));
+        } else {
+            logging::record(
+                app,
+                "shortcut-registered",
+                serde_json::json!({ "key": key.to_string() }),
+            );
         }
     }
     if !errors.is_empty() {

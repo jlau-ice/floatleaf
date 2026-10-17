@@ -27,6 +27,21 @@ pub fn show(window: &WebviewWindow) -> Result<(), String> {
     Ok(())
 }
 
+/// Must run on the event thread, like show. Windows visibility is managed natively.
+pub fn hide(window: &WebviewWindow) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        unsafe extern "C" {
+            fn fl_hide(window: *mut c_void);
+        }
+        // Tauri hide can skip SW_HIDE because native show bypasses Tao's cache.
+        unsafe { fl_hide(raw_window(window)?) };
+        Ok(())
+    }
+    #[cfg(target_os = "macos")]
+    window.hide().map_err(|e| e.to_string())
+}
+
 pub fn watch_session(
     window: &WebviewWindow,
     hide: extern "C" fn(),

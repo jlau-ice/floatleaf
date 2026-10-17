@@ -53,6 +53,7 @@ async function saveShortcuts() {
 }
 const removing = ref('');
 const dataDirectory = ref('');
+const logInfo = ref<{ directory: string; version: string; error: string | null }>();
 const importPath = ref('');
 const importDialog = ref<HTMLDialogElement>();
 let importRequest = 0;
@@ -121,6 +122,7 @@ onMounted(async () => {
     unlisten = stop;
     await refresh();
     dataDirectory.value = await invoke<string>('data_directory');
+    logInfo.value = await invoke('log_info');
   } catch (e) {
     error.value = String(e);
   }
@@ -462,6 +464,15 @@ const ranges: {
       <summary>本地数据位置</summary>
       <p>{{ dataDirectory }}</p>
       <p>退出浮页后备份 floatleaf.sqlite3，即可保留小说、进度和设置。移除书籍不会删除原始 TXT。</p>
+    </details>
+    <details v-if="logInfo" class="storage-note">
+      <summary>日志位置 · v{{ logInfo.version }}</summary>
+      <p>{{ logInfo.directory }}</p>
+      <p>遇到异常后，将此文件夹中的 .log 文件发给反馈接收人即可。日志不包含小说正文。</p>
+      <p v-if="logInfo.error" class="notice error">日志不可用：{{ logInfo.error }}</p>
+      <button class="secondary" :disabled="busy" @click="task(() => invoke('open_log_directory'))">
+        打开日志文件夹
+      </button>
     </details>
     <dialog
       v-if="importPath"

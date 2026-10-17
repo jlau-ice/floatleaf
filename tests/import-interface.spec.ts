@@ -42,6 +42,8 @@ test.beforeEach(async ({ page }) => {
             };
           if (command === 'library') return { books: [], currentBookId: null, settings };
           if (command === 'data_directory') return '/test-data';
+          if (command === 'log_info')
+            return { directory: '/test-data/logs', version: '0.1.1', error: null };
           if (command === 'choose_txt') return '/synthetic.txt';
           if (command === 'inspect_txt') {
             await new Promise((r) => setTimeout(r, args.encoding === 'gbk' ? 180 : 10));

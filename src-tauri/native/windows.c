@@ -13,6 +13,11 @@ void fl_show(void *raw) {
     ShowWindow(window, SW_SHOWNOACTIVATE);
     SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 }
+
+// Pair native show/hide: Tao's cached VISIBLE flag is not updated by fl_show.
+void fl_hide(void *raw) {
+    ShowWindow((HWND)raw, SW_HIDE);
+}
 bool fl_key_down(unsigned short code) { return (GetAsyncKeyState(code) & 0x8000) != 0; }
 static LRESULT CALLBACK session_proc(HWND w, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR ref) {
     (void)id; (void)ref;
