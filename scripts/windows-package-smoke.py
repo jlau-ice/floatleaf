@@ -32,13 +32,14 @@ u.GetForegroundWindow.restype = w.HWND
 u.SetForegroundWindow.argtypes = [w.HWND]
 u.GetWindowLongW.argtypes = [w.HWND, c.c_int]
 u.ShowWindow.argtypes = [w.HWND, c.c_int]
+u.ShowWindowAsync.argtypes = [w.HWND, c.c_int]
 u.IsIconic.argtypes = [w.HWND]
 u.IsZoomed.argtypes = [w.HWND]
 u.GetWindowRect.argtypes = [w.HWND, c.POINTER(w.RECT)]
 u.GetDC.argtypes = [w.HWND]
 u.GetDC.restype = w.HDC
 u.ReleaseDC.argtypes = [w.HWND, w.HDC]
-u.SendMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
+u.PostMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
 u.SetProcessDPIAware()
 u.DestroyWindow.argtypes = [w.HWND]
 u.CreateWindowExW.argtypes = [w.DWORD, w.LPCWSTR, w.LPCWSTR, w.DWORD,
@@ -123,6 +124,7 @@ checks = []
 
 def check(name, value):
     checks.append({"name": name, "passed": bool(value)})
+    print(name, bool(value), flush=True)
 
 
 def capture_settings(main, path):
@@ -182,13 +184,13 @@ def check_settings(main):
         check(f"settings-{name}", result == 0 and value.value == expected)
     style = u.GetWindowLongW(main, -16)
     check("settings-native-caption-resize-min-max", style & 0x00CF0000 == 0x00CF0000)
-    u.ShowWindow(main, 6)
+    u.ShowWindowAsync(main, 6)
     wait()
     check("settings-minimize", u.IsIconic(main))
-    u.ShowWindow(main, 3)
+    u.ShowWindowAsync(main, 3)
     wait()
     check("settings-maximize", u.IsZoomed(main))
-    u.ShowWindow(main, 9)
+    u.ShowWindowAsync(main, 9)
     wait()
     check("settings-restore", not u.IsZoomed(main) and not u.IsIconic(main))
     if args.screenshot:
@@ -258,7 +260,7 @@ try:
 
     if not args.expect_stuck:
         check_settings(main)
-        u.SendMessageW(main, 0x0010, 0, 0)  # WM_CLOSE must hide settings, not exit the reader.
+        u.PostMessageW(main, 0x0010, 0, 0)  # WM_CLOSE must hide settings, not exit the reader.
         wait()
         check("settings-close-hides-keeps-app", not u.IsWindowVisible(main) and app.poll() is None)
 

@@ -31,6 +31,7 @@ jobs:
           "FLOATLEAF_EXE=$directory/floatleaf.exe" >> $env:GITHUB_ENV
           "FLOATLEAF_LOG_DIR=$env:APPDATA/io.github.jlauice.floatleaf/logs" >> $env:GITHUB_ENV
       - name: Check the installed app under dark system preference
+        timeout-minutes: 2
         shell: pwsh
         run: |
           $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
