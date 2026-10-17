@@ -157,7 +157,7 @@ P0 必须在 Windows 和 macOS 上分别记录结果。单端编译通过不能�
 
 仓库保留 README、AGENTS.md、产品计划、架构、任务清单、环境指南与 HANDOFF。已实现、已编译、已实测和待验证分别记录，阶段提交保留锁文件并排除真实小说、用户数据和编译缓存。
 
-首轮验证平台为 Windows 11 x64 与本机 macOS Apple Silicon；Intel Mac 和其他 Windows 版本按测试设备与发布需求扩大覆盖。Windows 和 macOS 分别使用对应系统构建，macOS 构建成功不替代 Windows 验证。
+首轮验证平台为 Windows 11 x64 与本机 macOS Apple Silicon；Intel Mac 和其他 Windows 版本按测试设备与发布需求扩大覆盖。优先使用对应系统构建；目前 Windows 试用包按 Tauri 官方 NSIS 路径在 macOS 交叉构建，仍须在 Windows 实机验证，不能用构建成功替代系统体验验收。
 
 Windows 提供安装程序，注意 WebView2 运行时；macOS 提供应用与 DMG。初期为本地开发构建，正式分发另配置签名、公证和发布流程。无账号和业务服务器时，持续成本主要来自安装包托管及签名相关费用。[7][8]
 

@@ -4,7 +4,7 @@
 
 当前已实现 **Tauri 2 + Vue 3 + TypeScript + Rust + SQLite 的 TXT 阅读闭环**：导入预览、UTF-8/GBK、书架、分页、独立进度、文字样式、自动翻页及原生悬浮控制。macOS 原生阅读流程已验证，Windows、真实键鼠和多屏等验收仍在推进。
 
-使用方法见 [使用说明](docs/USER_GUIDE.md)，本地试用、Windows 构建与签名边界见 [安装说明](docs/INSTALL.md)。已接入编辑尺寸、位置恢复、自定义快捷键和单实例运行。
+使用方法见 [使用说明](docs/USER_GUIDE.md)，转发给试用者可使用 [试用说明](docs/TRIAL_GUIDE.md)。本地试用、Windows 构建与签名边界见 [安装说明](docs/INSTALL.md)。已接入编辑尺寸、位置恢复、自定义快捷键和单实例运行。
 
 ## 开始开发
 
@@ -45,4 +45,4 @@ P0 macOS 原生窗口探针已运行，完整键鼠与双平台实机验收仍�
 
 ## 分发前提
 
-macOS 完全透明的 Tauri 实现使用私有 API，采用独立安装包路线。品牌图标源文件为 `assets/floatleaf-icon.svg`。macOS 本地包使用 ad-hoc 签名，正式签名与公证另需授权；Windows 安装包尚待 Windows 构建与实测。没有远端仓库、发布凭证或服务端依赖。
+macOS 完全透明的 Tauri 实现使用私有 API，采用独立安装包路线。品牌图标源文件为 `assets/floatleaf-icon.svg`。macOS 本地包使用 ad-hoc 签名，正式签名与公证另需授权；Windows x64 未签名 NSIS 包已交叉构建，仍待 Windows 实测，见 [Windows 构建记录](docs/WINDOWS_BUILD.md)。没有远端仓库、发布凭证或服务端依赖。

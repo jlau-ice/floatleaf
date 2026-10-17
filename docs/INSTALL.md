@@ -12,7 +12,9 @@
 
 ## Windows 构建路径
 
-当前没有 Windows 编译或运行结果，仓库配置不等于已产出 Windows 安装包。在 Windows 11 x64 设备安装 Visual Studio C++ 构建工具与 Windows SDK、rustup、项目要求的 Node 和 pnpm 后执行：
+已在 macOS 交叉构建 Windows x64 NSIS 试用包，并通过 Windows 目标 Clippy 和安装包静态核验；尚无 Windows 实机运行结果。可将 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip` 发给 Windows 11 x64 试用者，解压后运行安装程序。说明、示例和反馈表已包含在 ZIP 中，构建命令与哈希见 WINDOWS_BUILD.md。
+
+如需在 Windows 本机构建，安装 Visual Studio C++ 构建工具与 Windows SDK、rustup、项目要求的 Node 和 pnpm 后执行：
 
 ```powershell
 pnpm install --frozen-lockfile

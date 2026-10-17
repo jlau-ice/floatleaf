@@ -1,6 +1,6 @@
 # P3 本机交付记录
 
-日期：2026-10-17。基于 `ee339ed` 后的 P3 本地提交，精确提交见 `git log --oneline`。环境同 PERFORMANCE.md。这里仅记录 macOS 本机结果；Windows 没有编译或实机证据。
+日期：2026-10-17。基于 `ee339ed` 后的 P3 本地提交，精确提交见 `git log --oneline`。环境同 PERFORMANCE.md。这里保留该阶段的 macOS 本机结果；当时 Windows 没有编译或实机证据。后续已完成 Windows 交叉构建与试用包核验，见 [Windows 构建记录](WINDOWS_BUILD.md)，Windows 实机验收仍待完成。
 
 ## 实现与回归
 

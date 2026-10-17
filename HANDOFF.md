@@ -1,6 +1,6 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-17。当前阶段：P0～P3 本机可完成的实现、回归、试用包、性能采样与文档已完成；双平台系统验收仍待补，持续目标尚未完成。
+更新日期：2026-10-17。当前阶段：macOS 试用包已验证启动；Windows x64 NSIS 试用包已交叉构建并完成静态核验，等待实机反馈。用户已选择先做 macOS 手工验收，并准备让 Windows 同学试用；目前尚未收到手工通过或异常结果，持续目标尚未完成。
 
 ## 仓库与环境
 
@@ -13,7 +13,7 @@ Node 22.22.3（nvm）、pnpm 10.33.4；Rust 1.99.1（rustup），rustfmt 与 Cli
 - 隐藏预创建 overlay，透明无框无阴影、置顶、不可聚焦、默认鼠标穿透。
 - Rust `controller.rs` 是唯一显隐权威。按住/切换/固定模式、独立位置锁定、紧急隐藏、旧事件保护、编辑布局拖动。
 - 默认 Ctrl+Alt+Space，紧急隐藏 Ctrl+Alt+Escape。插件注册加原生组合键成员检查，覆盖主键/修饰键释放顺序，按住检查线程可即时唤醒。
-- macOS 不激活显示调用、Workspace/锁屏通知；Windows 不激活显示调用、WTS 和电源广播。Windows 代码未在 Windows 编译。
+- macOS 不激活显示调用、Workspace/锁屏通知；Windows 不激活显示调用、WTS 和电源广播。Windows 代码已在 Mac 上交叉编译，未在 Windows 上构建或运行。
 - 托盘/菜单栏入口：设置、找回位置、紧急隐藏、退出；关闭设置只隐藏。
 - 自定义五组快捷键；编辑态右下角调整宽度和完整行数；SQLite 保存逻辑位置；工作区约束、显示器变化和缩放重排、原屏消失时主屏恢复。
 - TXT 文件选择、UTF-8/GBK 预览与确认导入、书架与移除。直接 SQLite 保存正文、每书 UTF-16 锚点和设置，无 ORM。
@@ -41,24 +41,28 @@ Node 22.22.3（nvm）、pnpm 10.33.4；Rust 1.99.1（rustup），rustfmt 与 Cli
 | 普通 macOS 安装包 | app/DMG 构建、ad-hoc 签名校验、从 DMG 复制后启动、重复启动与正常退出通过 |
 | 性能采样 | 隐藏 300 秒 CPU 0.607%；固定静态 60 秒 0.750%；自动阅读 600 秒 3.168%，详细范围见 PERFORMANCE.md |
 | 文档 | 使用、安装、人工验收步骤已补齐；Word 计划书更新并检查 6 页渲染 |
+| Windows x64 交叉构建 | release、NSIS 生成、Windows 目标 Clippy all-targets 通过；PE/归档内容核验通过，未实机运行 |
+| 试用说明与转发包 | 三页 Word 全页渲染检查通过；Windows ZIP 含安装器、说明、合成示例、反馈表和哈希清单 |
 
 P1 原生 IPC 冒烟通过：导入两本合成文本、分页/重排、隐藏暂停、手动重置、末尾停止、去重、独立进度和移走源文件后的重启恢复。修复重复分页回报造成的计时干扰，增加稳定 revision 回归检查。SQLite 使用 DELETE journal，退出后单文件备份。证据见 `docs/P1_READ_VERIFICATION.md`，本地数据 `.local/p1-final/`。
 
 P0 证据：`docs/P0_NATIVE_VERIFICATION.md`。本地运行数据 `.local/p0/native-smoke.json`，截图 `.local/p0/main.png`、`overlay.png`（忽略提交）。原生测试不等于物理键鼠测试。
 
-P3 证据与包哈希见 `docs/P3_DELIVERY_VERIFICATION.md`。试用包：`.local/release/FloatLeaf_0.1.0_aarch64.dmg`（2,986,687 字节），SHA-256 `89da12640a036d33e42c744d33f5d0af54887906053432c2a104d280fb7f0ddf`。最终原生回归数据在 `.local/p3-smoke/`，包启动证据在 `.local/release/package-smoke.json`。本次启动的测试进程已退出。
+P3 证据与包哈希见 `docs/P3_DELIVERY_VERIFICATION.md`。试用包：`.local/release/FloatLeaf_0.1.0_aarch64.dmg`（2,986,687 字节），SHA-256 `89da12640a036d33e42c744d33f5d0af54887906053432c2a104d280fb7f0ddf`。最终原生回归数据在 `.local/p3-smoke/`，包启动证据在 `.local/release/package-smoke.json`。上述自动回归测试进程已退出。
+
+Windows 新产物见 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip`（2,395,100 字节），安装器单独保存在同目录。构建命令、工具版本、文件哈希、已知构建警告与核验范围见 `docs/WINDOWS_BUILD.md`。业务代码与锁文件未改变。macOS 手工验收已准备 `.local/manual-macos/` 示例及输入窗口，结果待用户反馈。
 
 ## 待验证与外部条件
 
 - P2 程序路径已验证，见 `docs/P2_LAYOUT_VERIFICATION.md`。macOS Carbon 允许共享快捷键；独占冲突检查通过，不能保证检测所有其他应用拦截。
 - 本机测试进程的辅助功能自动化和屏幕录制权限均未授予。真实键鼠释放顺序/输入连续性/点击穿透待手工或获授权的自动化验证。未修改系统权限。
-- 锁屏、真实休眠、全屏/多桌面、外接屏未实测。没有 Windows 设备，Windows 无编译和运行证据。TASKS 的双平台项目不能勾选。
+- 锁屏、真实休眠、全屏/多桌面、外接屏未实测。Windows 已有交叉构建证据，仍无 Windows 本机构建、安装和运行证据。TASKS 的双平台项目不能勾选。
 - CPU/RSS 已测隐藏空闲、固定静态与自动阅读；固定静态不是物理长按。端到端 P95 未测，不能宣称响应目标通过。采样使用优化诊断版，最终普通 DMG 未直接采样。
-- macOS 包为 ad-hoc 本地试用包；正式签名、公证、干净设备安装和朋友试用待完成。Windows NSIS 尚未构建。
+- macOS 包为 ad-hoc 本地试用包，Windows NSIS 未签名；正式签名、公证、干净设备安装和朋友试用结果待完成。
 
 ## 下一步
 
-下一步需要 Windows 11 x64 测试设备，以及按 `docs/MANUAL_VALIDATION.md` 完成两端物理键鼠与系统变化测试。有这些条件后先执行 Windows 构建与 P0 核心场景，修复发现的问题，再补齐剩余验收。macOS 可以先用本机 DMG 试用。仅在正式分发时才需要签名账号和额外授权。
+下一步由用户转发 Windows ZIP，同学在 Windows 11 x64 安装并试用；用户继续 macOS 手工验收。按 `docs/TRIAL_GUIDE.md` 的检查项先确认 P0 核心场景，收到异常后修复，再补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。仅在正式分发时才需要签名账号和额外授权。
 
 保持实现直接、简单：rusqlite bundled，无 ORM、额外仓储框架或独立小说文件。不得将当前本机程序验证外推为双平台通过。没有远端操作；阶段提交依次为 `e6072f7`、`de1c7ed`、`ee339ed` 及随后 P3 提交（用 `git log` 查看）。
 ```bash

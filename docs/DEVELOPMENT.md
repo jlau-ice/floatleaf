@@ -74,6 +74,8 @@ Vue/TypeScript 使用 Prettier（`pnpm format:check`），Rust 使用 rustfmt �
 
 平台覆盖配置位于 `src-tauri/tauri.macos.conf.json` 和 `tauri.windows.conf.json`。macOS 本地试用包为 ad-hoc 签名；Windows 配置为当前用户 NSIS 安装。步骤和限制见 INSTALL.md，系统验收步骤见 MANUAL_VALIDATION.md。
 
+Windows x64 NSIS 已按官方 cargo-xwin 路线在本机交叉构建，精确工具版本、命令、构建警告和文件核验见 WINDOWS_BUILD.md。SDK 缓存放在 `.local/xwin`；交叉构建结果不替代 Windows 原生运行和系统体验验证。
+
 普通 release 不包含文件探针；`--features diagnostics` 显式编译优化诊断版本，用于隔离书库和性能采样。不得把该版本当作普通试用包。默认包不接受诊断数据目录覆盖，源代码仍由 rustup/pnpm 固定工具链构建。
 
 图标源文件为 `assets/floatleaf-icon.svg`，使用 `pnpm tauri icon` 生成各平台资源。默认不生成或提交移动端资源。单实例插件阻止同一应用重复打开，第二次启动只显示已有设置窗口。
