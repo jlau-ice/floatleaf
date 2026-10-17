@@ -18,6 +18,15 @@ const activeTab = ref<'library' | 'appearance' | 'shortcuts'>('library');
 const draft = ref<ReadingSettings>();
 const saved = ref('');
 const shortcutDraft = ref<Bindings>();
+const recordingShortcut = ref<keyof Bindings | null>(null);
+const shortcutNotice = ref('');
+const shortcutsChanged = computed(() =>
+  Object.keys(shortcutLabels).some(
+    (key) =>
+      shortcutDraft.value?.[key as keyof Bindings] !==
+      state.value?.settings.shortcuts[key as keyof Bindings],
+  ),
+);
 const shortcutLabels = {
   display: '显示 / 隐藏',
   emergency: '紧急隐藏',
@@ -31,14 +40,37 @@ function keyLabel(value: string) {
     .replaceAll('Key', '')
     .replaceAll('ArrowLeft', '←')
     .replaceAll('ArrowRight', '→')
+    .replaceAll('ArrowUp', '↑')
+    .replaceAll('ArrowDown', '↓')
+    .replaceAll('Super', '⌘ / Win')
     .replaceAll('Space', '空格')
     .replaceAll('Escape', 'Esc')
     .replaceAll('+', ' + ');
 }
+function startRecording(event: MouseEvent, key: keyof Bindings) {
+  (event.currentTarget as HTMLButtonElement).focus();
+  recordingShortcut.value = key;
+  shortcutNotice.value = '';
+}
+function cancelRecording(key: keyof Bindings) {
+  if (recordingShortcut.value !== key) return;
+  recordingShortcut.value = null;
+  shortcutNotice.value = '已取消录制，原组合键保留。';
+}
 function recordShortcut(event: KeyboardEvent, key: keyof Bindings) {
-  if (event.key === 'Tab' || event.repeat) return;
+  if (recordingShortcut.value !== key) return;
+  if (event.key === 'Tab') {
+    cancelRecording(key);
+    return;
+  }
   event.preventDefault();
+  if (event.repeat) return;
   if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key) || !shortcutDraft.value) return;
+  if (!event.ctrlKey && !event.altKey && !event.metaKey) {
+    if (event.key === 'Escape') cancelRecording(key);
+    else shortcutNotice.value = '请按住 Ctrl、Alt 或 ⌘ / Win，再按另一个键。';
+    return;
+  }
   shortcutDraft.value[key] = [
     event.ctrlKey && 'Control',
     event.altKey && 'Alt',
@@ -48,9 +80,14 @@ function recordShortcut(event: KeyboardEvent, key: keyof Bindings) {
   ]
     .filter(Boolean)
     .join('+');
+  recordingShortcut.value = null;
+  saved.value = '';
+  shortcutNotice.value = `已录制「${shortcutLabels[key]}」：${keyLabel(shortcutDraft.value[key])}。点击「保存快捷键」后生效。`;
 }
 async function saveShortcuts() {
-  if (shortcutDraft.value) await save({ shortcuts: { ...shortcutDraft.value } });
+  if (!shortcutDraft.value) return;
+  await save({ shortcuts: { ...shortcutDraft.value } });
+  shortcutNotice.value = error.value ? error.value : '快捷键已保存，下次按下新组合键即可使用。';
 }
 const removing = ref('');
 const dataDirectory = ref('');
@@ -406,22 +443,46 @@ const ranges: {
       </div>
     </section>
     <section v-else-if="shortcutDraft" class="shortcut-settings">
-      <h2>按下要使用的组合键</h2>
-      <p class="hint">
-        先点输入框，再按组合键。须包含 Ctrl、Alt 或 Super；支持字母、空格、方向键、Esc、F1～F12。Alt
-        在 Mac 上是 ⌥，Super 是 ⌘ / Win。
+      <h2>录制你的快捷键</h2>
+      <p id="shortcut-instructions" class="hint">
+        点击「录制快捷键」→ 按下组合键 → 保存。录制时按 Esc 取消，按 Tab 离开。
       </p>
-      <label v-for="(label, key) in shortcutLabels" :key="key" class="shortcut-field">
-        {{ label
-        }}<input
-          :value="keyLabel(shortcutDraft[key])"
-          readonly
+      <div v-for="(label, key) in shortcutLabels" :key="key" class="shortcut-field">
+        <span class="shortcut-label">{{ label }}</span>
+        <button
+          class="shortcut-recorder secondary"
+          :class="{ recording: recordingShortcut === key }"
           :disabled="busy"
-          :aria-label="label"
+          :aria-label="`${label}：${recordingShortcut === key ? '正在录制' : '录制快捷键'}，当前 ${keyLabel(shortcutDraft[key])}`"
+          :aria-pressed="recordingShortcut === key"
+          aria-describedby="shortcut-instructions shortcut-feedback"
+          @click="startRecording($event, key)"
           @keydown="recordShortcut($event, key)"
-        />
-      </label>
-      <button :disabled="busy" @click="saveShortcuts">保存快捷键</button>
+          @blur="cancelRecording(key)"
+        >
+          <span v-if="recordingShortcut === key" class="recording-prompt">请按下组合键…</span>
+          <kbd v-else>{{ keyLabel(shortcutDraft[key]) }}</kbd>
+          <span class="record-action">
+            <span v-if="recordingShortcut === key" class="record-dot" aria-hidden="true" />
+            {{ recordingShortcut === key ? '正在录制' : '录制快捷键' }}
+          </span>
+        </button>
+      </div>
+      <p id="shortcut-feedback" class="shortcut-feedback" role="status">
+        {{
+          shortcutNotice ||
+          (recordingShortcut
+            ? `正在录制「${shortcutLabels[recordingShortcut]}」。按住修饰键，再按另一个键；Esc 取消。`
+            : '组合键须包含 Ctrl、Alt 或 ⌘ / Win；支持字母、空格、方向键、Esc、F1～F12。')
+        }}
+      </p>
+      <div class="shortcut-save">
+        <button :disabled="busy || !!recordingShortcut || !shortcutsChanged" @click="saveShortcuts">
+          保存快捷键
+        </button>
+        <span v-if="shortcutsChanged" class="shortcut-unsaved">尚未保存</span>
+        <span v-else class="hint">Mac 上 Alt 对应 ⌥，⌘ 对应 Command。</span>
+      </div>
       <p class="hint">
         系统报告占用时会提示，原快捷键继续可用。macOS
         允许部分共享快捷键；如与其他应用同时响应，请换一组。保存后重新触发即可显示。
@@ -541,17 +602,65 @@ const ranges: {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  margin: 14px 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #dce0d4;
   font-size: 13px;
 }
-.shortcut-field input {
-  width: 300px;
-  padding: 10px;
-  font: inherit;
-  color: inherit;
-  border: 1px solid #a7b4a5;
-  border-radius: 4px;
+.shortcut-label {
+  flex: 1;
+}
+.shortcut-recorder {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  width: 350px;
+  min-height: 46px;
+  padding: 10px 14px;
   background: #fffdf4;
+}
+.shortcut-recorder kbd {
+  border: 0;
+  padding: 0;
+  font-size: 13px;
+}
+.record-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+.shortcut-recorder.recording {
+  color: #203b32;
+  border-color: #ab7247;
+  background: #ede6d8;
+}
+.record-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a66139;
+}
+.shortcut-feedback {
+  min-height: 40px;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 16px 0 8px;
+}
+.shortcut-save {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.shortcut-unsaved {
+  font-size: 12px;
+  color: #87562f;
+}
+@media (max-width: 700px) {
+  .shortcut-recorder {
+    width: 300px;
+    gap: 12px;
+  }
 }
 .cn-mark {
   letter-spacing: 0.1em;

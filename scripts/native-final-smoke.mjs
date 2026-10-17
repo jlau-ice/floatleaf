@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 const dir = resolve(process.argv[2] || '.local/p3-smoke');
+const shortcutsOnly = process.argv.includes('--shortcuts-only');
 await mkdir(dir, { recursive: true });
 const first = join(dir, 'final-first.txt'),
   second = join(dir, 'final-second.txt');
@@ -17,12 +18,13 @@ await writeFile(
  const assert=(value,message)=>{if(!value)throw Error(message);};
  async function wait(f){for(let n=0;n<150;n++){let s=await state();if(f(s))return s;await delay(30);}throw Error('state timeout');}
  try {
+  const initial=await state();
+  if (!${shortcutsOnly}) {
   const a=await invoke('import_book',{path:${JSON.stringify(first)},encoding:'utf8'});
   await wait(s=>s.reader.bookId===a.id&&s.reader.ready);
   const b=await invoke('import_book',{path:${JSON.stringify(second)},encoding:'utf8'});
   await wait(s=>s.reader.bookId===b.id&&s.reader.ready);
   await invoke('select_book',{id:a.id});await wait(s=>s.reader.bookId===a.id&&s.reader.ready);
-  const initial=await state();
   await invoke('save_settings',{settings:{...initial.settings,mode:'pinned',intervalSeconds:2},selectMode:true});await wait(s=>s.visible&&s.reader.ready);
   await invoke('reader_action',{action:'auto'});await wait(s=>s.reader.autoRunning);
   await delay(500); const beforeStyle = await state();
@@ -33,17 +35,25 @@ await writeFile(
   await invoke('remove_book',{id:b.id});await delay(100);
   const kept=await state();assert(kept.reader.autoRunning&&kept.reader.bookId===a.id,'Removing another book interrupted reading');
   await invoke('remove_book',{id:a.id});await wait(s=>!s.visible&&s.reader.bookId===null);
+  }
   document.querySelectorAll('.tabs button')[2].click();await delay(100);
-  const input=document.querySelector('.shortcut-field input');
+  const input=document.querySelector('.shortcut-recorder');
+  input.click();await delay(50);
+  assert(document.activeElement===input,'Recorder click must focus the button in WKWebView');
+  assert(input.getAttribute('aria-pressed')==='true','Recorder did not enter recording state');
   const tab=new KeyboardEvent('keydown',{key:'Tab',code:'Tab',bubbles:true,cancelable:true});input.dispatchEvent(tab);
   assert(!tab.defaultPrevented,'Shortcut recorder trapped Tab navigation');
+  input.click();
   input.dispatchEvent(new KeyboardEvent('keydown',{key:'r',code:'KeyR',ctrlKey:true,altKey:true,bubbles:true,cancelable:true}));
-  [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='保存快捷键').click();
+  await delay(50);
+  const save=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='保存快捷键');
+  assert(!save.disabled,'Recorded shortcut must enable saving');
+  save.click();
   await wait(s=>s.settings.shortcuts.display==='Control+Alt+KeyR');
   const shelf=await invoke('library');assert(shelf.settings.shortcuts.display==='Control+Alt+KeyR','UI save not persisted');
   await invoke('save_settings',{settings:initial.settings});
   await wait(s=>s.settings.shortcuts.display===initial.settings.shortcuts.display);
-  await invoke('reader_action',{action:'probe-result:'+JSON.stringify({ok:true,checks:['inactive removal preserves running session','active removal clears reader and hides','shortcut UI records and saves actual bindings','Tab remains navigable'],state:await state()})});
+  await invoke('reader_action',{action:'probe-result:'+JSON.stringify({ok:true,checks:[...(${shortcutsOnly} ? [] : ['inactive removal preserves running session','active removal clears reader and hides']),'recorder click focuses and enters recording in WKWebView','shortcut UI records and saves actual bindings','Tab remains navigable'],state:await state()})});
  }catch(e){await invoke('reader_action',{action:'probe-result:'+JSON.stringify({ok:false,error:String(e),state:await state()})});}
 })();`,
 );

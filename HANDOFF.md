@@ -2,6 +2,14 @@
 
 更新日期：2026-10-17。当前阶段：已公开发布 Windows v0.2.1 标题栏优化试用版，macOS 沿用 v0.2.0。两端均含 EPUB/TXT 章节、自动翻页控制与日志入口；Windows 新版的五个附件已公开下载并与本地逐字节核验。持续目标尚未完成，用户设备的章节兼容性与完整系统验收仍待反馈。
 
+## 当前源码：快捷键录制入口
+
+用户反馈旧只读输入框看不出可以录制。已改为每项明确显示「录制快捷键」的按钮；点击后进入高亮录制态并主动聚焦（兼容 WKWebView 按钮点击焦点行为），单按 Esc、Tab 或失焦取消，录好后显示「尚未保存」，保存成功或注册失败在按钮附近给出反馈。Rust 注册/冲突/存储路径未修改。
+
+环境检查、前端构建、类型/rustfmt/Clippy、Prettier 通过；10 项浏览器测试通过，其中新增 3 项录制交互测试。为保留用户已启动的 1420 桌面开发服务，测试使用临时 1422 端口配置，位于 `.local/shortcut-ux/`。macOS 独立标识的 debug 桌面构建及真实 WKWebView 录制/保存通过，执行 `node scripts/native-final-smoke.mjs .local/shortcut-ux/native --shortcuts-only`；验证点击聚焦、录制状态、Tab 导航、Rust 实际注册与 SQLite 保存，之后恢复测试配置。入口和取消状态截图已目视核对，证据为 `native-shortcuts-result.log`、`shortcuts-idle.png` 和 `shortcuts-cancelled.png`。测试应用已正常退出，用户原开发程序保留。已发布的 Windows v0.2.1 / macOS v0.2.0 安装包不包含本次源码改动，不覆盖现有发布附件。
+
+验证边界：WebView 测试通过 DOM 按钮点击和 KeyboardEvent 驱动，实际调用 Rust 与 SQLite；不代表物理快捷键已验收。第一次综合冒烟在阅读窗口处于紧急隐藏状态时等待显示超时，尚未走到录制；针对录制的首次执行又因脚本在 Vue 更新保存按钮前同步点击而中断。已增加等待按钮更新并复跑录制测试通过，先前记录分别保存在 `reading-smoke-interrupted.json`、`synchronous-click-interrupted.json`；不宣称整套阅读综合冒烟本轮通过。
+
 ## v0.2.1 Windows 标题栏
 
 用户反馈 Windows 黑色标题栏与浅色页面割裂。已仅对 Windows 设置窗口设置浅色主题、暖白标题栏和深绿文字，保留原生窗口控件及拖动/缩放行为；macOS 与悬浮阅读控制不变。类型、Rust 格式、Clippy、Windows 目标 Clippy、Windows 普通 NSIS 与 macOS debug 构建通过。源码 CI `39037365528` 两端各 27 项 Rust / 7 项浏览器测试通过，但 Windows 原生测试因脚本窗口等待失败，整体状态仍为失败。
