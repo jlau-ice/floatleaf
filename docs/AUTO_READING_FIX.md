@@ -35,4 +35,14 @@ v0.1.2 允许隐藏时通过设置按钮或暂停/恢复快捷键切换自动翻
 
 该轮新包验证没有执行到窗口断言：静默安装返回 0，但测试从指定目录启动 EXE 时报告 `WinError 2`。工作流已将混用分隔符的安装路径改为 PowerShell `Join-Path`，并打印安装注册信息和目录；需以复跑结果确认，不能将这一轮说成新包原生验收通过。
 
-v0.1.2 实现提交 `edb350a`，复跑编号 `39019344546`，提交时结果仍在进行中。
+## v0.1.2 Windows 原生回归
+
+实现提交 `edb350a`，运行 [39019344546](https://github.com/jlau-ice/floatleaf/actions/runs/39019344546)：macOS 检查通过；Windows 环境、类型/格式/Clippy、19 项 Rust、5 项浏览器测试、普通 release/NSIS 构建、实际静默安装及原生行为验证全部通过。注册表确认安装版本 0.1.2，安装目录 `D:\a\_temp\floatleaf-installed`，此前路径问题已消失。
+
+Windows Server 2025 10.0.26100：`scripts/windows-package-smoke.py` 的 35 项断言全部通过，覆盖初始隐藏、六种释放顺序的显示/隐藏、不抢前台焦点、NOACTIVATE/TOPMOST/TRANSPARENT 样式、紧急隐藏、旧组合键保护和新组合键恢复。使用普通安装后的 EXE、系统 `SendInput` 和 HWND 查询，没有调试探针；尚不等于 Windows 11 用户实机的物理键鼠、实际点击穿透、屏幕像素或自动翻页 UI 验收。此次 CI 构建来自相同源码，发布附件由本机交叉构建，两份二进制不声称字节一致。
+
+该轮 CI 总状态为失败，唯一失败步骤是附件上传：JSON 在 D: 工作目录，应用日志在 C: 用户目录，`upload-artifact` 无法选择共同根目录。已将报告和日志拆成两个附件，待后续 CI 确认上传；功能测试没有被跳过。完整日志保存在 `.local/auto-012/windows-ci.log`，其中报告提取为 `.local/auto-012/windows-fixed-from-ci.json`。
+
+## 发布
+
+[v0.1.2](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.2) 已公开发布为 Pre-release，标签 `2d17dec`。DMG、EXE、ZIP、复测说明、SHA256SUMS 共五个附件已从公开 URL 下载并与本地逐字节核验，全部一致。源码及验证文档已推送；Windows 用户设备复测仍待反馈。

@@ -1,22 +1,24 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-17。当前阶段：用户报告 Windows v0.1.0 安装包无法隐藏/紧急隐藏，macOS 开发环境正常。已修复 Windows 原生显示与 Tao 缓存隐藏混用，补充本地日志与设置页日志入口，公开发布 v0.1.1 Windows 复测包。持续目标尚未完成，Windows 用户设备复测仍待反馈。
+更新日期：2026-10-17。当前阶段：已公开发布 v0.1.2 Windows/macOS 试用包，修复按住模式隐藏时无法开关自动翻页，阅读按钮旁可调间隔；同时包含 Windows 原生隐藏修复和日志入口。五个发布附件已公开下载并与本地逐字节核验。持续目标尚未完成，Windows 用户设备复测仍待反馈。
 
 ## v0.1.2 自动翻页控制
 
-修复按住模式下无法开关自动翻页，将 2～60 秒间隔滑块移到阅读按钮旁，隐藏时开启只改变阅读意图，不推进计时或进度。19 项 Rust / 5 项浏览器测试和真实 macOS WebView/IPC/SQLite 回归通过；正常退出重启后间隔 3 秒和锚点 55 恢复。两端安装包、Windows 目标 Clippy、macOS ad-hoc 签名/DMG 校验通过，见 `docs/AUTO_READING_FIX.md`。提交 `edb350a` 已推送，CI `39019344546` 运行中。
+修复按住模式下无法开关自动翻页，将 2～60 秒间隔滑块移到阅读按钮旁，隐藏时开启只改变阅读意图，不推进计时或进度。19 项 Rust / 5 项浏览器测试和真实 macOS WebView/IPC/SQLite 回归通过；正常退出重启后间隔 3 秒和锚点 55 恢复。两端安装包、Windows 目标 Clippy、macOS ad-hoc 签名/DMG 校验通过，见 `docs/AUTO_READING_FIX.md`。提交 `edb350a` 已推送；CI `39019344546` 的 macOS 检查及 Windows 功能验证均通过，Windows 最后附件上传失败的原因与修正见下。
 
-上一轮 Windows CI 的新包启动步骤因指定目录找不到 EXE 中断，不能视为新包验收通过；已调整工作流安装路径并增加路径证据输出，待复跑。当前两端试用包在 `.local/github-release-0.1.2/`，未将 Windows 云端或用户设备待测项标为通过。
+Windows Server 2025 CI 已安装 v0.1.2 普通 NSIS 包，35 项原生断言全部通过：六种松键顺序、紧急隐藏、旧组合键保护、重新触发和前台焦点保持。使用系统合成输入及 HWND 查询，不代表 Windows 11 物理键鼠/点击穿透验收。此前新包 EXE 路径问题经 `Join-Path` 修正已消失。CI 唯一失败为日志与 JSON 分处 C:/D: 盘，附件上传无法计算共同目录；已拆成两个附件上传，待后续 CI 确认上传。报告从完整运行日志提取到 `.local/auto-012/windows-fixed-from-ci.json`。
+
+发布：[v0.1.2](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.2)，标签指向 `2d17dec`，应用实现为 `edb350a`。DMG、Windows EXE、试用 ZIP、复测说明、SHA256SUMS 五个附件公开下载核验通过，文件副本在 `.local/auto-012/download/`。
 
 ## v0.1.1 Windows 修复与日志（历史记录）
 
 `platform::hide` 在 Windows 调用原生 `SW_HIDE`，覆盖普通、紧急及错误路径；macOS 原隐藏实现保留。日志按窗口实际状态记录显隐结果，只采集应用快捷键和窗口诊断，不采集小说正文/书名/普通输入；设置页显示版本和路径，可打开日志文件夹。两个日志文件共约 2 MiB 上限，轮转测试已加入。
 
-本机类型、rustfmt、Clippy、18 项 Rust / 5 项浏览器测试、前端构建和 Windows 普通 release/NSIS 构建通过。新增 Windows 安装包回归脚本及 CI 步骤，对旧包复现和新包实际 HWND 显隐进行检查；云端结果待补。复测说明见 `docs/RELEASE_v0.1.1.md`，根因/验证见 `docs/WINDOWS_HIDE_FIX.md`。下方 v0.1.0 阶段记录作为历史保留。
+本机类型、rustfmt、Clippy、18 项 Rust / 5 项浏览器测试、前端构建和 Windows 普通 release/NSIS 构建通过。新增 Windows 安装包回归脚本及 CI 步骤，对旧包复现和新包实际 HWND 显隐进行检查；最终云端结果见上方 v0.1.2 记录。复测说明见 `docs/RELEASE_v0.1.1.md`，根因/验证见 `docs/WINDOWS_HIDE_FIX.md`。下方 v0.1.0 阶段记录作为历史保留。
 
-补充：Windows 目标 Clippy 通过；macOS 独立测试标识的 debug 桌面构建、100 次原生显隐、日志入口 WKWebView/IPC 实测和截图检查通过，日志中期望/实际可见性一致。首次显隐测试因前台进程变化中断，随后完整复跑通过。测试应用正常退出，原有应用和书库保留。源码修复提交 `683fcfd` 已推送；CI 运行 `39013867420` 进行中。新安装器及复测 ZIP 在 `.local/github-release-0.1.1/`，不覆盖 v0.1.0。
+补充：Windows 目标 Clippy 通过；macOS 独立测试标识的 debug 桌面构建、100 次原生显隐、日志入口 WKWebView/IPC 实测和截图检查通过，日志中期望/实际可见性一致。首次显隐测试因前台进程变化中断，随后完整复跑通过。测试应用正常退出，原有应用和书库保留。源码修复提交 `683fcfd` 已推送；CI 运行 `39013867420` 已结束：macOS 通过；Windows 旧包复现通过，新包测试因安装目录未找到 EXE 而中断。新安装器及复测 ZIP 在 `.local/github-release-0.1.1/`，不覆盖 v0.1.0。
 
-发布结果：`https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.1`，标签指向 `0b71557`。四个附件（Windows 安装器、试用 ZIP、复测说明、SHA256SUMS）均经公开链接重新下载，逐字节/哈希比对通过。macOS 安装包仍为 v0.1.0。本次 Windows 旧包复现步骤已在云端通过，新包安装回归仍在运行。
+发布结果：`https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.1`，标签指向 `0b71557`。四个附件（Windows 安装器、试用 ZIP、复测说明、SHA256SUMS）均经公开链接重新下载，逐字节/哈希比对通过。macOS 安装包仍为 v0.1.0。该轮 Windows 旧包复现通过，新包安装回归中断；后续 v0.1.2 已通过原生窗口回归。
 
 ## 仓库与环境
 
@@ -82,7 +84,7 @@ Windows 新产物见 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip`（2,
 
 ## 下一步
 
-下一步由用户转发 **v0.1.1** Windows 安装器或 ZIP；同学先退出旧版再安装，从“日志位置”确认版本，复测不同松键顺序与紧急隐藏，回传日志和步骤。用户继续 macOS 手工验收。收到异常后修复，再补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。仅在正式分发时才需要签名账号和额外授权。
+下一步由用户转发 **v0.1.2** Windows 安装器或 ZIP；同学先退出旧版再安装，从“日志位置”确认版本。先验证隐藏时开启/暂停自动翻页、3 秒间隔与隐藏冻结，再复测不同松键顺序和紧急隐藏，异常时回传日志和步骤。用户继续 macOS 手工验收。收到反馈后补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。仅在正式分发时才需要签名账号和额外授权。
 
 保持实现直接、简单：rusqlite bundled，无 ORM、额外仓储框架或独立小说文件。不得将当前本机程序验证外推为双平台通过。发布说明见 `docs/RELEASE_v0.1.0.md`，附件在 `.local/github-release/`，包含两端安装器、Windows 试用 ZIP、Word 说明、MIT 协议和 SHA-256 清单，不进入 Git。历史提交已检查，未包含依赖目录、编译缓存、真实小说、用户书库或已知凭据模式。发布标签指向 `149e9ff`；后续换行规则与交接记录修正不改变安装包，阶段提交见 `git log`。
 ```bash

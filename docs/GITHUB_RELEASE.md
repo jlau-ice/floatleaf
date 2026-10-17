@@ -1,4 +1,14 @@
-# GitHub 首次公开发布记录
+# GitHub 公开发布记录
+
+## v0.1.2
+
+[v0.1.2 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.2) 已公开发布，标签指向 `2d17dec299126802606ee41173cdcb6a3bd53b7c`，应用实现提交为 `edb350a`。包含按住模式自动翻页开关、可调间隔、Windows 隐藏修复和日志入口。macOS Apple Silicon DMG、Windows x64 NSIS 安装器、Windows 试用 ZIP、复测说明和 SHA256SUMS 共五个附件已从公开下载 URL 重新下载，逐字节与本地构建一致。
+
+包大小和 SHA-256 见 [AUTO_READING_FIX.md](AUTO_READING_FIX.md)。发布文件在 `.local/github-release-0.1.2/`，下载副本在 `.local/auto-012/download/`；不纳入 Git。包仍未正式签名或公证，用户设备复测待反馈。
+
+`edb350a` 的 [CI](https://github.com/jlau-ice/floatleaf/actions/runs/39019344546) 两端各 19 项 Rust / 5 项浏览器测试及类型/格式/Clippy 通过，macOS job 成功。Windows 普通 NSIS 安装与 35 项系统输入/原生窗口断言通过；仅最后附件上传因 C:/D: 跨盘共同根目录失败，已拆分上传。总状态如实保留为失败，不影响已记录的功能测试结果，修正后的附件上传待确认。
+
+## 历史版本
 
 后续修复：已发布 [v0.1.1 Windows 隐藏修复与日志复测版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.1)，标签 `0b71557`，业务修复 `683fcfd`；安装器、ZIP、复测说明、SHA256SUMS 四个附件公开下载与本地逐字节一致。macOS 安装包保持 v0.1.0。新版本根因和验证见 [WINDOWS_HIDE_FIX.md](WINDOWS_HIDE_FIX.md)，以下保留首次发布记录。
 

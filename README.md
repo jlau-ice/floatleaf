@@ -68,11 +68,11 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 | 项目 | 当前证据 |
 | --- | --- |
 | macOS Apple Silicon | v0.1.2 debug 桌面自动翻页/重启回归通过，普通 app/DMG 构建及校验通过；DMG 安装启动证据来自 v0.1.0 |
-| Windows x64 | v0.1.0 用户设备反馈隐藏失败；v0.1.2 包含原生隐藏修复、通过交叉构建与包核验，仍待该设备复测 |
+| Windows x64 | v0.1.2 在 Windows Server 2025 CI 安装并通过 35 项显隐/焦点断言；Windows 11 用户设备复测仍待反馈 |
 | 单元与界面测试 | v0.1.2 本机 19 项 Rust、5 项浏览器测试通过；真实 macOS 界面/IPC/SQLite 验证自动翻页与间隔保存，Windows 安装包原生回归结果见修复记录 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
-本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。公开发布与 [双平台 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39011651513) 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。
+本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。公开发布与 CI 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。[v0.1.2 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39019344546) 功能检查通过，最后日志附件上传因跨盘路径失败，已修正工作流；详见 [修复记录](docs/AUTO_READING_FIX.md)。
 
 ## 开发
 
