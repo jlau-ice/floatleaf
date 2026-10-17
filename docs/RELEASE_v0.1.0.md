@@ -29,6 +29,7 @@ Windows 需要 WebView2：已有运行时可直接使用，缺少时安装器会
 - macOS：DMG 中应用的实际启动、重复启动和退出已验证；原生窗口属性与阅读闭环回归通过。
 - Windows：在 macOS 完成 MSVC release 交叉编译、Windows 目标 Clippy 与 NSIS 包完整性核验；尚未在 Windows 实机安装或运行。
 - 本机已有 17 项 Rust 测试和 5 项浏览器测试通过。这些检查不代替系统键鼠验收。
+- 发布后补充：修复 Windows 检出换行规则后，`main` 的 `c7ee2c8` 在 macOS / Windows CI 各通过 17 项 Rust、5 项浏览器测试、类型、格式、Clippy 和 debug 桌面构建，[查看检查](https://github.com/jlau-ice/floatleaf/actions/runs/39011651513)。云端 Windows 为 Server 2025，仍不代表 Windows 11 实际安装与交互通过；发布包内容未改变。
 - 两端真实组合键释放顺序、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景仍待反馈，不能宣称双平台验收完成。
 - 当前支持 TXT，暂不支持 EPUB、PDF、云同步和自动更新。性能数据和测量范围见 [性能记录](https://github.com/jlau-ice/floatleaf/blob/main/docs/PERFORMANCE.md)。
 

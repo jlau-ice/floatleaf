@@ -13,7 +13,7 @@ Node 22.22.3（nvm）、pnpm 10.33.4；Rust 1.99.1（rustup），rustfmt 与 Cli
 - 隐藏预创建 overlay，透明无框无阴影、置顶、不可聚焦、默认鼠标穿透。
 - Rust `controller.rs` 是唯一显隐权威。按住/切换/固定模式、独立位置锁定、紧急隐藏、旧事件保护、编辑布局拖动。
 - 默认 Ctrl+Alt+Space，紧急隐藏 Ctrl+Alt+Escape。插件注册加原生组合键成员检查，覆盖主键/修饰键释放顺序，按住检查线程可即时唤醒。
-- macOS 不激活显示调用、Workspace/锁屏通知；Windows 不激活显示调用、WTS 和电源广播。Windows 代码已交叉编译，云端 Windows runner 已通过类型/格式/Clippy 组成的 `pnpm check`；完整构建与测试正在复跑，桌面实机运行仍待反馈。
+- macOS 不激活显示调用、Workspace/锁屏通知；Windows 不激活显示调用、WTS 和电源广播。Windows 代码已交叉编译，并在 Windows Server 2025 CI 通过完整检查、测试和 debug 桌面构建；Windows 11 实机安装和交互仍待反馈。
 - 托盘/菜单栏入口：设置、找回位置、紧急隐藏、退出；关闭设置只隐藏。
 - 自定义五组快捷键；编辑态右下角调整宽度和完整行数；SQLite 保存逻辑位置；工作区约束、显示器变化和缩放重排、原屏消失时主屏恢复。
 - TXT 文件选择、UTF-8/GBK 预览与确认导入、书架与移除。直接 SQLite 保存正文、每书 UTF-16 锚点和设置，无 ORM。
@@ -44,8 +44,9 @@ Node 22.22.3（nvm）、pnpm 10.33.4；Rust 1.99.1（rustup），rustfmt 与 Cli
 | Windows x64 交叉构建 | release、NSIS 生成、Windows 目标 Clippy all-targets 通过；PE/归档内容核验通过，未实机运行 |
 | 试用说明与转发包 | 三页 Word 全页渲染检查通过；Windows ZIP 含安装器、说明、合成示例、反馈表和哈希清单 |
 | GitHub 公开发布 | main 已推送；v0.1.0 Pre-release 已发布，六个附件哈希核验和公开下载链接通过 |
+| GitHub 双平台 CI | 提交 `c7ee2c8`：macOS 26.6.2 arm64、Windows Server 2025 各 17 项 Rust / 5 项浏览器测试、类型、格式、Clippy 与 debug 桌面构建全部通过 |
 
-首轮 Windows CI 的 Prettier 检查报告全体 16 个文本目标格式不符，新增 `.gitattributes` 统一 LF。本机格式检查和 `core.autocrlf=true` 模拟检出均通过；两端云端复跑结果待记录，不能把此状态写为 CI 全通过。
+首轮 Windows CI 的 Prettier 检查报告全体 16 个文本目标格式不符，新增 `.gitattributes` 统一 LF。本机格式检查、`core.autocrlf=true` 模拟检出和两端 CI 复跑均通过，运行编号 `39011651513`。完整命令、环境与证据见 `docs/GITHUB_RELEASE.md`。云端测试不包含实际安装或系统键鼠交互。
 
 P1 原生 IPC 冒烟通过：导入两本合成文本、分页/重排、隐藏暂停、手动重置、末尾停止、去重、独立进度和移走源文件后的重启恢复。修复重复分页回报造成的计时干扰，增加稳定 revision 回归检查。SQLite 使用 DELETE journal，退出后单文件备份。证据见 `docs/P1_READ_VERIFICATION.md`，本地数据 `.local/p1-final/`。
 
@@ -59,7 +60,7 @@ Windows 新产物见 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip`（2,
 
 - P2 程序路径已验证，见 `docs/P2_LAYOUT_VERIFICATION.md`。macOS Carbon 允许共享快捷键；独占冲突检查通过，不能保证检测所有其他应用拦截。
 - 本机测试进程的辅助功能自动化和屏幕录制权限均未授予。真实键鼠释放顺序/输入连续性/点击穿透待手工或获授权的自动化验证。未修改系统权限。
-- 锁屏、真实休眠、全屏/多桌面、外接屏未实测。Windows 已有交叉构建及云端静态检查证据，仍无 Windows 实机安装和交互验收。TASKS 的双平台项目不能勾选。
+- 锁屏、真实休眠、全屏/多桌面、外接屏未实测。Windows 已有交叉构建及 Windows CI 本机构建、单元/浏览器测试证据，仍无 Windows 11 实机安装和交互验收。TASKS 的双平台项目不能勾选。
 - CPU/RSS 已测隐藏空闲、固定静态与自动阅读；固定静态不是物理长按。端到端 P95 未测，不能宣称响应目标通过。采样使用优化诊断版，最终普通 DMG 未直接采样。
 - macOS 包为 ad-hoc 本地试用包，Windows NSIS 未签名；正式签名、公证、干净设备安装和朋友试用结果待完成。
 

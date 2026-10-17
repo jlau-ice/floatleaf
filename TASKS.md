@@ -51,7 +51,7 @@ P2-01～04 已实现，17 项 Rust 测试通过；macOS 原生窗口尺寸、逻
 - [x] P3-M06：面向试用者的 Markdown/Word 说明、合成示例和反馈模板；Word 三页渲染检查通过。
 - [x] P3-M07：公开 README、MIT 协议、v0.1.0 试用发布说明和 Release 文件校验清单；检查 Git 历史提交范围。
 - [x] P3-M08：GitHub 公开仓库、main 推送、v0.1.0 两端试用安装包发布；六个附件下载哈希和公开链接核验通过，见 `docs/GITHUB_RELEASE.md`。
-- [ ] P3-M09：修复 Windows checkout 换行引起的 Prettier 失败，并完成双平台 GitHub Actions 检查；本机格式和模拟检出已通过。
+- [x] P3-M09：修复 Windows checkout 换行引起的 Prettier 失败；`c7ee2c8` 双平台 CI 全通过，各 17 项 Rust / 5 项浏览器测试、类型、格式、Clippy 和 debug 桌面构建，见运行 `39011651513`。
 - [ ] P3-E01：Windows 设备构建与安装，双平台真实按键/焦点/点击穿透/锁屏/休眠/多屏验收。
 - [ ] P3-E02：真实长按性能、显隐端到端 P95、干净设备安装及试用反馈。
 - [ ] P3-E03：正式签名与公证（仅正式分发时，需另行授权）。

@@ -33,7 +33,9 @@ macOS 优化诊断版已采样：隐藏空闲 300 秒平均 CPU 0.607%，固定�
 
 17 项 Rust、5 项界面/分页测试和类型/格式/Clippy 通过；最终 macOS WebView/IPC 阅读回归与快捷键界面保存通过。普通 app/DMG 已构建，从 DMG 复制后启动、第二实例退出与正常退出通过；ad-hoc 校验通过，未正式签名/公证。计划书与使用说明同步。详细命令、包哈希与外部条件见 P3_DELIVERY_VERIFICATION.md。人工验收按 MANUAL_VALIDATION.md 执行。
 
-后续补充：Windows x64 release/NSIS 已在 macOS 交叉构建，Windows 目标 Clippy all-targets 与安装包 PE/解包核验通过。试用 ZIP 与说明已准备，见 WINDOWS_BUILD.md。没有在 Windows 执行测试、安装或启动，因此上方 Windows 系统场景全部保持待测。macOS 手工验收也仍待用户反馈。
+后续补充：Windows x64 release/NSIS 已在 macOS 交叉构建，Windows 目标 Clippy all-targets 与安装包 PE/解包核验通过，见 WINDOWS_BUILD.md。两端安装包已在 GitHub v0.1.0 作为 Pre-release 公开发布，六个附件下载哈希与公开链接核验通过。
+
+2026-10-17 云端补充：`c7ee2c8` 在 macOS 26.6.2 arm64 和 Windows Server 2025 CI 各通过 17 项 Rust 测试、5 项浏览器测试、类型、格式、Clippy 和 debug 桌面构建。首次 Windows 格式检查失败通过固定 LF 换行修复，复跑 `39011651513` 全部通过，见 GITHUB_RELEASE.md。没有 Windows 11 实际安装或系统键鼠测试证据，因此上方 Windows 系统场景全部保持待测。macOS 手工验收也仍待用户反馈。
 
 ## P2 阶段证据
 

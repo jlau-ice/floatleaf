@@ -65,11 +65,11 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 | 项目 | 当前证据 |
 | --- | --- |
 | macOS Apple Silicon | 已构建并实际启动 DMG 中的应用；原生窗口与阅读流程回归通过 |
-| Windows x64 | 已在 macOS 交叉编译并生成 NSIS 安装包；Windows 目标 Clippy 和包完整性核验通过，尚待 Windows 实机安装与运行 |
-| 单元与界面测试 | 本机 17 项 Rust 测试、5 项浏览器测试通过 |
+| Windows x64 | 发布包在 macOS 交叉构建，完整性核验通过；另在 Windows Server 2025 CI 完成本机构建与测试，Windows 11 实机安装与交互仍待反馈 |
+| 单元与界面测试 | 本机及 macOS / Windows CI 各 17 项 Rust 测试、5 项浏览器测试通过 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
-本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。
+本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。公开发布与 [双平台 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39011651513) 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。
 
 ## 开发
 

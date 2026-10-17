@@ -28,4 +28,13 @@
 
 首轮 [Check](https://github.com/jlau-ice/floatleaf/actions/runs/39011286910) 的 Windows runner 通过环境检查、前端构建和 `pnpm check`，随后 Prettier 对 16 个文本文件报告格式问题；本机相同内容检查通过。仓库原本没有换行约定，新增 `.gitattributes` 固定文本 LF，避免 Windows checkout 转换为 CRLF。使用 `git -c core.autocrlf=true checkout-index` 模拟检出，16 个格式检查目标全部保持 LF；本机 `pnpm format:check` 通过。
 
-修复后的两端自动检查待复跑确认。CI 的编译、单元测试和浏览器测试不替代 Windows/macOS 实际安装、系统快捷键、输入焦点、点击穿透和多屏验收；这些仍按 MANUAL_VALIDATION.md 收集试用反馈。
+修复提交 `c7ee2c86e29011b42b6636993668d3385194b233` 的 [复跑 Check](https://github.com/jlau-ice/floatleaf/actions/runs/39011651513) 已全部通过，首轮失败记录保留，不重写发布标签。修复未改动业务代码、依赖或已发布安装包。
+
+| 环境 | 结果 |
+| --- | --- |
+| macOS 26.6.2（25G83），镜像 macos-26-arm64 | 环境、前端构建、类型、rustfmt、Clippy、Prettier、17 项 Rust 测试、5 项浏览器测试、debug 桌面构建全部通过 |
+| Windows Server 2025 Datacenter 10.0.26100，镜像 windows-2025-vs2026 | 同上全部通过；Windows 格式问题已消失 |
+
+对应命令为 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm format:check`、`pnpm test:rust`、`pnpm exec playwright install chromium`、`pnpm test:web` 和 `pnpm tauri build --debug --no-bundle`。运行元数据与完整日志保存在 `.local/github-ci-result.json`、`.local/github-ci-macos.log`、`.local/github-ci-windows.log`，不入 Git。GitHub API 确认仓库公开、默认分支为 main、协议识别为 MIT。
+
+CI 的编译、单元测试和浏览器测试不替代 Windows/macOS 实际安装、系统快捷键、输入焦点、点击穿透和多屏验收；Windows Server CI 也不等于 Windows 11 用户桌面。这些仍按 MANUAL_VALIDATION.md 收集试用反馈。
