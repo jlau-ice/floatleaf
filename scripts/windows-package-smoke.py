@@ -11,7 +11,9 @@ import json
 from pathlib import Path
 import platform
 import subprocess
+import struct
 import time
+import zlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument("exe", type=Path)
@@ -33,6 +35,9 @@ u.ShowWindow.argtypes = [w.HWND, c.c_int]
 u.IsIconic.argtypes = [w.HWND]
 u.IsZoomed.argtypes = [w.HWND]
 u.GetWindowRect.argtypes = [w.HWND, c.POINTER(w.RECT)]
+u.GetDC.argtypes = [w.HWND]
+u.GetDC.restype = w.HDC
+u.ReleaseDC.argtypes = [w.HWND, w.HDC]
 u.SendMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
 u.SetProcessDPIAware()
 u.DestroyWindow.argtypes = [w.HWND]
@@ -120,6 +125,53 @@ def check(name, value):
     checks.append({"name": name, "passed": bool(value)})
 
 
+def capture_settings(main, path):
+    # Capture in this process: launching a console screenshot helper steals focus.
+    gdi = c.WinDLL("gdi32")
+    gdi.CreateCompatibleDC.argtypes = [w.HDC]
+    gdi.CreateCompatibleDC.restype = w.HDC
+    gdi.CreateCompatibleBitmap.argtypes = [w.HDC, c.c_int, c.c_int]
+    gdi.CreateCompatibleBitmap.restype = w.HBITMAP
+    gdi.SelectObject.argtypes = [w.HDC, w.HANDLE]
+    gdi.SelectObject.restype = w.HANDLE
+    gdi.BitBlt.argtypes = [w.HDC, c.c_int, c.c_int, c.c_int, c.c_int,
+                          w.HDC, c.c_int, c.c_int, w.DWORD]
+    gdi.GetDIBits.argtypes = [w.HDC, w.HBITMAP, w.UINT, w.UINT, w.LPVOID, w.LPVOID, w.UINT]
+    gdi.DeleteObject.argtypes = [w.HANDLE]
+    gdi.DeleteDC.argtypes = [w.HDC]
+    rect = w.RECT()
+    u.GetWindowRect(main, c.byref(rect))
+    width, height = rect.right - rect.left, rect.bottom - rect.top
+    screen = u.GetDC(None)
+    canvas = gdi.CreateCompatibleDC(screen)
+    bitmap = gdi.CreateCompatibleBitmap(screen, width, height)
+    previous = gdi.SelectObject(canvas, bitmap)
+    pixels = c.create_string_buffer(width * height * 4)
+    header = c.create_string_buffer(struct.pack("<IiiHHIIiiII", 40, width, -height, 1, 32,
+                                                0, len(pixels), 0, 0, 0, 0) + bytes(4))
+    try:
+        if not gdi.BitBlt(canvas, 0, 0, width, height, screen, rect.left, rect.top, 0x00CC0020):
+            raise RuntimeError("Settings screenshot BitBlt failed")
+        gdi.SelectObject(canvas, previous)
+        if gdi.GetDIBits(screen, bitmap, 0, height, pixels, header, 0) != height:
+            raise RuntimeError("Settings screenshot pixel read failed")
+    finally:
+        gdi.DeleteObject(bitmap)
+        gdi.DeleteDC(canvas)
+        u.ReleaseDC(None, screen)
+    rgb = bytearray(width * height * 3)
+    rgb[0::3], rgb[1::3], rgb[2::3] = pixels.raw[2::4], pixels.raw[1::4], pixels.raw[0::4]
+    rows = b"".join(b"\0" + rgb[y * width * 3:(y + 1) * width * 3] for y in range(height))
+
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"\x89PNG\r\n\x1a\n" +
+                     chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)) +
+                     chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
+
+
 def check_settings(main):
     dwm = c.WinDLL("dwmapi")
     dwm.DwmGetWindowAttribute.argtypes = [w.HWND, w.DWORD, w.LPVOID, w.DWORD]
@@ -142,19 +194,9 @@ def check_settings(main):
     if args.screenshot:
         u.SetForegroundWindow(main)
         wait(1)
-        rect = w.RECT()
-        u.GetWindowRect(main, c.byref(rect))
-        args.screenshot.parent.mkdir(parents=True, exist_ok=True)
-        path = str(args.screenshot.resolve()).replace("'", "''")
-        subprocess.run(["powershell", "-NoProfile", "-Command", f"""
-            Add-Type -AssemblyName System.Drawing
-            $image = [Drawing.Bitmap]::new({rect.right - rect.left}, {rect.bottom - rect.top})
-            $graphics = [Drawing.Graphics]::FromImage($image)
-            $graphics.CopyFromScreen({rect.left}, {rect.top}, 0, 0, $image.Size)
-            $image.Save('{path}', [Drawing.Imaging.ImageFormat]::Png)
-            $graphics.Dispose()
-            $image.Dispose()
-        """], check=True)
+        if u.GetForegroundWindow() != main:
+            raise RuntimeError("Settings window is not foreground for screenshot")
+        capture_settings(main, args.screenshot)
 
 
 app = subprocess.Popen([str(args.exe.resolve())])
@@ -171,14 +213,11 @@ try:
     else:
         raise RuntimeError(f"App windows not ready: {app_windows(app.pid)}; exit={app.poll()}")
     wait(2)
-    main = find_window(app.pid, "浮页 FloatLeaf")
-    if not args.expect_stuck:
-        if not main:
-            raise RuntimeError("Settings HWND not found")
-        check_settings(main)
     fixture = u.CreateWindowExW(0, "STATIC", "FloatLeaf regression input fixture",
                                 0x00CF0000, 50, 50, 640, 480, None, None, None, None)
     u.ShowWindow(fixture, 5)
+    key(ALT)
+    key(ALT, False)  # Allow this test to establish its input target before measuring focus.
     u.SetForegroundWindow(fixture)
     wait()
     if u.GetForegroundWindow() != fixture:
@@ -218,6 +257,7 @@ try:
     check("fresh-chord-release-hides", not u.IsWindowVisible(overlay))
 
     if not args.expect_stuck:
+        check_settings(main)
         u.SendMessageW(main, 0x0010, 0, 0)  # WM_CLOSE must hide settings, not exit the reader.
         wait()
         check("settings-close-hides-keeps-app", not u.IsWindowVisible(main) and app.poll() is None)
