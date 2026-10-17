@@ -1,9 +1,10 @@
 use crate::{
+    book_import::{self, ImportPreview},
+    chapters::Chapter,
     logging, platform,
     reading_settings::ReadingSettings,
     runtime,
     storage::{Book, Library, Store},
-    text_import::{self, ImportPreview},
 };
 use std::{path::Path, sync::Mutex};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
@@ -66,18 +67,18 @@ pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tauri::command]
-pub fn choose_txt(window: WebviewWindow) -> Result<Option<String>, String> {
+pub fn choose_book(window: WebviewWindow) -> Result<Option<String>, String> {
     main_only(&window)?;
-    platform::choose_txt(&window)
+    platform::choose_book(&window)
 }
 #[tauri::command]
-pub async fn inspect_txt(
+pub async fn inspect_book(
     window: WebviewWindow,
     path: String,
     encoding: String,
 ) -> Result<ImportPreview, String> {
     main_only(&window)?;
-    tauri::async_runtime::spawn_blocking(move || text_import::preview(Path::new(&path), &encoding))
+    tauri::async_runtime::spawn_blocking(move || book_import::preview(Path::new(&path), &encoding))
         .await
         .map_err(|e| e.to_string())?
 }
@@ -121,7 +122,7 @@ pub fn select_core(app: &AppHandle, id: &str) -> Result<(), String> {
     Ok(())
 }
 #[tauri::command]
-pub async fn import_txt(
+pub async fn import_book(
     app: AppHandle,
     window: WebviewWindow,
     path: String,
@@ -136,6 +137,49 @@ pub async fn import_txt(
     })
     .await
     .map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn book_chapters(
+    app: AppHandle,
+    window: WebviewWindow,
+    id: String,
+) -> Result<Vec<Chapter>, String> {
+    main_only(&window)?;
+    tauri::async_runtime::spawn_blocking(move || with_store(&app, |store| store.chapters(&id)))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub fn select_chapter(
+    app: AppHandle,
+    window: WebviewWindow,
+    id: String,
+    index: usize,
+) -> Result<(), String> {
+    main_only(&window)?;
+    let chapter = with_store(&app, |store| store.chapters(&id))?
+        .get(index)
+        .cloned()
+        .ok_or("章节不存在，请重新打开目录")?;
+    let handle = app.clone();
+    runtime::change(&app, move |state| {
+        if state.reader.book_id.as_deref() != Some(&id) {
+            state.error = Some("当前书籍已改变，请重新选择章节".into());
+            return;
+        }
+        if let Err(error) = state.reader.seek(chapter.anchor) {
+            state.error = Some(error);
+            return;
+        }
+        state.error = with_store(&handle, |store| {
+            store.progress(&id, chapter.anchor);
+            store.flush()
+        })
+        .err();
+        state.controller.revision += 1;
+    });
+    Ok(())
 }
 #[tauri::command]
 pub async fn select_book(app: AppHandle, window: WebviewWindow, id: String) -> Result<(), String> {

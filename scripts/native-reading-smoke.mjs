@@ -43,11 +43,11 @@ const script = `
   }
   try {
     let rejected = false;
-    try { await invoke('inspect_txt', { path: ${JSON.stringify(empty)}, encoding: 'auto' }); } catch { rejected = true; }
+    try { await invoke('inspect_book', { path: ${JSON.stringify(empty)}, encoding: 'auto' }); } catch { rejected = true; }
     assert(rejected, 'Empty import must be rejected');
-    const gbk = await invoke('inspect_txt', { path: ${JSON.stringify(second)}, encoding: 'auto' });
+    const gbk = await invoke('inspect_book', { path: ${JSON.stringify(second)}, encoding: 'auto' });
     assert(gbk.encoding === 'GBK' && gbk.preview.startsWith('中文') && gbk.warning, 'GBK preview/fallback warning');
-    const a = await invoke('import_txt', { path: ${JSON.stringify(first)}, encoding: 'auto' });
+    const a = await invoke('import_book', { path: ${JSON.stringify(first)}, encoding: 'auto' });
     await wait(s => s.reader.bookId === a.id && s.reader.ready);
     await settings({ mode: 'pinned', width: 600, lines: 2, fontSize: 18, intervalSeconds: 2 });
     await action('pinned');
@@ -68,9 +68,9 @@ const script = `
     assert(manual.reader.remainingMs > 1600, 'Manual turn did not reset timer');
     await action('auto');
     const savedA = (await state()).reader.anchor;
-    const duplicate = await invoke('import_txt', { path: ${JSON.stringify(first)}, encoding: 'auto' });
+    const duplicate = await invoke('import_book', { path: ${JSON.stringify(first)}, encoding: 'auto' });
     assert(duplicate.id === a.id && duplicate.anchor === savedA, 'Duplicate import lost progress');
-    const b = await invoke('import_txt', { path: ${JSON.stringify(second)}, encoding: 'gbk' });
+    const b = await invoke('import_book', { path: ${JSON.stringify(second)}, encoding: 'gbk' });
     await wait(s => s.reader.bookId === b.id && s.reader.ready);
     const pageB = await turn('next');
     await invoke('select_book', { id: a.id }); const restored = await wait(s => s.reader.bookId === a.id && s.reader.ready);

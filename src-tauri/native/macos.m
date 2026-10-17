@@ -1,6 +1,7 @@
 #import <AppKit/AppKit.h>
 #import <ApplicationServices/ApplicationServices.h>
 #import <WebKit/WebKit.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <Carbon/Carbon.h>
 
 // No key/frontmost activation, including when FloatLeaf is not the active app.
@@ -39,11 +40,12 @@ bool fl_window_opaque(void *raw) { return [(__bridge NSWindow *)raw isOpaque]; }
 long fl_window_level(void *raw) { return [(__bridge NSWindow *)raw level]; }
 int fl_frontmost_pid(void) { return [[[NSWorkspace sharedWorkspace] frontmostApplication] processIdentifier]; }
 
-char *fl_choose_txt(void *raw) {
+char *fl_choose_book(void *raw) {
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     panel.canChooseDirectories = NO;
     panel.allowsMultipleSelection = NO;
-    panel.title = @"导入 TXT 小说";
+    panel.allowedContentTypes = @[[UTType typeWithFilenameExtension:@"txt"], [UTType typeWithFilenameExtension:@"epub"]];
+    panel.title = @"导入 TXT / EPUB 小说";
     panel.message = @"仅复制文件到浮页，原文件不会被修改。";
     [(__bridge NSWindow *)raw makeKeyAndOrderFront:nil];
     if ([panel runModal] != NSModalResponseOK) return NULL;

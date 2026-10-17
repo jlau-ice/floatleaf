@@ -36,12 +36,12 @@ void fl_watch_session(void *raw, void (*hide)(void), void (*displays)(void)) {
     WTSRegisterSessionNotification((HWND)raw, NOTIFY_FOR_THIS_SESSION);
 }
 
-char *fl_choose_txt(void *raw) {
+char *fl_choose_book(void *raw) {
     wchar_t path[32768] = {0};
     OPENFILENAMEW dialog = {0};
     dialog.lStructSize = sizeof(dialog);
     dialog.hwndOwner = (HWND)raw;
-    dialog.lpstrFilter = L"TXT files\0*.txt\0\0";
+    dialog.lpstrFilter = L"Books (TXT, EPUB)\0*.txt;*.epub\0TXT files\0*.txt\0EPUB files\0*.epub\0\0";
     dialog.lpstrFile = path;
     dialog.nMaxFile = 32768;
     dialog.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;

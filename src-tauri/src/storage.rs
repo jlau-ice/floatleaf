@@ -1,4 +1,9 @@
-use crate::{geometry::Placement, reading_settings::ReadingSettings, text_import};
+use crate::{
+    book_import,
+    chapters::{self, Chapter},
+    geometry::Placement,
+    reading_settings::ReadingSettings,
+};
 use rusqlite::{Connection, OptionalExtension, Row, params};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -52,7 +57,8 @@ fn book_row(row: &Row<'_>) -> rusqlite::Result<Book> {
 impl Store {
     pub fn open(directory: PathBuf) -> Result<Self, String> {
         fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
-        let connection = Connection::open(directory.join("floatleaf.sqlite3")).map_err(db_error)?;
+        let mut connection =
+            Connection::open(directory.join("floatleaf.sqlite3")).map_err(db_error)?;
         connection
             .busy_timeout(Duration::from_secs(3))
             .map_err(db_error)?;
@@ -70,9 +76,38 @@ impl Store {
                 settings TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS window_layout (id INTEGER PRIMARY KEY CHECK (id = 1), monitor TEXT, x REAL NOT NULL, y REAL NOT NULL);
-            PRAGMA user_version = 1;",
+            CREATE TABLE IF NOT EXISTS chapters (
+                book_id TEXT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+                position INTEGER NOT NULL, title TEXT NOT NULL,
+                anchor INTEGER NOT NULL, level INTEGER NOT NULL,
+                PRIMARY KEY (book_id, position)
+            );",
             )
             .map_err(db_error)?;
+        let version: u32 = connection
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .map_err(db_error)?;
+        if version < 2 {
+            let transaction = connection.transaction().map_err(db_error)?;
+            {
+                let mut books = transaction
+                    .prepare("SELECT id, content FROM books")
+                    .map_err(db_error)?;
+                let rows = books
+                    .query_map([], |row| {
+                        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                    })
+                    .map_err(db_error)?;
+                for book in rows {
+                    let (id, text) = book.map_err(db_error)?;
+                    write_chapters(&transaction, &id, &chapters::detect(&text))?;
+                }
+            }
+            transaction
+                .pragma_update(None, "user_version", 2)
+                .map_err(db_error)?;
+            transaction.commit().map_err(db_error)?;
+        }
         let settings =
             serde_json::to_string(&ReadingSettings::default()).map_err(|e| e.to_string())?;
         connection
@@ -145,15 +180,18 @@ impl Store {
     }
     pub fn import(&mut self, path: &Path, encoding: &str) -> Result<Book, String> {
         self.flush()?;
-        let (text, encoding, _) = text_import::decode(&text_import::read_source(path)?, encoding)?;
-        let id = format!("{:x}", Sha256::digest(text.as_bytes()));
+        let imported = book_import::read(path, encoding)?;
+        let id = format!("{:x}", Sha256::digest(imported.text.as_bytes()));
         let added_at = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
         let transaction = self.connection.transaction().map_err(db_error)?;
-        transaction.execute("INSERT INTO books (id, title, encoding, content, utf16_length, added_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(id) DO NOTHING",
-            params![id, text_import::title(path), encoding, text, text.encode_utf16().count() as i64, added_at as i64]).map_err(db_error)?;
+        let inserted = transaction.execute("INSERT INTO books (id, title, encoding, content, utf16_length, added_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(id) DO NOTHING",
+            params![id, imported.title, imported.encoding, imported.text, imported.text.encode_utf16().count() as i64, added_at as i64]).map_err(db_error)?;
+        if inserted > 0 {
+            write_chapters(&transaction, &id, &imported.chapters)?;
+        }
         transaction
             .execute(
                 "UPDATE app_state SET current_book_id = ?1 WHERE id = 1",
@@ -162,6 +200,25 @@ impl Store {
             .map_err(db_error)?;
         transaction.commit().map_err(db_error)?;
         self.book(&id)
+    }
+    pub fn chapters(&self, id: &str) -> Result<Vec<Chapter>, String> {
+        let mut statement = self
+            .connection
+            .prepare(
+                "SELECT title, anchor, level FROM chapters WHERE book_id = ?1 ORDER BY position",
+            )
+            .map_err(db_error)?;
+        statement
+            .query_map([id], |row| {
+                Ok(Chapter {
+                    title: row.get(0)?,
+                    anchor: row.get::<_, i64>(1)? as usize,
+                    level: row.get::<_, i64>(2)? as usize,
+                })
+            })
+            .map_err(db_error)?
+            .collect::<rusqlite::Result<_>>()
+            .map_err(db_error)
     }
     pub fn content(&self, id: &str) -> Result<String, String> {
         self.connection
@@ -225,6 +282,22 @@ impl Store {
             .map_err(db_error)?;
         Ok(())
     }
+}
+
+fn write_chapters(connection: &Connection, id: &str, chapters: &[Chapter]) -> Result<(), String> {
+    let mut insert = connection.prepare("INSERT INTO chapters (book_id, position, title, anchor, level) VALUES (?1, ?2, ?3, ?4, ?5)").map_err(db_error)?;
+    for (index, chapter) in chapters.iter().enumerate() {
+        insert
+            .execute(params![
+                id,
+                index as i64,
+                chapter.title,
+                chapter.anchor as i64,
+                chapter.level as i64
+            ])
+            .map_err(db_error)?;
+    }
+    Ok(())
 }
 
 /// JS and Rust exchange UTF-16 code-unit offsets, never UTF-8 byte offsets.
@@ -364,5 +437,61 @@ mod tests {
         }
         assert!(!utf16_boundary(text, 2));
         assert!(!utf16_boundary(text, 7));
+    }
+    #[test]
+    fn existing_txt_library_gets_chapters_without_resetting_progress_or_settings() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("legacy.txt");
+        fs::write(&source, "第一章 出发\n正文😀\n第二章 归来\n结束").unwrap();
+        let mut store = Store::open(temp.path().join("data")).unwrap();
+        let book = store.import(&source, "auto").unwrap();
+        store.progress(&book.id, 7);
+        store.flush().unwrap();
+        store
+            .set_settings(ReadingSettings {
+                interval_seconds: 17,
+                ..Default::default()
+            })
+            .unwrap();
+        store
+            .connection
+            .execute_batch("DROP TABLE chapters; PRAGMA user_version = 1;")
+            .unwrap();
+        drop(store);
+        fs::remove_file(&source).unwrap();
+        for _ in 0..2 {
+            let store = Store::open(temp.path().join("data")).unwrap();
+            assert_eq!(store.chapters(&book.id).unwrap().len(), 2);
+            assert_eq!(store.book(&book.id).unwrap().anchor, 7);
+            assert_eq!(
+                store.library().unwrap().current_book_id,
+                Some(book.id.clone())
+            );
+            assert_eq!(store.library().unwrap().settings.interval_seconds, 17);
+        }
+    }
+    #[test]
+    fn epub_chapters_survive_duplicate_import_source_removal_and_restart() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("fixture.epub");
+        crate::epub_import::tests::fixture(&source, false);
+        let mut store = Store::open(temp.path().join("data")).unwrap();
+        let book = store.import(&source, "auto").unwrap();
+        let chapters = store.chapters(&book.id).unwrap();
+        assert_eq!(book.encoding, "EPUB");
+        store.progress(&book.id, chapters[1].anchor);
+        store.flush().unwrap();
+        assert_eq!(
+            store.import(&source, "auto").unwrap().anchor,
+            chapters[1].anchor
+        );
+        assert_eq!(store.chapters(&book.id).unwrap(), chapters);
+        drop(store);
+        fs::remove_file(source).unwrap();
+        let mut store = Store::open(temp.path().join("data")).unwrap();
+        assert_eq!(store.chapters(&book.id).unwrap(), chapters);
+        assert_eq!(store.book(&book.id).unwrap().anchor, chapters[1].anchor);
+        store.remove(&book.id).unwrap();
+        assert!(store.chapters(&book.id).unwrap().is_empty());
     }
 }

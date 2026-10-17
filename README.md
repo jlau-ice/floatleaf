@@ -8,13 +8,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前版本为 **v0.1.2 试用版（Pre-release）**：支持按住模式隐藏时开关自动翻页，按钮旁可调间隔；包含 Windows 隐藏修复与日志入口。
+当前版本为 **v0.2.0 试用版（Pre-release）**：支持 EPUB / TXT 章节目录、搜索和跳转，原有 TXT 书库自动补目录；包含此前的自动翻页控制、Windows 隐藏修复与日志入口。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.2/FloatLeaf_0.1.2_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.2/FloatLeaf_0.1.2_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.2/FloatLeaf_0.1.2_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 TXT 示例 |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 TXT 示例 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -24,8 +24,8 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 开始阅读
 
-1. 打开“我的书架”，点击“导入小说”，选择 TXT 并核对编码预览。
-2. 选择“按住”显示模式，回到编辑器或其他正在使用的软件。
+1. 打开“我的书架”，点击“导入小说”，选择 EPUB 或 TXT，核对文字预览和章节数量。
+2. 可展开“章节目录”搜索并选择章节，再选择“按住”显示模式，回到其他软件。
 3. 按住 **Ctrl + Alt + 空格** 显示文字，松开任一组成键隐藏。Mac 的 Alt 对应 Option（⌥）。
 4. 在“文字与布局”中调整样式；需要移动窗口时，解除位置锁定并进入“编辑布局”。完成编辑后恢复鼠标穿透。
 
@@ -35,15 +35,16 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 
 ## 功能
 
-- **本地书架**：导入 UTF-8、常见 GBK 编码的 TXT，提供预览和手动编码选择；单文件上限 20 MiB。
+- **本地书架**：支持 EPUB 2/3（文件上限 100 MiB）和 UTF-8 / GBK TXT（20 MiB）；EPUB 提取正文上限 20 MiB，以纯文本阅读，不保留图片和原版式。
+- **章节导航**：EPUB 读取书内目录，TXT 识别常见章节标题；当前章节、目录搜索、选章跳转和前后章。旧 TXT 书库自动补目录，隐藏时选章保留窗口隐藏。
 - **悬浮阅读**：透明、无边框、置顶；实现按住、切换、固定三种显示模式，位置锁定独立控制。
 - **阅读操作**：上一页、下一页、自动翻页、暂停和恢复。隐藏或编辑布局时暂停计时，手动翻页重置计时，到结尾停止。
 - **翻页间隔**：阅读按钮旁可设 2～60 秒并自动保存；按住模式隐藏时也能开关自动翻页，显示后继续计时。
 - **文字排版**：字体、字号、颜色、文字与背景透明度、行高、字间距、宽度和完整行数可调。
-- **独立进度**：每本书分别保存阅读位置，重排后保留锚点；导入后移动原 TXT 不影响阅读。
+- **独立进度**：每本书分别保存阅读位置，重排后保留锚点；导入后移动原文件 不影响阅读。
 - **桌面控制**：自定义快捷键、紧急隐藏、鼠标穿透、拖动与调整尺寸、托盘找回窗口位置和单实例运行。
 
-上述功能已实现，系统行为的实测范围见下方“验证状态”。当前不支持 EPUB、PDF、云同步或自动更新。
+上述功能已实现，系统行为的实测范围见下方“验证状态”。当前不支持 PDF、MOBI、AZW3、加密正文、扫描图片书、云同步或自动更新。
 
 ## 默认快捷键
 
@@ -67,12 +68,12 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 
 | 项目 | 当前证据 |
 | --- | --- |
-| macOS Apple Silicon | v0.1.2 debug 桌面自动翻页/重启回归通过，普通 app/DMG 构建及校验通过；DMG 安装启动证据来自 v0.1.0 |
+| macOS Apple Silicon | v0.2.0 debug 桌面 EPUB 2/3、UTF-8/GBK 导入、目录搜索/跳转、重启恢复与截图检查通过；两端完整系统场景仍待用户反馈 |
 | Windows x64 | v0.1.2 在 Windows Server 2025 CI 安装并通过 35 项显隐/焦点断言；Windows 11 用户设备复测仍待反馈 |
-| 单元与界面测试 | v0.1.2 本机 19 项 Rust、5 项浏览器测试通过；真实 macOS 界面/IPC/SQLite 验证自动翻页与间隔保存，Windows 安装包原生回归结果见修复记录 |
+| 单元与界面测试 | v0.2.0 本机 27 项 Rust、7 项浏览器测试及类型/格式/Clippy 通过；详细导入边界与验证见章节记录 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
-本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。公开发布与 CI 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。[v0.1.2 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39019344546) 功能检查通过，最后日志附件上传因跨盘路径失败，已修正工作流；详见 [修复记录](docs/AUTO_READING_FIX.md)。
+本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布与 CI 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。[v0.1.2 CI 复跑](https://github.com/jlau-ice/floatleaf/actions/runs/39020157470) 两端检查及附件上传通过；v0.2.0 CI 结果见章节验证记录。
 
 ## 开发
 

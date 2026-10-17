@@ -5,7 +5,7 @@
 ## 模块边界
 
 - `src/`：Vue 设置、书架、悬浮阅读界面及浏览器排版逻辑。
-- `src-tauri/src/`：Rust 桌面入口与命令；`controller.rs` 管显隐、`reader.rs` 管阅读，`runtime.rs` 串行应用系统状态；`storage.rs` 使用直接 SQL，`text_import.rs` 负责解码；`geometry.rs` 管工作区坐标，`shortcuts.rs` 管注册，`platform.rs` 和 `native/` 负责系统差异。
+- `src-tauri/src/`：Rust 桌面入口与命令；`controller.rs` 管显隐、`reader.rs` 管阅读，`runtime.rs` 串行应用系统状态；`storage.rs` 使用直接 SQL，`book_import.rs` 分派格式，`text_import.rs` 解码 TXT、`epub_import.rs` 解析 EPUB，`chapters.rs` 识别 TXT 标题；`geometry.rs` 管工作区坐标，`shortcuts.rs` 管注册，`platform.rs` 和 `native/` 负责系统差异。
 - `scripts/`：跨平台环境检查与 Tauri 启动脚本。
 - `docs/`：产品计划、架构、环境说明、验收矩阵和 Word 计划书。
 - `TASKS.md`：唯一任务状态清单；`HANDOFF.md`：当前验证证据和接续入口。
@@ -61,3 +61,11 @@ Tauri capabilities 按窗口和实际功能最小化。原生功能由 Rust 命�
 使用官方 single-instance 插件避免同一应用重复打开；第二次启动及 macOS Dock 重新打开只显示设置窗口。核心阅读显隐路径仍不激活应用。普通 release 不带文件命令入口；原生自动化与优化性能采样必须显式编译 `diagnostics` feature。
 
 只有字体、字号、宽度、行高、字间距或行数变化才重新分页；颜色、透明度、锁定及快捷键变更不重建排版。保存相同自动翻页间隔不重置剩余时间。移除非当前书只更新书架，保持当前自动阅读会话。
+
+## 章节与 EPUB（v0.2.0）
+
+用户确认扩展 EPUB / TXT 章节阅读。EPUB 的 OPF spine 决定正文顺序，EPUB 2 NCX / EPUB 3 nav 定位目录，HTML 在 Rust 内转成纯文本，同时记录元素 ID 的 UTF-16 偏移；不执行书内脚本或加载外部资源。原文件及图片不另外保存。
+
+`chapters` SQLite 表保存书籍 ID、顺序、标题、锚点与层级；数据库版本 2 的事务升级为原有 TXT 生成目录。阅读状态仍只保存正文锚点，当前章节由锚点确定；目录通过独立 IPC 读取，不随每次倒计时广播整份列表。选择章节进入 Rust 串行状态更新，重置计时、立即保存，保留显示/紧急隐藏和自动阅读开关。
+
+格式边界、限额、验证证据见 CHAPTERS_EPUB.md。

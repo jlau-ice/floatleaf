@@ -17,9 +17,9 @@ await writeFile(
  const assert=(value,message)=>{if(!value)throw Error(message);};
  async function wait(f){for(let n=0;n<150;n++){let s=await state();if(f(s))return s;await delay(30);}throw Error('state timeout');}
  try {
-  const a=await invoke('import_txt',{path:${JSON.stringify(first)},encoding:'utf8'});
+  const a=await invoke('import_book',{path:${JSON.stringify(first)},encoding:'utf8'});
   await wait(s=>s.reader.bookId===a.id&&s.reader.ready);
-  const b=await invoke('import_txt',{path:${JSON.stringify(second)},encoding:'utf8'});
+  const b=await invoke('import_book',{path:${JSON.stringify(second)},encoding:'utf8'});
   await wait(s=>s.reader.bookId===b.id&&s.reader.ready);
   await invoke('select_book',{id:a.id});await wait(s=>s.reader.bookId===a.id&&s.reader.ready);
   const initial=await state();

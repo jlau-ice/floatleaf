@@ -2,11 +2,15 @@
 
 更新日期：2026-10-17。当前阶段：已公开发布 v0.1.2 Windows/macOS 试用包，修复按住模式隐藏时无法开关自动翻页，阅读按钮旁可调间隔；同时包含 Windows 原生隐藏修复和日志入口。五个发布附件已公开下载并与本地逐字节核验。持续目标尚未完成，Windows 用户设备复测仍待反馈。
 
+## 进行中的 v0.2.0 章节与 EPUB
+
+用户确认先支持 EPUB / TXT，章节选择是必要功能。已接入 EPUB 2/3 导航与阅读顺序解析、TXT 标题识别、SQLite 章节表和旧书库升级；新增可搜索目录、当前章节和前后章跳转，隐藏时跳章不改变窗口显隐。正文以纯文本导入，原书图片和版式不保留；加密正文拒绝导入。27 项 Rust、7 项浏览器测试、类型/格式/Clippy 和真实 macOS 桌面导入/搜索/跳章/重启恢复已通过；当前正在构建两端包，尚未发布 v0.2.0，已发布下载仍为 v0.1.2。证据与边界见 `docs/CHAPTERS_EPUB.md`。
+
 ## v0.1.2 自动翻页控制
 
 修复按住模式下无法开关自动翻页，将 2～60 秒间隔滑块移到阅读按钮旁，隐藏时开启只改变阅读意图，不推进计时或进度。19 项 Rust / 5 项浏览器测试和真实 macOS WebView/IPC/SQLite 回归通过；正常退出重启后间隔 3 秒和锚点 55 恢复。两端安装包、Windows 目标 Clippy、macOS ad-hoc 签名/DMG 校验通过，见 `docs/AUTO_READING_FIX.md`。提交 `edb350a` 已推送；CI `39019344546` 的 macOS 检查及 Windows 功能验证均通过，Windows 最后附件上传失败的原因与修正见下。
 
-Windows Server 2025 CI 已安装 v0.1.2 普通 NSIS 包，35 项原生断言全部通过：六种松键顺序、紧急隐藏、旧组合键保护、重新触发和前台焦点保持。使用系统合成输入及 HWND 查询，不代表 Windows 11 物理键鼠/点击穿透验收。此前新包 EXE 路径问题经 `Join-Path` 修正已消失。CI 唯一失败为日志与 JSON 分处 C:/D: 盘，附件上传无法计算共同目录；已拆成两个附件上传，待后续 CI 确认上传。报告从完整运行日志提取到 `.local/auto-012/windows-fixed-from-ci.json`。
+Windows Server 2025 CI 已安装 v0.1.2 普通 NSIS 包，35 项原生断言全部通过：六种松键顺序、紧急隐藏、旧组合键保护、重新触发和前台焦点保持。使用系统合成输入及 HWND 查询，不代表 Windows 11 物理键鼠/点击穿透验收。此前新包 EXE 路径问题经 `Join-Path` 修正已消失。CI 唯一失败为日志与 JSON 分处 C:/D: 盘，附件上传无法计算共同目录；已拆成两个附件上传，后续 CI `39020157470` 两端及附件上传全部通过。报告从完整运行日志提取到 `.local/auto-012/windows-fixed-from-ci.json`。
 
 发布：[v0.1.2](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.2)，标签指向 `2d17dec`，应用实现为 `edb350a`。DMG、Windows EXE、试用 ZIP、复测说明、SHA256SUMS 五个附件公开下载核验通过，文件副本在 `.local/auto-012/download/`。
 

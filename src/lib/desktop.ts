@@ -32,6 +32,11 @@ export interface Book {
   anchor: number;
   addedAt: number;
 }
+export interface Chapter {
+  title: string;
+  anchor: number;
+  level: number;
+}
 export interface Library {
   books: Book[];
   currentBookId: string | null;

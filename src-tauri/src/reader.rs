@@ -92,6 +92,15 @@ impl Reader {
             self.auto_running = !self.auto_running;
         }
     }
+    pub fn seek(&mut self, anchor: usize) -> Result<(), String> {
+        if anchor >= self.total || !utf16_boundary(&self.text, anchor) {
+            return Err("章节位置无效".into());
+        }
+        self.anchor = anchor;
+        self.remaining_ms = self.interval_ms;
+        self.relayout();
+        Ok(())
+    }
     pub fn set_interval(&mut self, seconds: u32) {
         let interval = u64::from(seconds) * 1000;
         if self.interval_ms != interval {
@@ -166,6 +175,27 @@ mod tests {
         assert!(!r.tick(10_000, false, false));
         assert!(r.tick(3000, true, false));
         assert_eq!(r.anchor, 4);
+    }
+    #[test]
+    fn chapter_seek_resets_clock_and_rejects_stale_layout_without_starting_auto() {
+        let mut r = reader();
+        let version = r.layout_version;
+        r.seek(4).unwrap();
+        assert_eq!(r.anchor, 4);
+        assert!(!r.auto_running);
+        assert!(!r.ready);
+        assert!(!r.accept_layout("book", 0, version, 4, None).unwrap());
+        r.accept_layout("book", 4, r.layout_version, 8, Some(0))
+            .unwrap();
+        r.toggle_auto();
+        r.tick(700, true, false);
+        r.seek(0).unwrap();
+        assert!(r.auto_running);
+        assert_eq!(r.remaining_ms, 2000);
+        assert!(!r.tick(9000, false, false));
+        assert_eq!(r.anchor, 0);
+        assert!(r.seek(2).is_err()); // Inside the emoji surrogate pair.
+        assert!(r.seek(r.total).is_err());
     }
     #[test]
     fn stale_layout_after_book_switch_or_reflow_is_ignored() {

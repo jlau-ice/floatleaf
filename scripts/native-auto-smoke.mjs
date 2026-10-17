@@ -18,7 +18,7 @@ await writeFile(
  async function wait(predicate){for(let n=0;n<150;n++){const s=await state();if(predicate(s))return s;await delay(30);}throw Error('state timeout');}
  const autoButton=()=>[...document.querySelectorAll('button')].find(b=>['自动翻页','暂停自动翻页'].includes(b.textContent.trim()));
  try {
-  const book=await invoke('import_txt',{path:${JSON.stringify(fixture)},encoding:'utf8'});
+  const book=await invoke('import_book',{path:${JSON.stringify(fixture)},encoding:'utf8'});
   await wait(s=>s.reader.bookId===book.id&&s.reader.ready);
   await invoke('reader_action',{action:'hold'});
   await wait(s=>s.mode==='hold'&&!s.visible);

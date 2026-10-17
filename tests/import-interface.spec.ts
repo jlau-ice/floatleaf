@@ -44,8 +44,8 @@ test.beforeEach(async ({ page }) => {
           if (command === 'data_directory') return '/test-data';
           if (command === 'log_info')
             return { directory: '/test-data/logs', version: '0.1.1', error: null };
-          if (command === 'choose_txt') return '/synthetic.txt';
-          if (command === 'inspect_txt') {
+          if (command === 'choose_book') return '/synthetic.txt';
+          if (command === 'inspect_book') {
             await new Promise((r) => setTimeout(r, args.encoding === 'gbk' ? 180 : 10));
             return {
               title: '合成文本',
@@ -53,9 +53,10 @@ test.beforeEach(async ({ page }) => {
               preview: args.encoding + ' 正确预览',
               warning: null,
               utf16Length: 8,
+              chapterCount: 0,
             };
           }
-          if (command === 'import_txt') throw '源文件已移动，请重新选择文件';
+          if (command === 'import_book') throw '源文件已移动，请重新选择文件';
           return 1;
         },
       },

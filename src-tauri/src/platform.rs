@@ -57,13 +57,13 @@ fn down(code: u16) -> bool {
     unsafe { fl_key_down(code) }
 }
 
-pub fn choose_txt(window: &WebviewWindow) -> Result<Option<String>, String> {
+pub fn choose_book(window: &WebviewWindow) -> Result<Option<String>, String> {
     unsafe extern "C" {
-        fn fl_choose_txt(window: *mut c_void) -> *mut std::ffi::c_char;
+        fn fl_choose_book(window: *mut c_void) -> *mut std::ffi::c_char;
         fn fl_free_string(value: *mut std::ffi::c_char);
     }
     unsafe {
-        let value = fl_choose_txt(raw_window(window)?);
+        let value = fl_choose_book(raw_window(window)?);
         if value.is_null() {
             return Ok(None);
         }

@@ -41,7 +41,7 @@ v0.1.2 允许隐藏时通过设置按钮或暂停/恢复快捷键切换自动翻
 
 Windows Server 2025 10.0.26100：`scripts/windows-package-smoke.py` 的 35 项断言全部通过，覆盖初始隐藏、六种释放顺序的显示/隐藏、不抢前台焦点、NOACTIVATE/TOPMOST/TRANSPARENT 样式、紧急隐藏、旧组合键保护和新组合键恢复。使用普通安装后的 EXE、系统 `SendInput` 和 HWND 查询，没有调试探针；尚不等于 Windows 11 用户实机的物理键鼠、实际点击穿透、屏幕像素或自动翻页 UI 验收。此次 CI 构建来自相同源码，发布附件由本机交叉构建，两份二进制不声称字节一致。
 
-该轮 CI 总状态为失败，唯一失败步骤是附件上传：JSON 在 D: 工作目录，应用日志在 C: 用户目录，`upload-artifact` 无法选择共同根目录。已将报告和日志拆成两个附件，待后续 CI 确认上传；功能测试没有被跳过。完整日志保存在 `.local/auto-012/windows-ci.log`，其中报告提取为 `.local/auto-012/windows-fixed-from-ci.json`。
+该轮 CI 总状态为失败，唯一失败步骤是附件上传：JSON 在 D: 工作目录，应用日志在 C: 用户目录，`upload-artifact` 无法选择共同根目录。已将报告和日志拆成两个附件，后续 `bd9999b` 的 CI `39020157470` 两端检查及附件上传全部通过；功能测试没有被跳过。完整日志保存在 `.local/auto-012/windows-ci.log`，其中报告提取为 `.local/auto-012/windows-fixed-from-ci.json`。
 
 ## 发布
 

@@ -1,5 +1,8 @@
+mod book_import;
+mod chapters;
 mod commands;
 mod controller;
+mod epub_import;
 mod geometry;
 mod logging;
 mod platform;
@@ -67,13 +70,15 @@ pub fn run() {
             reader_state,
             reader_action,
             drag_overlay,
-            commands::choose_txt,
-            commands::inspect_txt,
+            commands::choose_book,
+            commands::inspect_book,
             commands::library,
             commands::data_directory,
             commands::log_info,
             commands::open_log_directory,
-            commands::import_txt,
+            commands::import_book,
+            commands::book_chapters,
+            commands::select_chapter,
             commands::select_book,
             commands::remove_book,
             commands::book_text,

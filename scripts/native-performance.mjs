@@ -35,7 +35,7 @@ await writeFile(
  try {
   const s=await i('reader_state');
   await i('save_settings',{settings:{...s.settings,mode:'hold',width:600,fontSize:18,lineHeight:1.5,lines:2,intervalSeconds:2}});
-  await i('import_txt',{path:${JSON.stringify(file)},encoding:'utf8'});
+  await i('import_book',{path:${JSON.stringify(file)},encoding:'utf8'});
   await i('reader_action',{action:'probe-result:'+JSON.stringify({ok:true})});
  }catch(e){await i('reader_action',{action:'probe-result:'+JSON.stringify({ok:false,error:String(e)})});}
 })();`,

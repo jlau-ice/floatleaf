@@ -1,16 +1,5 @@
-use serde::Serialize;
 use std::{fs, io::Read, path::Path};
 const MAX_BOOK_BYTES: u64 = 20 * 1024 * 1024;
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ImportPreview {
-    pub title: String,
-    pub encoding: String,
-    pub preview: String,
-    pub warning: Option<String>,
-    pub utf16_length: usize,
-}
 
 pub fn title(path: &Path) -> String {
     path.file_stem()
@@ -101,17 +90,6 @@ pub fn decode(bytes: &[u8], requested: &str) -> Result<(String, String, Option<S
         warning = Some("内容含有替换字符 �，源文件可能已有乱码，请核对后再导入。".into());
     }
     Ok((text, encoding.into(), warning))
-}
-
-pub fn preview(path: &Path, encoding: &str) -> Result<ImportPreview, String> {
-    let (text, encoding, warning) = decode(&read_source(path)?, encoding)?;
-    Ok(ImportPreview {
-        title: title(path),
-        encoding,
-        preview: text.chars().take(1800).collect(),
-        warning,
-        utf16_length: text.encode_utf16().count(),
-    })
 }
 
 #[cfg(test)]

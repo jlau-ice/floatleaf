@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import ChapterDirectory from './ChapterDirectory.vue';
 import {
   desktop,
   useReader,
@@ -74,6 +75,7 @@ const importPreview = ref<{
   preview: string;
   warning: string | null;
   utf16Length: number;
+  chapterCount: number;
 }>();
 const importError = ref('');
 const current = computed(() => shelf.value?.books.find((b) => b.id === state.value?.reader.bookId));
@@ -145,7 +147,7 @@ async function task(work: () => Promise<unknown>) {
 }
 async function choose() {
   await task(async () => {
-    const path = await invoke<string | null>('choose_txt');
+    const path = await invoke<string | null>('choose_book');
     if (path) {
       importPath.value = path;
       encoding.value = 'auto';
@@ -158,7 +160,7 @@ async function inspect() {
   importError.value = '';
   importPreview.value = undefined;
   try {
-    const preview = await invoke<typeof importPreview.value>('inspect_txt', {
+    const preview = await invoke<typeof importPreview.value>('inspect_book', {
       path: importPath.value,
       encoding: encoding.value,
     });
@@ -170,7 +172,7 @@ async function inspect() {
 async function confirmImport() {
   await task(async () => {
     try {
-      await invoke('import_txt', { path: importPath.value, encoding: encoding.value });
+      await invoke('import_book', { path: importPath.value, encoding: encoding.value });
       importPath.value = '';
       importPreview.value = undefined;
       await refresh();
@@ -264,7 +266,7 @@ const ranges: {
       <div class="section-heading">
         <div>
           <h2>把一本书，放到桌面上</h2>
-          <p>TXT · UTF-8 / GBK · 本地保存</p>
+          <p>EPUB / TXT · 章节目录 · 本地保存</p>
         </div>
         <button :disabled="!desktop || busy" @click="choose">＋ 导入小说</button>
       </div>
@@ -273,8 +275,8 @@ const ranges: {
         <div>
           <h3>书架还空着</h3>
           <p>
-            导入后会保存独立副本，移动原文件也能继续阅读。<br />支持 20 MiB 以内的
-            TXT；导入前可以核对文字编码。
+            导入后会保存独立副本，移动原文件也能继续阅读。<br />支持 EPUB（100 MiB 以内）和 TXT（20
+            MiB 以内），自动读取或识别章节。
           </p>
         </div>
       </div>
@@ -308,6 +310,13 @@ const ranges: {
           ><span>{{ percent }}%</span>
         </div>
         <progress :value="percent" max="100" aria-label="阅读进度" />
+        <ChapterDirectory
+          :book-id="current.id"
+          :anchor="state?.reader.anchor ?? 0"
+          :busy="busy"
+          @select="(id, index) => task(() => invoke('select_chapter', { id, index }))"
+          @error="(message) => (error = message)"
+        />
         <div class="actions">
           <button
             class="secondary"
@@ -354,7 +363,7 @@ const ranges: {
           {{ keyLabel(state?.settings.shortcuts.next || '') }} 翻页；{{
             keyLabel(state?.settings.shortcuts.auto || '')
           }}
-          暂停或继续。可在隐藏时开启或暂停；仅在显示时计时。调整间隔后重新计时，隐藏期间不会改变进度。
+          暂停或继续。可在隐藏时开启或暂停；仅在显示时计时。调整间隔后重新计时，隐藏期间不会自动翻页。
         </p>
       </div>
     </section>
@@ -472,7 +481,9 @@ const ranges: {
     <details v-if="dataDirectory" class="storage-note">
       <summary>本地数据位置</summary>
       <p>{{ dataDirectory }}</p>
-      <p>退出浮页后备份 floatleaf.sqlite3，即可保留小说、进度和设置。移除书籍不会删除原始 TXT。</p>
+      <p>
+        退出浮页后备份 floatleaf.sqlite3，即可保留小说、章节、进度和设置。移除书籍不会删除原始文件。
+      </p>
     </details>
     <details v-if="logInfo" class="storage-note">
       <summary>日志位置 · v{{ logInfo.version }}</summary>
@@ -492,8 +503,8 @@ const ranges: {
     >
       <section class="import-dialog">
         <h2 id="import-title">核对导入文字</h2>
-        <p>{{ importPreview?.title || 'TXT 小说' }}</p>
-        <label
+        <p>{{ importPreview?.title || '小说' }}</p>
+        <label v-if="!importPath.toLowerCase().endsWith('.epub')"
           >文件编码<select v-model="encoding" :disabled="busy" @change="inspect">
             <option value="auto">自动检测</option>
             <option value="utf8">UTF-8</option>
@@ -502,6 +513,13 @@ const ranges: {
         >
         <p v-if="importError" class="notice error" role="alert">{{ importError }}</p>
         <p v-if="importPreview?.warning" class="notice">{{ importPreview.warning }}</p>
+        <p v-if="importPreview" class="hint">
+          {{ importPreview.encoding }} · {{ importPreview.chapterCount }} 个章节 / 分节<span
+            v-if="importPreview.encoding === 'EPUB'"
+          >
+            · 提取文字阅读，图片与原书版式不保留</span
+          >
+        </p>
         <pre v-if="importPreview" class="import-preview">{{ importPreview.preview }}</pre>
         <p class="hint">确认文字正常后导入。相同内容会复用已有书籍和进度。</p>
         <div class="actions">

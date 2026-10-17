@@ -6,7 +6,7 @@
 
 包大小和 SHA-256 见 [AUTO_READING_FIX.md](AUTO_READING_FIX.md)。发布文件在 `.local/github-release-0.1.2/`，下载副本在 `.local/auto-012/download/`；不纳入 Git。包仍未正式签名或公证，用户设备复测待反馈。
 
-`edb350a` 的 [CI](https://github.com/jlau-ice/floatleaf/actions/runs/39019344546) 两端各 19 项 Rust / 5 项浏览器测试及类型/格式/Clippy 通过，macOS job 成功。Windows 普通 NSIS 安装与 35 项系统输入/原生窗口断言通过；仅最后附件上传因 C:/D: 跨盘共同根目录失败，已拆分上传。总状态如实保留为失败，不影响已记录的功能测试结果，修正后的附件上传待确认。
+`edb350a` 的 [CI](https://github.com/jlau-ice/floatleaf/actions/runs/39019344546) 两端各 19 项 Rust / 5 项浏览器测试及类型/格式/Clippy 通过，macOS job 成功。Windows 普通 NSIS 安装与 35 项系统输入/原生窗口断言通过；仅最后附件上传因 C:/D: 跨盘共同根目录失败，已拆分上传。总状态如实保留为失败，不影响已记录的功能测试结果，修正提交 `bd9999b` 的运行 `39020157470` 两端与附件上传均成功。
 
 ## 历史版本
 
