@@ -30,7 +30,7 @@ fn main_only(window: &WebviewWindow) -> Result<(), String> {
 }
 pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let directory = app.path().app_data_dir()?;
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, feature = "diagnostics"))]
     let directory = std::env::var_os("FLOATLEAF_DATA_DIR")
         .map(std::path::PathBuf::from)
         .unwrap_or(directory);
@@ -139,13 +139,9 @@ pub async fn remove_book(app: AppHandle, window: WebviewWindow, id: String) -> R
     main_only(&window)?;
     tauri::async_runtime::spawn_blocking(move || {
         flush_progress(&app)?;
-        let current = with_store(&app, |s| {
-            s.remove(&id)?;
-            Ok(s.library()?.current_book_id)
-        })?;
-        if let Some(id) = current {
-            select_core(&app, &id)?;
-        } else {
+        let current = runtime::snapshot(&app).reader.book_id.as_deref() == Some(&id);
+        with_store(&app, |s| s.remove(&id))?;
+        if current {
             runtime::change(&app, |s| {
                 s.reader = Default::default();
                 s.controller.emergency_hide();
@@ -195,7 +191,9 @@ pub async fn save_settings(
             }
             state.controller.set_locked(settings.position_locked);
             state.reader.set_interval(settings.interval_seconds);
-            state.reader.relayout();
+            if !state.settings.same_layout(&settings) {
+                state.reader.relayout();
+            }
             if state.bindings != keys {
                 state.controller.emergency_hide();
                 state.action_held = [false; 4];

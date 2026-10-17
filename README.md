@@ -4,6 +4,8 @@
 
 当前已实现 **Tauri 2 + Vue 3 + TypeScript + Rust + SQLite 的 TXT 阅读闭环**：导入预览、UTF-8/GBK、书架、分页、独立进度、文字样式、自动翻页及原生悬浮控制。macOS 原生阅读流程已验证，Windows、真实键鼠和多屏等验收仍在推进。
 
+使用方法见 [使用说明](docs/USER_GUIDE.md)，本地试用、Windows 构建与签名边界见 [安装说明](docs/INSTALL.md)。已接入编辑尺寸、位置恢复、自定义快捷键和单实例运行。
+
 ## 开始开发
 
 ```bash
@@ -39,8 +41,8 @@ Rust 由 rustup 管理，rust-toolchain.toml 固定项目版本并声明 rustfmt
 4. [架构约定](docs/ARCHITECTURE.md)、[环境指南](docs/DEVELOPMENT.md)、[验收矩阵](docs/ACCEPTANCE.md)。
 5. [Word 计划书](docs/FloatLeaf-项目计划书.docx)：可分享的计划书。
 
-P0 macOS 原生窗口探针已运行，完整键鼠与双平台实机验收仍待补。具体证据见 [原生验证记录](docs/P0_NATIVE_VERIFICATION.md)，阅读闭环证据见 [P1 验收记录](docs/P1_READ_VERIFICATION.md)。下一步完善多屏、尺寸编辑、快捷键设置和试用构建。
+P0 macOS 原生窗口探针已运行，完整键鼠与双平台实机验收仍待补。具体证据见 [原生验证记录](docs/P0_NATIVE_VERIFICATION.md)、[P1 阅读验证](docs/P1_READ_VERIFICATION.md)、[P2 布局与快捷键验证](docs/P2_LAYOUT_VERIFICATION.md)、[P3 试用交付](docs/P3_DELIVERY_VERIFICATION.md)和[性能实测](docs/PERFORMANCE.md)。
 
 ## 分发前提
 
-macOS 完全透明的 Tauri 实现使用私有 API，当前计划为独立安装包分发。初始应用图标沿用生成器占位资源，品牌图标在发布前替换。没有远端仓库、发布凭证或服务端依赖。
+macOS 完全透明的 Tauri 实现使用私有 API，采用独立安装包路线。品牌图标源文件为 `assets/floatleaf-icon.svg`。macOS 本地包使用 ad-hoc 签名，正式签名与公证另需授权；Windows 安装包尚待 Windows 构建与实测。没有远端仓库、发布凭证或服务端依赖。

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import {
@@ -35,6 +35,7 @@ function keyLabel(value: string) {
     .replaceAll('+', ' + ');
 }
 function recordShortcut(event: KeyboardEvent, key: keyof Bindings) {
+  if (event.key === 'Tab' || event.repeat) return;
   event.preventDefault();
   if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key) || !shortcutDraft.value) return;
   shortcutDraft.value[key] = [
@@ -53,6 +54,18 @@ async function saveShortcuts() {
 const removing = ref('');
 const dataDirectory = ref('');
 const importPath = ref('');
+const importDialog = ref<HTMLDialogElement>();
+let importRequest = 0;
+watch(importPath, async (path) => {
+  if (path) {
+    await nextTick();
+    importDialog.value?.showModal();
+  }
+});
+function cancelImport(event: Event) {
+  if (busy.value) event.preventDefault();
+  else importPath.value = '';
+}
 const encoding = ref('auto');
 const importPreview = ref<{
   title: string;
@@ -75,7 +88,7 @@ const status = computed(() =>
     ? '已紧急隐藏 · 全部松开快捷键后重新触发'
     : state.value?.visible
       ? '阅读窗口已显示'
-      : '按住快捷键开始阅读',
+      : '使用显示快捷键开始阅读',
 );
 let unlisten: (() => void) | undefined;
 let alive = true;
@@ -139,23 +152,29 @@ async function choose() {
   });
 }
 async function inspect() {
+  const request = ++importRequest;
   importError.value = '';
   importPreview.value = undefined;
   try {
-    importPreview.value = await invoke('inspect_txt', {
+    const preview = await invoke<typeof importPreview.value>('inspect_txt', {
       path: importPath.value,
       encoding: encoding.value,
     });
+    if (request === importRequest) importPreview.value = preview;
   } catch (e) {
-    importError.value = String(e);
+    if (request === importRequest) importError.value = String(e);
   }
 }
 async function confirmImport() {
   await task(async () => {
-    await invoke('import_txt', { path: importPath.value, encoding: encoding.value });
-    importPath.value = '';
-    importPreview.value = undefined;
-    await refresh();
+    try {
+      await invoke('import_txt', { path: importPath.value, encoding: encoding.value });
+      importPath.value = '';
+      importPreview.value = undefined;
+      await refresh();
+    } catch (e) {
+      importError.value = String(e);
+    }
   });
 }
 async function select(book: Book) {
@@ -175,6 +194,7 @@ async function remove(book: Book) {
 async function save(patch: Partial<ReadingSettings> = {}) {
   if (!draft.value) return;
   const settings = { ...draft.value, ...patch };
+  saved.value = '';
   await task(async () => {
     await invoke('save_settings', { settings, selectMode: patch.mode !== undefined });
     saved.value = '已保存';
@@ -443,8 +463,14 @@ const ranges: {
       <p>{{ dataDirectory }}</p>
       <p>退出浮页后备份 floatleaf.sqlite3，即可保留小说、进度和设置。移除书籍不会删除原始 TXT。</p>
     </details>
-    <div v-if="importPath" class="modal-backdrop">
-      <section role="dialog" aria-modal="true" aria-labelledby="import-title" class="import-dialog">
+    <dialog
+      v-if="importPath"
+      ref="importDialog"
+      class="modal-backdrop"
+      aria-labelledby="import-title"
+      @cancel="cancelImport"
+    >
+      <section class="import-dialog">
         <h2 id="import-title">核对导入文字</h2>
         <p>{{ importPreview?.title || 'TXT 小说' }}</p>
         <label
@@ -465,7 +491,7 @@ const ranges: {
           </button>
         </div>
       </section>
-    </div>
+    </dialog>
   </main>
 </template>
 <style scoped>
@@ -690,7 +716,17 @@ input[type='color'] {
 .storage-note summary {
   cursor: pointer;
 }
+.modal-backdrop::backdrop {
+  background: transparent;
+}
 .modal-backdrop {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  color: inherit;
   position: fixed;
   inset: 0;
   display: grid;
@@ -727,6 +763,7 @@ input[type='color'] {
     sans-serif;
 }
 .import-dialog > p {
+  overflow-wrap: anywhere;
   font-size: 12px;
 }
 .import-dialog > .actions {

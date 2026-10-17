@@ -79,3 +79,13 @@ int fl_check_hotkey(unsigned short code, unsigned int modifiers) {
     if (result == noErr) UnregisterEventHotKey(key);
     return result;
 }
+
+// Diagnostic process attribution for our own WebViews (not desktop capture).
+@interface WKWebView (FloatLeafDiagnostics)
+- (pid_t)_webProcessIdentifier;
+@end
+int fl_web_pid(void *raw) {
+    WKWebView *view = findWebView([(__bridge NSWindow *)raw contentView]);
+    if (![view respondsToSelector:@selector(_webProcessIdentifier)]) return 0;
+    return [view _webProcessIdentifier];
+}

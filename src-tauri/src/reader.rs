@@ -93,8 +93,11 @@ impl Reader {
         }
     }
     pub fn set_interval(&mut self, seconds: u32) {
-        self.interval_ms = u64::from(seconds) * 1000;
-        self.remaining_ms = self.interval_ms;
+        let interval = u64::from(seconds) * 1000;
+        if self.interval_ms != interval {
+            self.interval_ms = interval;
+            self.remaining_ms = interval;
+        }
     }
     pub fn tick(&mut self, elapsed_ms: u64, visible: bool, editing: bool) -> bool {
         if !visible || editing || !self.ready || !self.auto_running {
@@ -123,6 +126,8 @@ mod tests {
         let mut r = reader();
         r.toggle_auto();
         assert!(!r.tick(750, true, false));
+        assert_eq!(r.remaining_ms, 1250);
+        r.set_interval(2); // Saving appearance or mode must not restart the countdown.
         assert_eq!(r.remaining_ms, 1250);
         r.tick(9000, false, false);
         assert_eq!(r.remaining_ms, 1250);

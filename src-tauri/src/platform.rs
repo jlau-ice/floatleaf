@@ -195,7 +195,7 @@ pub fn chord(shortcut: &Shortcut) -> (bool, bool, bool) {
     (all, main, any)
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(debug_assertions, feature = "diagnostics"))]
 pub fn probe(window: &WebviewWindow) -> serde_json::Value {
     #[cfg(target_os = "macos")]
     {
@@ -206,11 +206,12 @@ pub fn probe(window: &WebviewWindow) -> serde_json::Value {
             fn fl_window_opaque(window: *mut c_void) -> bool;
             fn fl_window_level(window: *mut c_void) -> std::ffi::c_long;
             fn fl_frontmost_pid() -> i32;
+            fn fl_web_pid(window: *mut c_void) -> i32;
         }
         let raw = raw_window(window).unwrap();
         unsafe {
             serde_json::json!({
-                "automationAllowed": fl_automation_allowed(), "clickthrough": fl_window_clickthrough(raw),
+                "webPid": fl_web_pid(raw), "automationAllowed": fl_automation_allowed(), "clickthrough": fl_window_clickthrough(raw),
             "keyWindow": fl_window_key(raw), "opaque": fl_window_opaque(raw), "level": fl_window_level(raw), "frontmostPid": fl_frontmost_pid(),
             })
         }
@@ -221,7 +222,7 @@ pub fn probe(window: &WebviewWindow) -> serde_json::Value {
     }
 }
 
-#[cfg(all(debug_assertions, target_os = "macos"))]
+#[cfg(all(any(debug_assertions, feature = "diagnostics"), target_os = "macos"))]
 pub fn capture(window: &WebviewWindow, path: &std::path::Path) {
     unsafe extern "C" {
         fn fl_snapshot(window: *mut c_void, path: *const std::ffi::c_char);

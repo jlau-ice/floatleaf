@@ -182,7 +182,6 @@ impl Store {
         Ok(text)
     }
     pub fn set_settings(&mut self, settings: ReadingSettings) -> Result<(), String> {
-        settings.validate()?;
         let json = serde_json::to_string(&settings).map_err(|e| e.to_string())?;
         self.connection
             .execute("UPDATE app_state SET settings = ?1 WHERE id = 1", [json])

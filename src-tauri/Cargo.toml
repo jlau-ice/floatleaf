@@ -9,6 +9,9 @@ rust-version = "1.99.1"
 name = "floatleaf_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+diagnostics = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 cc = "1"
@@ -26,6 +29,7 @@ tempfile = "3"
 
 [target.'cfg(any(target_os = "macos", windows))'.dependencies]
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
 
 [profile.release]
 codegen-units = 1

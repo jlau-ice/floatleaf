@@ -51,7 +51,8 @@ watch(
       }
       await document.fonts.ready;
       if (request !== generation) return;
-      const key = JSON.stringify(snapshot.settings);
+      const { fontFamily, fontSize, lineHeight, letterSpacing, width, lines } = snapshot.settings;
+      const key = JSON.stringify([fontFamily, fontSize, lineHeight, letterSpacing, width, lines]);
       if (!paginator || key !== layoutKey) {
         paginator?.destroy();
         paginator = new Paginator(content, snapshot.settings);

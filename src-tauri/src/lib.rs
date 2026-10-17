@@ -35,6 +35,9 @@ fn drag_overlay(app: tauri::AppHandle) -> Result<(), String> {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            runtime::open_settings(app)
+        }))
         .manage(runtime::Shared::default())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
@@ -78,6 +81,10 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("failed to build FloatLeaf")
         .run(|app, event| {
+            #[cfg(target_os = "macos")]
+            if matches!(event, tauri::RunEvent::Reopen { .. }) {
+                runtime::open_settings(app);
+            }
             if matches!(
                 event,
                 tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit

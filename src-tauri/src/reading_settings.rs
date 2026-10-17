@@ -69,6 +69,14 @@ impl ReadingSettings {
         self.shortcuts.parse()?;
         Ok(())
     }
+    pub fn same_layout(&self, other: &Self) -> bool {
+        self.font_family == other.font_family
+            && self.font_size == other.font_size
+            && self.line_height == other.line_height
+            && self.letter_spacing == other.letter_spacing
+            && self.width == other.width
+            && self.lines == other.lines
+    }
     pub fn height(&self) -> f64 {
         (self.font_size * self.line_height * f64::from(self.lines)).ceil() + 48.0
     }

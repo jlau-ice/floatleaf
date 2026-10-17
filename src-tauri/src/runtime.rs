@@ -147,7 +147,7 @@ fn apply(app: &AppHandle, state: &Snapshot) {
         state.error = Some(format!("阅读窗口操作失败：{error}"));
     }
     let _ = app.emit("reader-state", snapshot(app));
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, feature = "diagnostics"))]
     write_probe(app);
 }
 
@@ -206,10 +206,17 @@ fn start_watch(app: AppHandle) {
                     }
                 });
             }
-            #[cfg(debug_assertions)]
+            #[cfg(any(debug_assertions, feature = "diagnostics"))]
             probe_command(&app);
         }
     });
+}
+
+pub fn open_settings(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }
 
 fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
@@ -226,12 +233,7 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
         .tooltip("浮页 FloatLeaf")
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "settings" => {
-                if let Some(w) = app.get_webview_window("main") {
-                    let _ = w.show();
-                    let _ = w.set_focus();
-                }
-            }
+            "settings" => open_settings(app),
             "recover" => geometry::recover(app, true),
             "hide" => change(app, |s| s.controller.emergency_hide()),
             "quit" => app.exit(0),
@@ -245,7 +247,7 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 }
 
 pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, feature = "diagnostics"))]
     if let Some(report) = action.strip_prefix("probe-result:") {
         let directory = std::env::var("FLOATLEAF_PROBE_DIR").map_err(|_| "未启用调试探针")?;
         let value: serde_json::Value = serde_json::from_str(report).map_err(|e| e.to_string())?;
@@ -301,12 +303,12 @@ pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
     Ok(())
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(debug_assertions, feature = "diagnostics"))]
 fn write_probe(app: &AppHandle) {
     if let Ok(directory) = std::env::var("FLOATLEAF_PROBE_DIR")
         && let Some(window) = app.get_webview_window("overlay")
     {
-        let value = serde_json::json!({ "state": snapshot(app), "native": platform::probe(&window),
+        let value = serde_json::json!({ "pid": std::process::id(), "mainNative": app.get_webview_window("main").map(|w| platform::probe(&w)), "state": snapshot(app), "native": platform::probe(&window),
                 "monitors": window.available_monitors().ok(), "visible": window.is_visible().ok(), "position": window.outer_position().ok(), "size": window.outer_size().ok() });
         let dir = std::path::Path::new(&directory);
         let _ = std::fs::create_dir_all(dir);
@@ -316,7 +318,7 @@ fn write_probe(app: &AppHandle) {
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(debug_assertions, feature = "diagnostics"))]
 fn probe_command(app: &AppHandle) {
     if let Ok(directory) = std::env::var("FLOATLEAF_PROBE_DIR") {
         // Sample on a later event-loop turn so queued native cursor/focus changes
@@ -354,6 +356,12 @@ fn probe_command(app: &AppHandle) {
                         }
                     }
                 });
+                return;
+            }
+            if command.trim() == "hide-settings" {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.hide();
+                }
                 return;
             }
             if command.trim() == "move-test" {

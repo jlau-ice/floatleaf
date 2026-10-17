@@ -39,7 +39,7 @@ const script = `
   }
   async function settings(patch) {
     const old = await state(); await invoke('save_settings', { settings: { ...old.settings, ...patch } });
-    return wait(s => s.reader.ready && s.reader.layoutVersion > old.reader.layoutVersion);
+    return wait(s => s.reader.ready && Object.entries(patch).every(([key, value]) => s.settings[key] === value));
   }
   try {
     let rejected = false;

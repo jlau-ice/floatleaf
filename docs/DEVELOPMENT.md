@@ -69,3 +69,13 @@ Vue/TypeScript 使用 Prettier（`pnpm format:check`），Rust 使用 rustfmt �
 本地小说、进度和设置写入 `floatleaf.sqlite3`；SQLite 通过 rusqlite bundled 编译进应用，不要求用户安装数据库服务。设置作为一行 JSON 字段保存在 SQLite 内，没有独立 JSON 存储文件。运行期的阅读状态由 Rust 控制器持有，前端通过 Vue 组合函数订阅，没有额外 Pinia 状态副本。
 
 `pnpm test:rust` 覆盖显示/阅读状态和 SQLite 持久化；`pnpm test:web` 通过隔离 Chrome 实测分页。后者使用本机 Chrome，CI 配置下载 Chromium。原生使用 `scripts/native-reading-smoke.mjs`，需显式开启 debug 探针，详细步骤见 P1_READ_VERIFICATION.md。CI 尚未远端运行。
+
+## 打包与交付验证
+
+平台覆盖配置位于 `src-tauri/tauri.macos.conf.json` 和 `tauri.windows.conf.json`。macOS 本地试用包为 ad-hoc 签名；Windows 配置为当前用户 NSIS 安装。步骤和限制见 INSTALL.md，系统验收步骤见 MANUAL_VALIDATION.md。
+
+普通 release 不包含文件探针；`--features diagnostics` 显式编译优化诊断版本，用于隔离书库和性能采样。不得把该版本当作普通试用包。默认包不接受诊断数据目录覆盖，源代码仍由 rustup/pnpm 固定工具链构建。
+
+图标源文件为 `assets/floatleaf-icon.svg`，使用 `pnpm tauri icon` 生成各平台资源。默认不生成或提交移动端资源。单实例插件阻止同一应用重复打开，第二次启动只显示已有设置窗口。
+
+Word 计划书与 Markdown 同步。更新文档时使用渲染验证；本次 bundled LibreOffice 的默认字体配置缺少中文，QA 使用仅在 `.local/` 的 FONTCONFIG_FILE 引用系统中文字体，六页均逐页目视检查。此配置不修改系统字体或应用字体，也不提交临时渲染产物。

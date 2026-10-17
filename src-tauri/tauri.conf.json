@@ -53,6 +53,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "category": "Productivity",
+    "shortDescription": "Offline floating TXT reader",
+    "longDescription": "FloatLeaf displays your local books in a transparent desktop overlay."
   }
 }
