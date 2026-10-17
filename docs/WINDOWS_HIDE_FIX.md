@@ -22,6 +22,9 @@
 - `pnpm test:rust`：18 项通过，含日志轮转及重复窗口状态去重测试。
 - `pnpm test:web`：5 项通过。首轮因沙箱禁止监听本机端口未能启动，授权环境重跑通过。
 - Windows `pnpm tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis`：普通 release 与 NSIS 构建成功，未启用 diagnostics。
+- Windows 目标 release Clippy all-targets（`-D warnings`）：通过。安装包 `7zz t`、解包及版本/日志入口核验通过，普通包不含调试命令目录标记。
+- macOS 独立测试标识 debug 构建、实际启动、100 次原生显隐与紧急隐藏/编辑状态回归通过。首轮因前台进程变化中断，稳定后完整复跑通过；不当作物理输入验证。实际 WKWebView/IPC 验证日志版本、路径显示、打开文件夹成功，日志所有显隐记录与系统值一致；设置截图检查通过。测试数据位于 `.local/fix-011/`，没有接触用户书库。
+- Windows 安装器：2,385,539 字节，SHA-256 `8413541f46b3c06265e363e38324ccbef72f845bcea556eced918f9cf31d31bb`。
 - `scripts/windows-package-smoke.py`：从外部进程输入系统组合键，以 `IsWindowVisible` 检查六种释放顺序、紧急隐藏、旧组合键保护和重新触发，同时检查前台窗口未改变。CI 先在 v0.1.0 包中复现，再安装新包回归；运行结果待补，不能先写通过。
 - Windows 11 用户设备：v0.1.0 隐藏失败；v0.1.1 待用户复测。实际点击穿透、锁屏/休眠、多屏和真实键鼠仍按验收矩阵保留待测。
 

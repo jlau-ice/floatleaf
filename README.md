@@ -8,13 +8,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前版本为 **v0.1.0 试用版（Pre-release）**。
+当前 Windows 版本为 **v0.1.1 复测试用版（Pre-release）**，修复 v0.1.0 隐藏失效并增加日志入口；macOS 安装包保持 v0.1.0。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
 | macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.0/FloatLeaf_0.1.0_aarch64.dmg) | 打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.0/FloatLeaf_0.1.0_x64-setup.exe) | 运行 EXE，按提示完成当前用户安装 |
-| Windows · 完整试用资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.0/FloatLeaf_0.1.0_windows-x64_trial.zip) | 解压后运行安装程序；含说明、合成 TXT 示例和反馈表 |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.1/FloatLeaf_0.1.1_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.1.1/FloatLeaf_0.1.1_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 TXT 示例 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -30,6 +30,8 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 4. 在“文字与布局”中调整样式；需要移动窗口时，解除位置锁定并进入“编辑布局”。完成编辑后恢复鼠标穿透。
 
 关闭设置窗口后，浮页仍在运行。通过系统托盘或菜单栏图标重新打开设置，也可以在那里紧急隐藏或退出。
+
+v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”。复现异常后可发送其中的 `.log` 文件，日志不含小说正文或普通打字内容。Windows 备用路径为 `%APPDATA%\io.github.jlauice.floatleaf\logs`，详细步骤见 [复测说明](docs/RELEASE_v0.1.1.md)。
 
 ## 功能
 
@@ -65,8 +67,8 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 | 项目 | 当前证据 |
 | --- | --- |
 | macOS Apple Silicon | 已构建并实际启动 DMG 中的应用；原生窗口与阅读流程回归通过 |
-| Windows x64 | 发布包在 macOS 交叉构建，完整性核验通过；另在 Windows Server 2025 CI 完成本机构建与测试，Windows 11 实机安装与交互仍待反馈 |
-| 单元与界面测试 | 本机及 macOS / Windows CI 各 17 项 Rust 测试、5 项浏览器测试通过 |
+| Windows x64 | v0.1.0 用户设备反馈隐藏失败；v0.1.1 已修复原生隐藏、通过交叉构建与包核验，仍待该设备复测 |
+| 单元与界面测试 | v0.1.1 本机 18 项 Rust、5 项浏览器测试通过；v0.1.0 双平台 CI 通过，新增 Windows 安装包原生回归结果见修复记录 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
 本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。公开发布与 [双平台 CI](https://github.com/jlau-ice/floatleaf/actions/runs/39011651513) 的证据见 [发布记录](docs/GITHUB_RELEASE.md)。

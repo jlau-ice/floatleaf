@@ -1,16 +1,18 @@
 # 浮页 FloatLeaf 试用说明
 
-版本 0.1.0 · 2026 年 10 月 17 日
+Windows 版本 0.1.1 / macOS 安装包版本 0.1.0 · 2026 年 10 月 17 日
 
 浮页是一款离线 TXT 悬浮阅读工具。导入小说后，文字可以像桌面歌词一样显示：按住快捷键阅读，松开隐藏。书籍、阅读进度和设置保存在本机，无需账号。
 
 ## 试用范围
 
-Windows 本轮面向 Windows 11 x64；macOS 试用包面向 Apple Silicon。Windows 包在 Mac 上交叉构建，尚待 Windows 实机验证。macOS 已验证原生程序和阅读流程，真实键鼠、多屏、锁屏与休眠等场景仍需本轮试用反馈。
+Windows 本轮面向 Windows 11 x64；macOS 试用包面向 Apple Silicon。Windows v0.1.0 收到隐藏失效反馈，v0.1.1 修复原生隐藏并加入日志，尚待用户设备复测。macOS 已验证原生程序和阅读流程，真实键鼠、多屏、锁屏与休眠等场景仍需本轮试用反馈。
 
 ## 安装与打开
 
-**Windows：**先解压试用压缩包，双击其中的 `FloatLeaf_0.1.0_x64-setup.exe`，选择语言并完成安装，然后从开始菜单打开 FloatLeaf。缺少 WebView2 时安装器会联网下载，请在首次安装时保持网络连接。日常阅读可离线使用。
+**Windows：**先从托盘退出旧版浮页。解压试用压缩包，双击其中的 `FloatLeaf_0.1.1_x64-setup.exe`，选择语言并完成安装，然后从开始菜单打开 FloatLeaf。无需删除书库。缺少 WebView2 时安装器会联网下载，请在首次安装时保持网络连接。日常阅读可离线使用。
+
+**反馈日志（v0.1.1 起）：**打开设置页底部“日志位置”，确认版本，点击“打开日志文件夹”。复现后发送其中的 `floatleaf.log` 和存在时的 `floatleaf.previous.log`，说明操作顺序和发生时间即可。日志不包含小说正文，无需发送数据库。Windows 备用路径为 `%APPDATA%\io.github.jlauice.floatleaf\logs`。
 
 **macOS：**打开 `.dmg`，将 FloatLeaf 拖到“应用程序”，再打开应用。当前包仅配置 Apple Silicon，其他芯片请勿混用。
 

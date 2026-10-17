@@ -8,6 +8,8 @@
 
 本机类型、rustfmt、Clippy、18 项 Rust / 5 项浏览器测试、前端构建和 Windows 普通 release/NSIS 构建通过。新增 Windows 安装包回归脚本及 CI 步骤，对旧包复现和新包实际 HWND 显隐进行检查；云端结果待补。复测说明见 `docs/RELEASE_v0.1.1.md`，根因/验证见 `docs/WINDOWS_HIDE_FIX.md`。下方 v0.1.0 阶段记录作为历史保留。
 
+补充：Windows 目标 Clippy 通过；macOS 独立测试标识的 debug 桌面构建、100 次原生显隐、日志入口 WKWebView/IPC 实测和截图检查通过，日志中期望/实际可见性一致。首次显隐测试因前台进程变化中断，随后完整复跑通过。测试应用正常退出，原有应用和书库保留。源码修复提交 `683fcfd` 已推送；CI 运行 `39013867420` 进行中。新安装器及复测 ZIP 在 `.local/github-release-0.1.1/`，准备作为 v0.1.1 发布，不覆盖 v0.1.0。
+
 ## 仓库与环境
 
 目录 `/Users/ice/jlau-ice/floatleaf`，当前分支 `main`，跟踪 `origin/main`。按用户授权已创建公开仓库 https://github.com/jlau-ice/floatleaf ，推送完整阶段历史、README 和 MIT 协议，发布 https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.0 试用版。六个附件下载哈希一致，公开下载链接 HTTP 200。发布证据见 `docs/GITHUB_RELEASE.md`。
