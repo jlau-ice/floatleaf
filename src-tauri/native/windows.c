@@ -3,6 +3,8 @@
 #include <commctrl.h>
 #include <wtsapi32.h>
 #include <stdbool.h>
+#include <commdlg.h>
+#include <stdlib.h>
 
 static void (*hide_callback)(void);
 void fl_show(void *raw) {
@@ -25,3 +27,20 @@ void fl_watch_session(void *raw, void (*hide)(void)) {
     SetWindowSubclass((HWND)raw, session_proc, 1, 0);
     WTSRegisterSessionNotification((HWND)raw, NOTIFY_FOR_THIS_SESSION);
 }
+
+char *fl_choose_txt(void *raw) {
+    wchar_t path[32768] = {0};
+    OPENFILENAMEW dialog = {0};
+    dialog.lStructSize = sizeof(dialog);
+    dialog.hwndOwner = (HWND)raw;
+    dialog.lpstrFilter = L"TXT files\0*.txt\0\0";
+    dialog.lpstrFile = path;
+    dialog.nMaxFile = 32768;
+    dialog.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+    if (!GetOpenFileNameW(&dialog)) return NULL;
+    int count = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+    char *result = (char *)malloc(count);
+    if (result) WideCharToMultiByte(CP_UTF8, 0, path, -1, result, count, NULL, NULL);
+    return result;
+}
+void fl_free_string(char *value) { free(value); }

@@ -37,6 +37,18 @@ bool fl_window_opaque(void *raw) { return [(__bridge NSWindow *)raw isOpaque]; }
 long fl_window_level(void *raw) { return [(__bridge NSWindow *)raw level]; }
 int fl_frontmost_pid(void) { return [[[NSWorkspace sharedWorkspace] frontmostApplication] processIdentifier]; }
 
+char *fl_choose_txt(void *raw) {
+    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    panel.canChooseDirectories = NO;
+    panel.allowsMultipleSelection = NO;
+    panel.title = @"导入 TXT 小说";
+    panel.message = @"仅复制文件到浮页，原文件不会被修改。";
+    [(__bridge NSWindow *)raw makeKeyAndOrderFront:nil];
+    if ([panel runModal] != NSModalResponseOK) return NULL;
+    return strdup(panel.URL.path.UTF8String);
+}
+void fl_free_string(char *value) { free(value); }
+
 static WKWebView *findWebView(NSView *view) {
     if ([view isKindOfClass:[WKWebView class]]) return (WKWebView *)view;
     for (NSView *child in view.subviews) {

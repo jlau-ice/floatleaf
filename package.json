@@ -16,19 +16,23 @@
     "rust:clippy": "node scripts/cargo.mjs clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings",
     "check": "pnpm typecheck && pnpm rust:fmt && pnpm rust:clippy",
     "env:check": "node scripts/doctor.mjs",
-    "test:rust": "node scripts/cargo.mjs test --manifest-path src-tauri/Cargo.toml --locked"
+    "test:rust": "node scripts/cargo.mjs test --manifest-path src-tauri/Cargo.toml --locked",
+    "test:web": "playwright test",
+    "test": "pnpm test:rust && pnpm test:web",
+    "format:check": "prettier --check src tests playwright.config.ts scripts/native-reading-smoke.mjs"
   },
   "dependencies": {
-    "vue": "^3.5.13",
     "@tauri-apps/api": "^2",
-    "pinia": "^3.0.0"
+    "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "^6.0.7",
+    "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
-    "vue-tsc": "^3.3.5",
-    "@tauri-apps/cli": "^2"
+    "vue-tsc": "^3.3.5"
   },
   "description": "FloatLeaf 浮页 — 离线桌面悬浮阅读工具",
   "packageManager": "pnpm@10.33.4",

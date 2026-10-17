@@ -13,7 +13,7 @@ fn main() {
         cc::Build::new()
             .file("native/windows.c")
             .compile("floatleaf_native");
-        for lib in ["user32", "comctl32", "wtsapi32"] {
+        for lib in ["user32", "comctl32", "wtsapi32", "comdlg32"] {
             println!("cargo:rustc-link-lib={lib}");
         }
     }

@@ -1,6 +1,9 @@
 use crate::{
+    commands,
     controller::{Controller, DisplayMode},
     platform,
+    reader::Reader,
+    reading_settings::ReadingSettings,
 };
 use serde::Serialize;
 use std::{
@@ -25,12 +28,16 @@ pub struct Snapshot {
     pub controller: Controller,
     pub shortcuts: Vec<String>,
     pub error: Option<String>,
+    pub reader: Reader,
+    pub settings: ReadingSettings,
 }
 
 pub struct Runtime {
     pub controller: Controller,
     pub display: Shortcut,
     pub error: Option<String>,
+    pub reader: Reader,
+    pub settings: ReadingSettings,
     last_tick: Instant,
 }
 
@@ -40,7 +47,30 @@ impl Default for Runtime {
             controller: Controller::default(),
             display: DISPLAY.parse().unwrap(),
             error: None,
+            reader: Reader::default(),
+            settings: ReadingSettings::default(),
             last_tick: Instant::now(),
+        }
+    }
+}
+
+impl Runtime {
+    fn advance_clock(&mut self) {
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.last_tick);
+        self.last_tick += Duration::from_millis(elapsed.as_millis() as u64);
+        if elapsed > Duration::from_secs(2) {
+            self.controller.emergency_hide();
+            return;
+        }
+        let seconds = self.reader.remaining_ms / 1000;
+        let advanced = self.reader.tick(
+            elapsed.as_millis() as u64,
+            self.controller.visible,
+            self.controller.editing_layout,
+        );
+        if advanced || seconds != self.reader.remaining_ms / 1000 {
+            self.controller.revision += 1;
         }
     }
 }
@@ -54,6 +84,8 @@ pub fn snapshot(app: &AppHandle) -> Snapshot {
         controller: state.controller.clone(),
         shortcuts: vec![DISPLAY.into(), EMERGENCY.into()],
         error: state.error.clone(),
+        reader: state.reader.clone(),
+        settings: state.settings.clone(),
     }
 }
 
@@ -65,7 +97,10 @@ pub fn change(app: &AppHandle, update: impl FnOnce(&mut Runtime) + Send + 'stati
         let before = snapshot(&handle);
         {
             let shared = handle.state::<Shared>();
-            update(&mut shared.lock().unwrap());
+            let mut state = shared.lock().unwrap();
+            // Charge elapsed time to the previous visibility state before changing it.
+            state.advance_clock();
+            update(&mut state);
         }
         let after = snapshot(&handle);
         if !before.controller.needs_key_watch()
@@ -85,6 +120,20 @@ fn apply(app: &AppHandle, state: &Snapshot) {
         return;
     };
     let apply_window = || -> Result<(), String> {
+        let size = window
+            .inner_size()
+            .map_err(|e| e.to_string())?
+            .to_logical::<f64>(window.scale_factor().map_err(|e| e.to_string())?);
+        if (size.width - state.settings.width).abs() > 0.5
+            || (size.height - state.settings.height()).abs() > 0.5
+        {
+            window
+                .set_size(tauri::LogicalSize::new(
+                    state.settings.width,
+                    state.settings.height(),
+                ))
+                .map_err(|e| e.to_string())?;
+        }
         window
             .set_ignore_cursor_events(!state.controller.editing_layout)
             .map_err(|e| e.to_string())?;
@@ -117,6 +166,7 @@ extern "C" fn session_interrupted() {
 
 pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let _ = APP.set(app.clone());
+    commands::setup(app)?;
     let window = app.get_webview_window("overlay").ok_or("overlay missing")?;
     window.set_ignore_cursor_events(true)?;
     platform::watch_session(&window, session_interrupted)?;
@@ -149,6 +199,24 @@ pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             ));
         }
     }
+    for (shortcut, action_name) in [
+        ("Control+Alt+ArrowRight", "next"),
+        ("Control+Alt+ArrowLeft", "previous"),
+        ("Control+Alt+KeyP", "auto"),
+    ] {
+        if let Err(error) = app
+            .global_shortcut()
+            .on_shortcut(shortcut, move |app, _, event| {
+                if event.state == ShortcutState::Pressed {
+                    let _ = action(app, action_name.into());
+                }
+            })
+        {
+            app.state::<Shared>().lock().unwrap().error =
+                Some(format!("翻页快捷键注册失败：{error}"));
+        }
+    }
+    apply(app, &snapshot(app));
     start_watch(app.clone());
     setup_tray(app)?;
     Ok(())
@@ -171,17 +239,19 @@ fn start_watch(app: AppHandle) {
             }
             let done = pending.clone();
             change(&app, move |state| {
-                let now = Instant::now();
-                if now.duration_since(state.last_tick) > Duration::from_secs(2) {
-                    state.controller.emergency_hide();
-                }
-                state.last_tick = now;
                 if state.controller.needs_key_watch() {
                     let (all, main, any) = platform::chord(&state.display);
                     state.controller.key_sample(all, main, any);
                 }
                 done.store(false, Ordering::SeqCst);
             });
+            if let Err(error) = commands::save_progress(&app, false) {
+                change(&app, move |state| {
+                    if state.error.as_deref() != Some(&error) {
+                        state.error = Some(error);
+                    }
+                });
+            }
             #[cfg(debug_assertions)]
             probe_command(&app);
         }
@@ -219,8 +289,19 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 }
 
 pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
+    #[cfg(debug_assertions)]
+    if let Some(report) = action.strip_prefix("probe-result:") {
+        let directory = std::env::var("FLOATLEAF_PROBE_DIR").map_err(|_| "未启用调试探针")?;
+        let value: serde_json::Value = serde_json::from_str(report).map_err(|e| e.to_string())?;
+        return std::fs::write(
+            std::path::Path::new(&directory).join("ui-result.json"),
+            value.to_string(),
+        )
+        .map_err(|e| e.to_string());
+    }
     if ![
-        "hide", "hold", "toggle", "pinned", "unlock", "lock", "edit", "finish",
+        "hide", "hold", "toggle", "pinned", "unlock", "lock", "edit", "finish", "next", "previous",
+        "auto",
     ]
     .contains(&action.as_str())
     {
@@ -230,7 +311,10 @@ pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
         return Err("请先解除位置锁定。".into());
     }
     change(app, move |state| match action.as_str() {
-        "hide" => state.controller.emergency_hide(),
+        "hide" => {
+            state.controller.emergency_hide();
+            state.reader.auto_running = false;
+        }
         "hold" => state.controller.set_mode(DisplayMode::Hold),
         "toggle" => state.controller.set_mode(DisplayMode::Toggle),
         "pinned" => state.controller.set_mode(DisplayMode::Pinned),
@@ -241,6 +325,16 @@ pub fn action(app: &AppHandle, action: String) -> Result<(), String> {
         }
         "finish" => {
             let _ = state.controller.set_editing(false);
+        }
+        "next" | "previous" => {
+            if state.controller.visible {
+                state.reader.turn(action == "next", true);
+                state.controller.revision += 1;
+            }
+        }
+        "auto" if state.controller.visible => {
+            state.reader.toggle_auto();
+            state.controller.revision += 1;
         }
         _ => {}
     });
@@ -272,6 +366,15 @@ fn probe_command(app: &AppHandle) {
         let path = std::path::Path::new(&directory).join("command.txt");
         if let Ok(command) = std::fs::read_to_string(&path) {
             let _ = std::fs::remove_file(path);
+            if command.trim() == "evaluate" {
+                if let Ok(script) =
+                    std::fs::read_to_string(std::path::Path::new(&directory).join("evaluate.js"))
+                    && let Some(window) = app.get_webview_window("main")
+                {
+                    let _ = window.eval(script);
+                }
+                return;
+            }
             #[cfg(target_os = "macos")]
             if command.trim() == "capture" {
                 let handle = app.clone();

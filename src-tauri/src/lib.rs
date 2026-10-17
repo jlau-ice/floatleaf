@@ -1,6 +1,11 @@
+mod commands;
 mod controller;
 mod platform;
+mod reader;
+mod reading_settings;
 mod runtime;
+mod storage;
+mod text_import;
 
 use tauri::Manager;
 
@@ -42,8 +47,27 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             reader_state,
             reader_action,
-            drag_overlay
+            drag_overlay,
+            commands::choose_txt,
+            commands::inspect_txt,
+            commands::library,
+            commands::data_directory,
+            commands::import_txt,
+            commands::select_book,
+            commands::remove_book,
+            commands::book_text,
+            commands::save_settings,
+            commands::report_layout
         ])
-        .run(tauri::generate_context!())
-        .expect("failed to run FloatLeaf");
+        .build(tauri::generate_context!())
+        .expect("failed to build FloatLeaf")
+        .run(|app, event| {
+            if matches!(
+                event,
+                tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit
+            ) && let Err(error) = commands::flush_progress(app)
+            {
+                eprintln!("退出保存失败：{error}");
+            }
+        });
 }

@@ -28,4 +28,8 @@ jobs:
       - run: pnpm env:check
       - run: pnpm build
       - run: pnpm check
+      - run: pnpm format:check
+      - run: pnpm test:rust
+      - run: pnpm exec playwright install chromium
+      - run: pnpm test:web
       - run: pnpm tauri build --debug --no-bundle

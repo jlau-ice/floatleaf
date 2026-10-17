@@ -61,3 +61,11 @@ GitHub Actions 配置提供 Windows 与 macOS 检查，但只有推送远端并�
 - 正式分发：macOS 签名、公证与 Windows 签名在 P3 配置，凭证不入库。
 
 官方前置依赖：https://v2.tauri.app/start/prerequisites/
+
+## 代码与数据约定
+
+Vue/TypeScript 使用 Prettier（`pnpm format:check`），Rust 使用 rustfmt 与 Clippy。Vue 组件 PascalCase、普通 TS 文件 kebab-case、Rust 模块 snake_case。实现以具体功能为单位，避免无需求的抽象层和重复校验。
+
+本地小说、进度和设置写入 `floatleaf.sqlite3`；SQLite 通过 rusqlite bundled 编译进应用，不要求用户安装数据库服务。设置作为一行 JSON 字段保存在 SQLite 内，没有独立 JSON 存储文件。运行期的阅读状态由 Rust 控制器持有，前端通过 Vue 组合函数订阅，没有额外 Pinia 状态副本。
+
+`pnpm test:rust` 覆盖显示/阅读状态和 SQLite 持久化；`pnpm test:web` 通过隔离 Chrome 实测分页。后者使用本机 Chrome，CI 配置下载 Chromium。原生使用 `scripts/native-reading-smoke.mjs`，需显式开启 debug 探针，详细步骤见 P1_READ_VERIFICATION.md。CI 尚未远端运行。
