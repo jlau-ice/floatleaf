@@ -1,6 +1,6 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-17。当前阶段：用户报告 Windows v0.1.0 安装包无法隐藏/紧急隐藏，macOS 开发环境正常。已修复 Windows 原生显示与 Tao 缓存隐藏混用，补充本地日志与设置页日志入口，准备 v0.1.1 复测包。持续目标尚未完成，Windows 用户设备复测仍待反馈。
+更新日期：2026-10-17。当前阶段：用户报告 Windows v0.1.0 安装包无法隐藏/紧急隐藏，macOS 开发环境正常。已修复 Windows 原生显示与 Tao 缓存隐藏混用，补充本地日志与设置页日志入口，公开发布 v0.1.1 Windows 复测包。持续目标尚未完成，Windows 用户设备复测仍待反馈。
 
 ## v0.1.1 Windows 修复与日志
 
@@ -8,7 +8,9 @@
 
 本机类型、rustfmt、Clippy、18 项 Rust / 5 项浏览器测试、前端构建和 Windows 普通 release/NSIS 构建通过。新增 Windows 安装包回归脚本及 CI 步骤，对旧包复现和新包实际 HWND 显隐进行检查；云端结果待补。复测说明见 `docs/RELEASE_v0.1.1.md`，根因/验证见 `docs/WINDOWS_HIDE_FIX.md`。下方 v0.1.0 阶段记录作为历史保留。
 
-补充：Windows 目标 Clippy 通过；macOS 独立测试标识的 debug 桌面构建、100 次原生显隐、日志入口 WKWebView/IPC 实测和截图检查通过，日志中期望/实际可见性一致。首次显隐测试因前台进程变化中断，随后完整复跑通过。测试应用正常退出，原有应用和书库保留。源码修复提交 `683fcfd` 已推送；CI 运行 `39013867420` 进行中。新安装器及复测 ZIP 在 `.local/github-release-0.1.1/`，准备作为 v0.1.1 发布，不覆盖 v0.1.0。
+补充：Windows 目标 Clippy 通过；macOS 独立测试标识的 debug 桌面构建、100 次原生显隐、日志入口 WKWebView/IPC 实测和截图检查通过，日志中期望/实际可见性一致。首次显隐测试因前台进程变化中断，随后完整复跑通过。测试应用正常退出，原有应用和书库保留。源码修复提交 `683fcfd` 已推送；CI 运行 `39013867420` 进行中。新安装器及复测 ZIP 在 `.local/github-release-0.1.1/`，不覆盖 v0.1.0。
+
+发布结果：`https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.1`，标签指向 `0b71557`。四个附件（Windows 安装器、试用 ZIP、复测说明、SHA256SUMS）均经公开链接重新下载，逐字节/哈希比对通过。macOS 安装包仍为 v0.1.0。本次 Windows 旧包复现步骤已在云端通过，新包安装回归仍在运行。
 
 ## 仓库与环境
 
@@ -74,7 +76,7 @@ Windows 新产物见 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip`（2,
 
 ## 下一步
 
-下一步由用户转发 Windows ZIP，同学在 Windows 11 x64 安装并试用；用户继续 macOS 手工验收。按 `docs/TRIAL_GUIDE.md` 的检查项先确认 P0 核心场景，收到异常后修复，再补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。仅在正式分发时才需要签名账号和额外授权。
+下一步由用户转发 **v0.1.1** Windows 安装器或 ZIP；同学先退出旧版再安装，从“日志位置”确认版本，复测不同松键顺序与紧急隐藏，回传日志和步骤。用户继续 macOS 手工验收。收到异常后修复，再补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。仅在正式分发时才需要签名账号和额外授权。
 
 保持实现直接、简单：rusqlite bundled，无 ORM、额外仓储框架或独立小说文件。不得将当前本机程序验证外推为双平台通过。发布说明见 `docs/RELEASE_v0.1.0.md`，附件在 `.local/github-release/`，包含两端安装器、Windows 试用 ZIP、Word 说明、MIT 协议和 SHA-256 清单，不进入 Git。历史提交已检查，未包含依赖目录、编译缓存、真实小说、用户书库或已知凭据模式。发布标签指向 `149e9ff`；后续换行规则与交接记录修正不改变安装包，阶段提交见 `git log`。
 ```bash

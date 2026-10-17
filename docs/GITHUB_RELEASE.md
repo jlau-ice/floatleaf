@@ -1,5 +1,7 @@
 # GitHub 首次公开发布记录
 
+后续修复：已发布 [v0.1.1 Windows 隐藏修复与日志复测版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.1.1)，标签 `0b71557`，业务修复 `683fcfd`；安装器、ZIP、复测说明、SHA256SUMS 四个附件公开下载与本地逐字节一致。macOS 安装包保持 v0.1.0。新版本根因和验证见 [WINDOWS_HIDE_FIX.md](WINDOWS_HIDE_FIX.md)，以下保留首次发布记录。
+
 日期：2026-10-17。按用户明确授权创建公开仓库、推送源码，并发布两端试用安装包。
 
 - 仓库：[jlau-ice/floatleaf](https://github.com/jlau-ice/floatleaf)，默认分支 `main`，协议 MIT。
