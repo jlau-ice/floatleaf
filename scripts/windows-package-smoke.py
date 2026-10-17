@@ -218,8 +218,6 @@ try:
     fixture = u.CreateWindowExW(0, "STATIC", "FloatLeaf regression input fixture",
                                 0x00CF0000, 50, 50, 640, 480, None, None, None, None)
     u.ShowWindow(fixture, 5)
-    key(ALT)
-    key(ALT, False)  # Allow this test to establish its input target before measuring focus.
     u.SetForegroundWindow(fixture)
     wait()
     if u.GetForegroundWindow() != fixture:
