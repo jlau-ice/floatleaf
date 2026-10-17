@@ -231,13 +231,17 @@ try:
     else:
         raise RuntimeError(f"App windows not ready: {app_windows(app.pid)}; exit={app.poll()}")
     wait(2)
-    fixture = u.CreateWindowExW(0, "STATIC", "FloatLeaf regression input fixture",
+    fixture = u.CreateWindowExW(0, "EDIT", "FloatLeaf regression input fixture",
                                 0x00CF0000, 50, 50, 640, 480, None, None, None, None)
+    if not fixture:
+        raise RuntimeError(f"Input fixture creation failed: {c.get_last_error()}")
     # A real synthetic click establishes focus without bypassing Windows foreground policy.
     u.SetWindowPos(fixture, -1, 50, 50, 640, 480, 0x0050)
     click(100, 110)
     if u.GetForegroundWindow() != fixture:
-        raise RuntimeError("Input fixture could not become foreground")
+        if args.screenshot:
+            capture_settings(fixture, args.screenshot.with_name("windows-focus-failure.png"))
+        raise RuntimeError(f"Input fixture {fixture} could not become foreground: {u.GetForegroundWindow()}")
     check("initial-hidden", not u.IsWindowVisible(overlay))
 
     for order in itertools.permutations([CTRL, ALT, SPACE]):
