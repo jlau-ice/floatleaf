@@ -8,13 +8,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前提供 **Windows v0.2.1 / macOS v0.2.0 试用版（Pre-release）**。Windows 新版将原生标题栏与设置页统一为暖白底、深绿文字，保留系统窗口按钮。两端均支持 EPUB / TXT 章节目录、搜索和跳转，原有 TXT 书库自动补目录；包含自动翻页控制、Windows 隐藏修复与日志入口。
+当前提供 **Windows / macOS v0.2.2 试用版（Pre-release）**。快捷键页新增明确的「录制快捷键」按钮、正在录制和保存反馈。两端均支持 EPUB / TXT 章节目录、搜索和跳转；包含 Windows 暖白原生标题栏、隐藏修复、自动翻页控制与日志入口。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.0/FloatLeaf_0.2.0_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.1/FloatLeaf_0.2.1_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.1/FloatLeaf_0.2.1_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 EPUB/TXT 示例 |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.2/FloatLeaf_0.2.2_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.2/FloatLeaf_0.2.2_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.2/FloatLeaf_0.2.2_windows-x64_trial.zip) | 含安装程序、取日志步骤、试用说明和合成 EPUB/TXT 示例 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -56,7 +56,7 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 | 自动翻页暂停 / 恢复 | `Ctrl + Alt + P` |
 | 紧急隐藏 | `Ctrl + Alt + Esc` |
 
-按住模式下，保持显示组合键，再按方向键翻页或按 P 控制自动阅读。紧急隐藏优先于所有显示模式；完全松键后重新触发显示快捷键即可恢复。快捷键冲突时可在设置中修改。
+按住模式下，保持显示组合键，再按方向键翻页或按 P 控制自动阅读。紧急隐藏优先于所有显示模式；完全松键后重新触发显示快捷键即可恢复。修改时，在「快捷键」页点击对应的「录制快捷键」，按下组合键后点击「保存快捷键」。Esc 取消录制，Tab 或点击其他控件离开；「尚未保存」表示改动还没生效。
 
 ## 本地数据
 
@@ -68,12 +68,12 @@ v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”�
 
 | 项目 | 当前证据 |
 | --- | --- |
-| macOS Apple Silicon | v0.2.0 debug 桌面 EPUB 2/3、UTF-8/GBK 导入、目录搜索/跳转、重启恢复与截图检查通过；两端完整系统场景仍待用户反馈 |
-| Windows x64 | v0.2.1 普通安装包在 Windows Server 2025 CI 实际安装，43 项显隐/焦点/窗口控制与标题栏像素断言通过；Windows 11 用户设备复测仍待反馈 |
-| 单元与界面测试 | v0.2.1 源码双平台 CI 各 27 项 Rust、7 项浏览器测试及类型/格式/Clippy 通过；详细导入边界与验证见章节记录 |
+| macOS Apple Silicon | v0.2.2 DMG 校验、复制后启动、单实例与退出通过；录制入口已在真实 WKWebView 验证，完整系统场景仍待用户反馈 |
+| Windows x64 | v0.2.2 公开安装包在 Windows Server 2025 CI 实际安装，43 项显隐/焦点/窗口控制与标题栏像素断言通过；Windows 11 用户设备复测仍待反馈 |
+| 单元与界面测试 | 录制优化源码双平台 CI 各 27 项 Rust、10 项浏览器测试及类型/格式/Clippy 通过；v0.2.2 打包版本的本机与 Windows 目标检查通过 |
 | 仍待实机反馈 | 两端真实组合键释放、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
-本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布证据见 [发布记录](docs/GITHUB_RELEASE.md)；[v0.2.1 安装包回归](https://github.com/jlau-ice/floatleaf/actions/runs/39040506097) 通过，源码检查首轮的测试脚本失败与修正如实记录在 [标题栏验证](docs/WINDOWS_TITLEBAR.md)。
+本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布证据见 [发布记录](docs/GITHUB_RELEASE.md)；[v0.2.2 安装包回归](https://github.com/jlau-ice/floatleaf/actions/runs/39044669420) 和 [录制优化源码双平台检查](https://github.com/jlau-ice/floatleaf/actions/runs/39042534515) 均通过。
 
 ## 开发
 

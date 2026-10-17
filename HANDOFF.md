@@ -1,16 +1,22 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-17。当前阶段：已公开发布 Windows v0.2.1 标题栏优化试用版，macOS 沿用 v0.2.0。两端均含 EPUB/TXT 章节、自动翻页控制与日志入口；Windows 新版的五个附件已公开下载并与本地逐字节核验。持续目标尚未完成，用户设备的章节兼容性与完整系统验收仍待反馈。
+更新日期：2026-10-17。当前阶段：已公开发布 Windows x64 / macOS Apple Silicon v0.2.2 试用版，加入明确的快捷键录制入口与保存反馈，包含此前 EPUB/TXT 章节、自动翻页控制、Windows 标题栏和隐藏修复。六个发布附件已公开下载并与本地逐字节/哈希核验。持续目标尚未完成，用户设备的章节兼容性、物理键鼠与完整系统验收仍待反馈。
 
-## v0.2.2 发布进行中
+## v0.2.2 发布完成
 
-用户已要求更新安装包。版本统一升级为 0.2.2，将 `4fbc4a0` 的录制入口优化打入 Windows x64 / macOS Apple Silicon 普通试用包。该提交的双平台 CI `39042534515` 已成功；本轮包构建、启动验收与发布核验进行中，产物及日志位于 `.local/release-022/` 和 `.local/github-release-0.2.2/`。
+[v0.2.2](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.2) 已公开发布为 Pre-release，标签指向 `344824f5e0d07232ebd1daa2147ab3b42cfe4057`，录制入口实现为 `4fbc4a0`。版本统一升级为 0.2.2，两端普通安装包不含 diagnostics 探针；源码双平台 CI `39042534515` 各 27 项 Rust / 10 项浏览器测试及类型/格式/Clippy 通过。本轮 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm format:check` 与 Windows 目标 release Clippy all-targets 均通过。
+
+Windows 普通 NSIS 和 macOS app/DMG 构建、包版本与诊断入口排除、归档/签名校验通过。Windows 初次 NSIS 步骤因沙箱缓存写权限失败，获准在沙箱外重试后成功。macOS DMG 只读挂载并复制后实际启动（PID 5178）、设置窗口可见、第二实例退出与正常退出通过，证据 `.local/release-022/mac-package-smoke.json`；原开发应用正常退出后已用 `pnpm desktop:dev` 恢复运行。包为 ad-hoc 签名且未公证，Windows 未正式签名。
+
+Windows Server 2025 的 [39044669420](https://github.com/jlau-ice/floatleaf/actions/runs/39044669420) 实际下载并安装公开 v0.2.2 EXE，深色应用偏好下 43 项系统合成按键、原生显隐/焦点/样式、窗口控制及标题栏像素断言通过，日志版本确认为 0.2.2，真实截图核对通过。原始报告、截图和日志在 `.local/release-022/windows-trial/`，运行元数据 `trial-ci.json`；工作流保持 `contents: read`。此项不代表 Windows 11 新录制入口或物理键鼠已验收。
+
+DMG、Windows EXE、试用 ZIP、独立章节示例、复测说明和 SHA256SUMS 共六个附件已从未登录公开 URL 下载，与本地逐字节及 SHA-256 一致，报告 `.local/release-022/download/verification.json`。构建与检查证据在 `.local/release-022/`，发布文件在 `.local/github-release-0.2.2/`；附件无真实小说或用户数据。哈希与完整发布记录见 `docs/GITHUB_RELEASE.md`。
 
 ## 当前源码：快捷键录制入口
 
 用户反馈旧只读输入框看不出可以录制。已改为每项明确显示「录制快捷键」的按钮；点击后进入高亮录制态并主动聚焦（兼容 WKWebView 按钮点击焦点行为），单按 Esc、Tab 或失焦取消，录好后显示「尚未保存」，保存成功或注册失败在按钮附近给出反馈。Rust 注册/冲突/存储路径未修改。
 
-环境检查、前端构建、类型/rustfmt/Clippy、Prettier 通过；10 项浏览器测试通过，其中新增 3 项录制交互测试。为保留用户已启动的 1420 桌面开发服务，测试使用临时 1422 端口配置，位于 `.local/shortcut-ux/`。macOS 独立标识的 debug 桌面构建及真实 WKWebView 录制/保存通过，执行 `node scripts/native-final-smoke.mjs .local/shortcut-ux/native --shortcuts-only`；验证点击聚焦、录制状态、Tab 导航、Rust 实际注册与 SQLite 保存，之后恢复测试配置。入口和取消状态截图已目视核对，证据为 `native-shortcuts-result.log`、`shortcuts-idle.png` 和 `shortcuts-cancelled.png`。测试应用已正常退出，用户原开发程序保留。已发布的 Windows v0.2.1 / macOS v0.2.0 安装包不包含本次源码改动，不覆盖现有发布附件。
+环境检查、前端构建、类型/rustfmt/Clippy、Prettier 通过；10 项浏览器测试通过，其中新增 3 项录制交互测试。为保留用户已启动的 1420 桌面开发服务，测试使用临时 1422 端口配置，位于 `.local/shortcut-ux/`。macOS 独立标识的 debug 桌面构建及真实 WKWebView 录制/保存通过，执行 `node scripts/native-final-smoke.mjs .local/shortcut-ux/native --shortcuts-only`；验证点击聚焦、录制状态、Tab 导航、Rust 实际注册与 SQLite 保存，之后恢复测试配置。入口和取消状态截图已目视核对，证据为 `native-shortcuts-result.log`、`shortcuts-idle.png` 和 `shortcuts-cancelled.png`。测试应用已正常退出，用户原开发程序保留。此次改动已包含于 v0.2.2 两端安装包；旧 v0.2.1 / v0.2.0 附件保留不覆盖。
 
 验证边界：WebView 测试通过 DOM 按钮点击和 KeyboardEvent 驱动，实际调用 Rust 与 SQLite；不代表物理快捷键已验收。第一次综合冒烟在阅读窗口处于紧急隐藏状态时等待显示超时，尚未走到录制；针对录制的首次执行又因脚本在 Vue 更新保存按钮前同步点击而中断。已增加等待按钮更新并复跑录制测试通过，先前记录分别保存在 `reading-smoke-interrupted.json`、`synchronous-click-interrupted.json`；不宣称整套阅读综合冒烟本轮通过。
 
@@ -110,7 +116,7 @@ Windows 新产物见 `.local/release/FloatLeaf_0.1.0_windows-x64_trial.zip`（2,
 
 ## 下一步
 
-下一步由用户转发 **v0.2.1** Windows 安装器或 ZIP；同学先退出旧版再安装，从“日志位置”确认版本。先查看系统浅色/深色下的标题栏及按钮悬停，复测缩放、拖动和贴靠。导入手头的 EPUB/TXT，检查目录、搜索和选章；隐藏时跳章、调整字号及重启后检查位置。再复测自动翻页间隔、不同松键顺序和紧急隐藏，异常时回传日志与操作步骤。用户继续 macOS 手工验收。收到反馈后补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。正式签名、公证和付费服务仍需另行授权。
+下一步由用户转发 **v0.2.2** Windows 安装器或 ZIP，macOS 用户安装同版本 DMG；先退出旧版再安装，从“日志位置”确认版本。先复测「录制快捷键」入口、取消、保存反馈及新组合键实际触发，再查看 Windows 系统浅色/深色下的标题栏及按钮悬停，复测缩放、拖动和贴靠。导入手头的 EPUB/TXT，检查目录、搜索和选章；隐藏时跳章、调整字号及重启后检查位置。再复测自动翻页间隔、不同松键顺序和紧急隐藏，异常时回传日志与操作步骤。用户继续 macOS 手工验收。收到反馈后补齐 `docs/MANUAL_VALIDATION.md` 剩余验收。正式签名、公证和付费服务仍需另行授权。
 
 保持实现直接、简单：rusqlite bundled，无 ORM、额外仓储框架或独立小说文件。不得将当前本机程序验证外推为双平台通过。发布说明见 `docs/RELEASE_v0.1.0.md`，附件在 `.local/github-release/`，包含两端安装器、Windows 试用 ZIP、Word 说明、MIT 协议和 SHA-256 清单，不进入 Git。历史提交已检查，未包含依赖目录、编译缓存、真实小说、用户书库或已知凭据模式。发布标签指向 `149e9ff`；后续换行规则与交接记录修正不改变安装包，阶段提交见 `git log`。
 ```bash

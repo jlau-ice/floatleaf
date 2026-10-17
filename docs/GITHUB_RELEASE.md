@@ -1,5 +1,28 @@
 # GitHub 公开发布记录
 
+## v0.2.2
+
+[v0.2.2 两端试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.2) 已公开发布为 Pre-release，标签指向 `344824f5e0d07232ebd1daa2147ab3b42cfe4057`，录制入口实现提交为 `4fbc4a069226899aa19c1b0f7d098582d6c39e3d`。Windows x64 / macOS Apple Silicon 版本统一为 0.2.2，新增明确的「录制快捷键」、正在录制、尚未保存与保存结果提示，包含此前标题栏、章节、隐藏及自动翻页修复。
+
+普通 app/DMG、NSIS 构建成功，版本与诊断探针排除、Windows 安装归档/ZIP CRC、macOS ad-hoc 签名及 DMG 校验通过。本机执行 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm format:check` 和 Windows 目标 release Clippy all-targets 均通过。Windows 首次 NSIS 步骤因沙箱禁止写缓存失败，在沙箱外重试成功，记录 `windows-build.log` / `windows-build-retry.log`；业务代码未因此变更。
+
+- [源码 CI 39042534515](https://github.com/jlau-ice/floatleaf/actions/runs/39042534515)：两端各 27 项 Rust / 10 项浏览器测试与环境/类型/格式/Clippy 通过；macOS debug 构建和 Windows 普通 NSIS 构建及 43 项原生回归均通过。该轮为实现提交，包版本尚为 0.2.1。
+- [v0.2.2 安装包回归 39044669420](https://github.com/jlau-ice/floatleaf/actions/runs/39044669420)：Windows Server 2025，深色应用偏好下实际下载并安装本次公开 EXE，43 项系统合成按键、原生显隐/焦点/样式、设置窗口控制与标题栏像素检查全部通过；启动日志版本确认为 0.2.2，真实截图目视核对通过。报告和截图在 `.local/release-022/windows-trial/windows-trial-evidence/`，日志在 `windows-trial-logs/`，工作流保留 `contents: read`。
+- macOS 普通 DMG 只读挂载并复制应用后，实际启动（PID 5178）、设置窗口可见、第二实例退出、正常退出通过，证据 `.local/release-022/mac-package-smoke.json`。随后恢复用户的桌面开发程序。录制功能的真实 WKWebView / Rust / SQLite 验证见 `HANDOFF.md`，由 DOM 事件驱动，不代表物理键盘验证。
+
+六个附件从未登录公开 URL 重新下载，逐字节及 SHA-256 与本地产物一致。发布文件在 `.local/github-release-0.2.2/`，核验报告 `.local/release-022/download/verification.json`。Windows ZIP 包含安装器、MIT 协议、说明与原创合成章节示例，无真实小说、用户数据库或凭据。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| Chapter-Samples.zip | 2,797 | `9610a3c801556b679a140abeabbbaa3367b10da3cda309e3e2434f0e683b45f3` |
+| FloatLeaf_0.2.2_aarch64.dmg | 3,746,639 | `d1844005152cdae4c8671c1a65f1c3a07db5d47180394fc1d33ce9961cf94730` |
+| FloatLeaf_0.2.2_windows-x64_trial.zip | 2,975,900 | `6b57ec38ac44e06eec1a1da7e370076bfd8453b998cf31a9f2cdcfb9e13e71ac` |
+| FloatLeaf_0.2.2_x64-setup.exe | 2,987,007 | `7c91059e1d0d924d8ffb9c3a74bfb2c9f5119495859d8bb25370f4c73350c461` |
+| Retest-Guide.txt | 1,281 | `cf5f3c6c508bf4041d105f788bd4ba9d29c5dfc6eaaa1ae9d87c6fbe122e20b1` |
+| SHA256SUMS.txt | 463 | `b2a20be45e219f73e6392044f7dca36e5ea02b72724a94f35eade8d7568d2d35` |
+
+Windows 11 用户设备的新录制入口、物理键鼠、不同缩放、多屏与休眠仍待验收。安装包仍未使用正式发布证书；macOS 为 ad-hoc 签名且未公证。本次发布不代表持续目标和双平台完整验收完成。
+
 ## v0.2.1
 
 [v0.2.1 Windows 试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.1) 已公开发布，标签指向 `140c974f5ee8193af1246447f1527f5b93983c77`，应用实现为 `249c0c5`。设置窗口使用与页面一致的暖白原生标题栏和深绿文字，系统窗口按钮保持原生；macOS 下载沿用 v0.2.0。
