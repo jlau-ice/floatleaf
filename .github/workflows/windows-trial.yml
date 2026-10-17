@@ -1,0 +1,50 @@
+name: Verify Windows trial
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release or draft containing the installer to verify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  installed-trial:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and install the trial
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          gh release download $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --pattern '*_x64-setup.exe' --dir $env:RUNNER_TEMP
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $installer = Get-ChildItem "$env:RUNNER_TEMP/*_x64-setup.exe" | Select-Object -First 1
+          $directory = Join-Path $env:RUNNER_TEMP 'floatleaf-trial'
+          $install = Start-Process $installer.FullName -ArgumentList '/S', "/D=$directory" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installer exited $($install.ExitCode)" }
+          "FLOATLEAF_EXE=$directory/floatleaf.exe" >> $env:GITHUB_ENV
+          "FLOATLEAF_LOG_DIR=$env:APPDATA/io.github.jlauice.floatleaf/logs" >> $env:GITHUB_ENV
+      - name: Check the installed app under dark system preference
+        shell: pwsh
+        run: |
+          $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+          New-Item -Path $themeKey -Force | Out-Null
+          Set-ItemProperty -Path $themeKey -Name AppsUseLightTheme -Type DWord -Value 0
+          python scripts/windows-package-smoke.py $env:FLOATLEAF_EXE --output .local/windows-trial.json --screenshot .local/windows-settings.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-trial-evidence
+          include-hidden-files: true
+          path: .local/windows-*
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-trial-logs
+          path: ${{ env.FLOATLEAF_LOG_DIR }}/*.log

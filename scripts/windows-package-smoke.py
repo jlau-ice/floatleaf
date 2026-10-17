@@ -92,7 +92,7 @@ def press_display():
     wait()
 
 
-def find_window(pid, name):
+def app_windows(pid):
     found = []
 
     @enum_proc
@@ -101,12 +101,16 @@ def find_window(pid, name):
         u.GetWindowThreadProcessId(hwnd, c.byref(owner))
         title = c.create_unicode_buffer(256)
         u.GetWindowTextW(hwnd, title, len(title))
-        if owner.value == pid and title.value == name:
-            found.append(hwnd)
+        if owner.value == pid:
+            found.append((hwnd, title.value))
         return True
 
     u.EnumWindows(visit, 0)
-    return found[0] if found else None
+    return found
+
+
+def find_window(pid, name):
+    return next((hwnd for hwnd, title in app_windows(pid) if title == name), None)
 
 
 checks = []
@@ -158,13 +162,14 @@ fixture = None
 try:
     for _ in range(300):
         overlay = find_window(app.pid, "FloatLeaf 阅读")
-        if overlay:
+        main = find_window(app.pid, "浮页 FloatLeaf")
+        if overlay and (args.expect_stuck or main):
             break
         if app.poll() is not None:
             raise RuntimeError(f"App exited before creating its overlay: {app.returncode}")
         wait(0.1)
     else:
-        raise RuntimeError("Overlay HWND not found")
+        raise RuntimeError(f"App windows not ready: {app_windows(app.pid)}; exit={app.poll()}")
     wait(2)
     main = find_window(app.pid, "浮页 FloatLeaf")
     if not args.expect_stuck:
