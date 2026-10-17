@@ -3,7 +3,8 @@
   "identifier": "default",
   "description": "Minimal capability for the FloatLeaf main window",
   "windows": [
-    "main"
+    "main",
+    "overlay"
   ],
   "permissions": [
     "core:default"

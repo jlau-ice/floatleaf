@@ -15,7 +15,8 @@
     "rust:fmt": "node scripts/cargo.mjs fmt --manifest-path src-tauri/Cargo.toml -- --check",
     "rust:clippy": "node scripts/cargo.mjs clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings",
     "check": "pnpm typecheck && pnpm rust:fmt && pnpm rust:clippy",
-    "env:check": "node scripts/doctor.mjs"
+    "env:check": "node scripts/doctor.mjs",
+    "test:rust": "node scripts/cargo.mjs test --manifest-path src-tauri/Cargo.toml --locked"
   },
   "dependencies": {
     "vue": "^3.5.13",

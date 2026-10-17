@@ -16,13 +16,33 @@
         "width": 920,
         "height": 680,
         "minWidth": 640,
-        "minHeight": 520
+        "minHeight": 520,
+        "label": "main"
+      },
+      {
+        "label": "overlay",
+        "title": "FloatLeaf 阅读",
+        "url": "index.html?window=overlay",
+        "width": 640,
+        "height": 108,
+        "x": 180,
+        "y": 160,
+        "visible": false,
+        "transparent": true,
+        "decorations": false,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "focusable": false,
+        "resizable": false
       }
     ],
     "security": {
       "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:",
       "devCsp": "default-src 'self'; connect-src ipc: http://ipc.localhost http://localhost:1420 ws://localhost:1420 ws://localhost:1421; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
-    }
+    },
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,

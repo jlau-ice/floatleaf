@@ -57,7 +57,7 @@ GitHub Actions 配置提供 Windows 与 macOS 检查，但只有推送远端并�
 - cargo 找不到：手动 source ~/.cargo/env，或使用项目提供的 pnpm 脚本。
 - 端口 1420 已占用：确认是否已有本项目进程；不要结束其他项目服务。
 - 只有网页没有桌面：使用 pnpm desktop:dev；pnpm dev 不启动 Rust。
-- 快捷键/阅读无效：初始化版本尚未实现，按 TASKS.md 的 P0/P1 继续。
+- 快捷键无效：检查设置中的注册错误。默认 Ctrl+Alt+Space，紧急隐藏后须全部释放再重新按下；网页模式不支持系统快捷键。
 - 正式分发：macOS 签名、公证与 Windows 签名在 P3 配置，凭证不入库。
 
 官方前置依赖：https://v2.tauri.app/start/prerequisites/

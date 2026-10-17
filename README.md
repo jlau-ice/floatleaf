@@ -2,7 +2,7 @@
 
 像桌面歌词一样显示小说的离线阅读工具，计划支持 Windows 和 macOS。按住快捷键显示文字，松开隐藏；字体、透明度、显示行数及翻页方式可调。
 
-当前为 **Tauri 2 + Vue 3 + TypeScript + Pinia + Rust 初始化骨架**。启动页可检查原生 IPC 连接；透明悬浮、阅读和快捷键业务尚未实现。
+当前为 **Tauri 2 + Vue 3 + TypeScript + Rust 原生窗口原型**。已实现透明悬浮、显示模式、组合键状态防护、紧急隐藏和托盘。TXT 阅读闭环正在开发，当前悬浮文本为明确标注的验证文本。
 
 ## 开始开发
 
@@ -24,6 +24,7 @@ Rust 由 rustup 管理，rust-toolchain.toml 固定项目版本并声明 rustfmt
 | pnpm dev | 浏览器预览，不能验证全局快捷键和系统窗口行为 |
 | pnpm env:check | 检查 Node、rustup、Rust 组件和系统工具 |
 | pnpm build | Vue 类型检查与前端生产构建 |
+| pnpm test:rust | 阅读控制器 Rust 单元测试 |
 | pnpm check | 类型、Rust 格式和 Clippy 检查 |
 | pnpm tauri build --debug --no-bundle | 编译本机桌面程序，不生成分发安装包 |
 | pnpm desktop:build | 构建当前平台安装包，正式发布另需签名配置 |
@@ -36,7 +37,7 @@ Rust 由 rustup 管理，rust-toolchain.toml 固定项目版本并声明 rustfmt
 4. [架构约定](docs/ARCHITECTURE.md)、[环境指南](docs/DEVELOPMENT.md)、[验收矩阵](docs/ACCEPTANCE.md)。
 5. [Word 计划书](docs/FloatLeaf-项目计划书.docx)：可分享的计划书。
 
-下一项工作是 P0-01 透明阅读窗口。先跑通两个平台的显示隐藏、不抢焦点和穿透，再进入小说导入及分页。
+P0 macOS 原生窗口探针已运行，完整键鼠与双平台实机验收仍待补。具体证据见 [原生验证记录](docs/P0_NATIVE_VERIFICATION.md)，接下来推进小说导入及分页。
 
 ## 分发前提
 
