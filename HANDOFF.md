@@ -4,6 +4,8 @@
 
 ## 当前排查：Windows 商家工作台
 
+后续发现并修复紧急隐藏的另一边界：配置的 Pressed 已收到但组合键采样为 false 时，旧共用条件会拒绝紧急隐藏。v0.2.5 源码让该事件直接隐藏并暂停自动阅读，其余显示/翻页规则不变。本机 29 项 Rust 测试、类型/格式/Clippy、Windows 目标 Clippy 与 macOS debug app 构建通过，旧逻辑失败证据保留。当前仅修改源码，v0.2.4 公共附件不覆盖。Windows 增加普通包事件时序注入的六项原生检查，CI 待执行；macOS 独立 PID 24227、测试紧急键 Ctrl + Option + E 尚无按键结果，用户正在添加 `src-tauri/target/debug/bundle/macos/FloatLeaf.app` 的输入监控权限，等待确认后按原参数重启。暂不覆盖该调试包，原书库不变。完整记录见 `docs/EMERGENCY_INPUT_FIX.md`。
+
 用户补充：拼多多商家工作台前台无法唤起浮页，关闭其快捷键无效，微信覆盖到前台后恢复。旧普通 v0.2.2 日志中显示/紧急隐藏注册成功、两组翻页冲突，并有多组 1～2 ms 内 Pressed/Released；不能仅归因为快捷键占用或置顶。新增仅配置快捷键与显隐时的前台进程名/PID、完整性 RID、实际按键采样、控制器前后状态和原生窗口属性日志，沿用两份 1 MiB 轮转，不记录业务内容或普通输入。版本 0.2.3 已交付，完整步骤与证据见 `docs/PDD_SHORTCUT_DIAGNOSTICS.md`。
 
 本机类型/rustfmt/Clippy、27 项 Rust 测试、前端构建/格式和 Windows 目标 release Clippy 已通过。Windows 普通 NSIS/复测 ZIP 与 macOS app/DMG 位于 `.local/github-release-0.2.3/`，已公开发布。NSIS 解包、排除调试探针标记和 DMG/ad-hoc 签名校验通过；macOS 从 DMG 复制后启动（PID 18649）、单实例与正常退出通过，之后恢复已获授权的旧独立调试 app，保留用户数据。新包仍显示未授权，不能借用旧包授权结论。源码 `0abb69f`、工作流 `93d7a46` 已推送；CI `39087706786` 两端各 27 项 Rust/11 项浏览器测试及类型/格式/Clippy 通过，Windows 普通安装包构建和 47 项原生断言通过。`39088371240` 另对公开的同一 EXE 实际安装，47 项断言通过；日志确认新字段有效、两进程均为高完整性，尚不覆盖普通浮页对高权限前台应用。公开下载、原生报告与包启动证据均在 `.local/pdd-023/`。

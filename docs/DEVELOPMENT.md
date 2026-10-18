@@ -44,6 +44,8 @@ open src-tauri/target/debug/bundle/macos/FloatLeaf.app
 
 开发模式提示会说明这一限制；打包版提示添加实际使用的 `.app`。重新编译或换启动方式后，以当前进程的权限提示和后台实测为准。本机证据及仍待验证项见 [后台快捷键说明](MACOS_BACKGROUND_INPUT.md)。
 
+已核对本项目 Tauri CLI 2.12.3 的[开发启动源码](https://github.com/tauri-apps/tauri/blob/tauri-cli-v2.12.3/crates/tauri-cli/src/interface/rust/desktop.rs)：默认通过 `cargo run` 启动子进程，`--runner` 替换的是执行 Cargo 参数的程序，不能直接改成 `open`。当前保留原有热更新入口；后台按键验收使用上面的独立 app 命令。尚未修改系统权限归属、签名要求或终端权限。
+
 ## 新 Windows 开发机
 
 安装 Node 22.22.3 和 pnpm 10.33.4、Visual Studio Build Tools 的 C++ 桌面开发工作负载及 Windows SDK、WebView2 Runtime，并使用官方 rustup 安装 MSVC 工具链。重新打开终端后，在仓库运行以下命令：

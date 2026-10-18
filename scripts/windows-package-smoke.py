@@ -22,6 +22,7 @@ parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--expect-stuck", action="store_true")
 parser.add_argument("--screenshot", type=Path)
 parser.add_argument("--check-diagnostics", action="store_true")
+parser.add_argument("--check-emergency-without-key", action="store_true")
 args = parser.parse_args()
 
 u = c.WinDLL("user32", use_last_error=True)
@@ -29,6 +30,7 @@ enum_proc = c.WINFUNCTYPE(w.BOOL, w.HWND, w.LPARAM)
 u.EnumWindows.argtypes = [enum_proc, w.LPARAM]
 u.GetWindowThreadProcessId.argtypes = [w.HWND, c.POINTER(w.DWORD)]
 u.GetWindowTextW.argtypes = [w.HWND, w.LPWSTR, c.c_int]
+u.GetClassNameW.argtypes = [w.HWND, w.LPWSTR, c.c_int]
 u.IsWindowVisible.argtypes = [w.HWND]
 u.GetForegroundWindow.restype = w.HWND
 u.SetWindowPos.argtypes = [w.HWND, w.HWND, c.c_int, c.c_int, c.c_int, c.c_int, w.UINT]
@@ -132,6 +134,32 @@ def app_windows(pid):
 
 def find_window(pid, name):
     return next((hwnd for hwnd, title in app_windows(pid) if title == name), None)
+
+
+def current_log_events(pid):
+    log = Path(os.environ["APPDATA"]) / "io.github.jlauice.floatleaf/logs/floatleaf.log"
+    events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+    start = next(i for i in range(len(events) - 1, -1, -1)
+                 if events[i]["event"] == "start" and events[i]["details"]["pid"] == pid)
+    return events[start:]
+
+
+def post_emergency_without_key(pid):
+    # Target only this app's global-hotkey 0.8 message window. Posting the
+    # registered event with Escape up exercises the unavailable-main-key path.
+    for hwnd, _ in app_windows(pid):
+        name = c.create_unicode_buffer(256)
+        u.GetClassNameW(hwnd, name, len(name))
+        if name.value == "global_hotkey_app":
+            break
+    else:
+        raise RuntimeError("App hotkey message window not found")
+    registered = next(e["details"] for e in current_log_events(pid)
+                      if e["event"] == "shortcut-registered"
+                      and e["details"]["key"] == "control+alt+Escape")
+    if not u.PostMessageW(hwnd, 0x0312, registered["keyId"], (ESC << 16) | 3):
+        raise RuntimeError(f"WM_HOTKEY post failed: {c.get_last_error()}")
+    wait()
 
 
 checks = []
@@ -282,12 +310,29 @@ try:
     release_all()
     check("fresh-chord-release-hides", not u.IsWindowVisible(overlay))
 
+    if args.check_emergency_without_key:
+        press_display()
+        check("emergency-without-key-starts-visible", u.IsWindowVisible(overlay))
+        post_emergency_without_key(app.pid)
+        check("emergency-without-key-hides", not u.IsWindowVisible(overlay))
+        check("emergency-without-key-keeps-focus", u.GetForegroundWindow() == fixture)
+        presses = [e["details"] for e in current_log_events(app.pid)
+                   if e["event"] == "shortcut" and e["details"].get("action") == "emergency"
+                   and e["details"]["pressed"]]
+        check("emergency-without-key-sampling-evidence", any(
+            not e["mainDown"] and not e["chordDown"] and e["before"]["visible"]
+            and not e["after"]["visible"] and e["after"]["emergencyLatched"] for e in presses))
+        key(SPACE, False)
+        key(SPACE)
+        wait()
+        check("emergency-without-key-blocks-old-chord", not u.IsWindowVisible(overlay))
+        release_all()
+        press_display()
+        check("emergency-without-key-fresh-chord-recovers", u.IsWindowVisible(overlay))
+        release_all()
+
     if args.check_diagnostics:
-        log = Path(os.environ["APPDATA"]) / "io.github.jlauice.floatleaf/logs/floatleaf.log"
-        events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
-        start = next(i for i in range(len(events) - 1, -1, -1)
-                     if events[i]["event"] == "start" and events[i]["details"]["pid"] == app.pid)
-        events = events[start:]
+        events = current_log_events(app.pid)
         presses = [event["details"] for event in events if event["event"] == "shortcut"
                    and event["details"].get("action") == "display" and event["details"]["pressed"]]
         check("diagnostics-configured-key-state", any(
@@ -317,7 +362,7 @@ try:
     passed = reproduced if args.expect_stuck else not failures
     report = {"os": platform.platform(), "exe": args.exe.name,
               "expectedOldBug": args.expect_stuck, "passed": passed, "checks": checks,
-              "scope": "Synthetic system shortcuts + HWND visibility/focus/styles and settings controls; optional caption pixel checks; not physical keyboard/mouse acceptance"}
+              "scope": "Synthetic system shortcuts + HWND visibility/focus/styles and settings controls; optional caption pixels and posted emergency WM_HOTKEY with main key up; not physical keyboard/mouse or cross-integrity acceptance"}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))

@@ -11,6 +11,10 @@ on:
         description: Verify foreground diagnostic fields (v0.2.3 or later)
         type: boolean
         default: false
+      check_emergency_without_key:
+        description: Verify emergency event with its main key up (requires keyId logging)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -39,12 +43,14 @@ jobs:
         shell: pwsh
         env:
           CHECK_DIAGNOSTICS: ${{ inputs.check_diagnostics }}
+          CHECK_EMERGENCY_WITHOUT_KEY: ${{ inputs.check_emergency_without_key }}
         run: |
           $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
           New-Item -Path $themeKey -Force | Out-Null
           Set-ItemProperty -Path $themeKey -Name AppsUseLightTheme -Type DWord -Value 0
           $diagnostics = @()
           if ($env:CHECK_DIAGNOSTICS -eq 'true') { $diagnostics = @('--check-diagnostics') }
+          if ($env:CHECK_EMERGENCY_WITHOUT_KEY -eq 'true') { $diagnostics += '--check-emergency-without-key' }
           python scripts/windows-package-smoke.py $env:FLOATLEAF_EXE --output .local/windows-trial.json --screenshot .local/windows-settings.png @diagnostics
       - uses: actions/upload-artifact@v4
         if: always()

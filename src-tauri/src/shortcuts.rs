@@ -87,11 +87,48 @@ pub fn add(app: &AppHandle, keys: &[Shortcut; 5]) -> Result<Vec<Shortcut>, Strin
         logging::record(
             app,
             "shortcut-registered",
-            serde_json::json!({"key": key.to_string()}),
+            serde_json::json!({"key": key.to_string(), "keyId": key.id()}),
         );
         added.push(*key);
     }
     Ok(added)
+}
+
+fn apply_shortcut(
+    state: &mut runtime::Runtime,
+    index: usize,
+    event: ShortcutState,
+    (all, main, any): (bool, bool, bool),
+) {
+    if index == 0 {
+        state.controller.key_sample(all, main, any);
+        if event == ShortcutState::Pressed {
+            state.controller.press(all);
+        }
+    } else if event == ShortcutState::Released && !main {
+        state.action_held[index - 1] = false;
+    } else if event == ShortcutState::Pressed
+        && (index == 1 || (all && !state.action_held[index - 1]))
+    {
+        state.action_held[index - 1] = true;
+        match index {
+            // A registered emergency event can always hide, even when OS input
+            // permissions prevent sampling or a previous release was missed.
+            1 => {
+                state.controller.emergency_hide();
+                state.reader.auto_running = false;
+            }
+            2 | 3 if state.controller.visible => {
+                state.reader.turn(index == 3, true);
+                state.controller.revision += 1;
+            }
+            4 => {
+                state.reader.toggle_auto();
+                state.controller.revision += 1;
+            }
+            _ => {}
+        }
+    }
 }
 
 pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
@@ -103,31 +140,10 @@ pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
         };
         let (all, main, any) = platform::chord(&key);
         let before = state.controller.input_flags();
-        if index == 0 {
-            state.controller.key_sample(all, main, any);
-            if event.state == ShortcutState::Pressed {
-                state.controller.press(all);
-            }
-        } else if event.state == ShortcutState::Released && !main {
-            state.action_held[index - 1] = false;
-        } else if event.state == ShortcutState::Pressed && all && !state.action_held[index - 1] {
-            state.action_held[index - 1] = true;
-            match index {
-                1 => state.controller.emergency_hide(),
-                2 | 3 if state.controller.visible => {
-                    state.reader.turn(index == 3, true);
-                    state.controller.revision += 1;
-                }
-                4 => {
-                    state.reader.toggle_auto();
-                    state.controller.revision += 1;
-                }
-                _ => {}
-            }
-        }
+        apply_shortcut(state, index, event.state, (all, main, any));
         let action = ["display", "emergency", "previous", "next", "auto"][index];
         let mut details = serde_json::json!({
-            "key": key.to_string(),
+            "key": key.to_string(), "keyId": key.id(),
             "action": action,
             "pressed": event.state == ShortcutState::Pressed,
             "chordDown": all, "mainDown": main, "anyDown": any,
@@ -173,7 +189,7 @@ pub fn setup(app: &AppHandle) {
             logging::record(
                 app,
                 "shortcut-registered",
-                serde_json::json!({ "key": key.to_string() }),
+                serde_json::json!({ "key": key.to_string(), "keyId": key.id() }),
             );
         }
     }
@@ -188,6 +204,78 @@ pub fn setup(app: &AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::controller::DisplayMode;
+
+    #[test]
+    fn emergency_event_hides_without_key_sampling_in_every_mode() {
+        for mode in [DisplayMode::Hold, DisplayMode::Toggle, DisplayMode::Pinned] {
+            let mut state = runtime::Runtime::default();
+            state.controller.set_mode(mode);
+            apply_shortcut(
+                &mut state,
+                0,
+                ShortcutState::Released,
+                (false, false, false),
+            );
+            apply_shortcut(&mut state, 0, ShortcutState::Pressed, (true, true, true));
+            assert!(state.controller.visible);
+            state.reader.auto_running = true;
+
+            apply_shortcut(&mut state, 1, ShortcutState::Pressed, (false, false, false));
+            assert!(!state.controller.visible, "{mode:?} must hide on the event");
+            assert!(state.controller.emergency_latched);
+            assert!(!state.reader.auto_running);
+
+            apply_shortcut(&mut state, 0, ShortcutState::Pressed, (true, true, true));
+            assert!(
+                !state.controller.visible,
+                "old display chord must stay blocked"
+            );
+            apply_shortcut(
+                &mut state,
+                0,
+                ShortcutState::Released,
+                (false, false, false),
+            );
+            apply_shortcut(&mut state, 0, ShortcutState::Pressed, (true, true, true));
+            assert!(state.controller.visible, "fresh display chord must recover");
+            apply_shortcut(&mut state, 1, ShortcutState::Pressed, (false, false, false));
+            assert!(
+                !state.controller.visible,
+                "a missed emergency release cannot block hiding"
+            );
+        }
+    }
+
+    #[test]
+    fn unavailable_sampling_does_not_display_or_change_reading() {
+        let mut state = runtime::Runtime::default();
+        state.reader.open("test".into(), "0123456789".into(), 0, 8);
+        let version = state.reader.layout_version;
+        state
+            .reader
+            .accept_layout("test", 0, version, 3, None)
+            .unwrap();
+        apply_shortcut(&mut state, 0, ShortcutState::Pressed, (false, false, false));
+        assert!(!state.controller.visible);
+
+        state.controller.set_mode(DisplayMode::Pinned);
+        apply_shortcut(
+            &mut state,
+            1,
+            ShortcutState::Released,
+            (false, false, false),
+        );
+        assert!(
+            state.controller.visible,
+            "release alone must not emergency-hide"
+        );
+        apply_shortcut(&mut state, 3, ShortcutState::Pressed, (false, false, false));
+        apply_shortcut(&mut state, 4, ShortcutState::Pressed, (false, false, false));
+        assert_eq!(state.reader.anchor, 0);
+        assert!(!state.reader.auto_running);
+    }
+
     #[test]
     fn shortcut_validation_rejects_alias_duplicates_and_typing_keys() {
         assert!(Bindings::default().parse().is_ok());
