@@ -12,6 +12,8 @@ mod runtime;
 mod shortcuts;
 mod storage;
 mod text_import;
+#[cfg(windows)]
+mod windows_diagnostics;
 
 use tauri::Manager;
 

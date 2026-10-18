@@ -6,6 +6,8 @@
 #include <commdlg.h>
 #include <stdlib.h>
 #include <dwmapi.h>
+#include <stdint.h>
+#include <wchar.h>
 
 // Match the settings page while keeping the native caption and window controls.
 long fl_style_settings(void *raw) {
@@ -20,10 +22,12 @@ long fl_style_settings(void *raw) {
 
 static void (*hide_callback)(void);
 static void (*displays_callback)(void);
+static DWORD last_show_error;
 void fl_show(void *raw) {
     HWND window = (HWND)raw;
     ShowWindow(window, SW_SHOWNOACTIVATE);
-    SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    BOOL positioned = SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    last_show_error = positioned ? ERROR_SUCCESS : GetLastError();
 }
 
 // Pair native show/hide: Tao's cached VISIBLE flag is not updated by fl_show.
@@ -31,6 +35,76 @@ void fl_hide(void *raw) {
     ShowWindow((HWND)raw, SW_HIDE);
 }
 bool fl_key_down(unsigned short code) { return (GetAsyncKeyState(code) & 0x8000) != 0; }
+
+typedef struct {
+    DWORD pid, integrity_rid, query_error, token_error, image_error;
+    wchar_t executable[260];
+} FlProcessInfo;
+
+typedef struct {
+    uintptr_t foreground_window;
+    FlProcessInfo application, foreground;
+    DWORD foreground_style, overlay_style;
+    RECT foreground_rect, overlay_rect;
+    int foreground_rect_valid, overlay_rect_valid, overlay_visible, foreground_above_overlay;
+    DWORD overlay_cloaked, show_error;
+    HRESULT cloak_result;
+} FlWindowContext;
+
+static void process_info(DWORD pid, FlProcessInfo *info) {
+    info->pid = pid;
+    HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!process) { info->query_error = GetLastError(); return; }
+    wchar_t path[32768];
+    DWORD length = sizeof(path) / sizeof(path[0]);
+    if (QueryFullProcessImageNameW(process, 0, path, &length)) {
+        const wchar_t *name = wcsrchr(path, L'\\');
+        wcsncpy_s(info->executable, 260, name ? name + 1 : path, _TRUNCATE);
+    } else info->image_error = GetLastError();
+
+    HANDLE token;
+    if (OpenProcessToken(process, TOKEN_QUERY, &token)) {
+        // A mandatory label contains one SID; the union keeps its pointer aligned.
+        union { TOKEN_MANDATORY_LABEL label; BYTE bytes[sizeof(TOKEN_MANDATORY_LABEL) + SECURITY_MAX_SID_SIZE]; } data;
+        DWORD size;
+        if (GetTokenInformation(token, TokenIntegrityLevel, &data, sizeof(data), &size)) {
+            PSID sid = data.label.Label.Sid;
+            info->integrity_rid = *GetSidSubAuthority(sid, *GetSidSubAuthorityCount(sid) - 1);
+        } else info->token_error = GetLastError();
+        CloseHandle(token);
+    } else info->token_error = GetLastError();
+    CloseHandle(process);
+}
+
+// Shortcut diagnostics only: executable basename and native window attributes.
+// Never reads window titles, document paths, chat content, or unrelated keys.
+void fl_window_context(void *raw, FlWindowContext *context) {
+    HWND overlay = (HWND)raw;
+    HWND foreground = GetForegroundWindow();
+    DWORD pid = 0;
+    GetWindowThreadProcessId(foreground, &pid);
+    context->foreground_window = (uintptr_t)foreground;
+    process_info(GetCurrentProcessId(), &context->application);
+    process_info(pid, &context->foreground);
+    context->foreground_style = (DWORD)GetWindowLongPtrW(foreground, GWL_EXSTYLE);
+    context->foreground_rect_valid = GetWindowRect(foreground, &context->foreground_rect);
+    context->overlay_style = (DWORD)GetWindowLongPtrW(overlay, GWL_EXSTYLE);
+    context->overlay_rect_valid = GetWindowRect(overlay, &context->overlay_rect);
+    context->overlay_visible = IsWindowVisible(overlay);
+    context->cloak_result = DwmGetWindowAttribute(overlay, DWMWA_CLOAKED, &context->overlay_cloaked, sizeof(DWORD));
+    context->show_error = last_show_error;
+    context->foreground_above_overlay = -1;
+    if (context->overlay_visible && foreground) {
+        context->foreground_above_overlay = 0;
+        HWND window = GetWindow(overlay, GW_HWNDPREV);
+        unsigned steps = 0;
+        // Z order may change during enumeration; bound diagnostic work on the UI thread.
+        for (; window && steps < 256; window = GetWindow(window, GW_HWNDPREV), ++steps) {
+            if (window == foreground) { context->foreground_above_overlay = 1; break; }
+        }
+        if (steps == 256) context->foreground_above_overlay = -1;
+    }
+}
 static LRESULT CALLBACK session_proc(HWND w, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR ref) {
     (void)id; (void)ref;
     if (hide_callback && ((msg == WM_WTSSESSION_CHANGE &&

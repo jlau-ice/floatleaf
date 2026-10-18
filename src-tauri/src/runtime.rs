@@ -148,18 +148,21 @@ fn apply(app: &AppHandle, state: &Snapshot) {
         state.error = Some(format!("阅读窗口操作失败：{error}"));
     }
     let actual = snapshot(app);
-    logging::record(
-        app,
-        "window",
-        serde_json::json!({
-            "requestedVisible": actual.controller.visible,
-            "nativeVisible": window.is_visible().ok(),
-            "focused": window.is_focused().ok(),
-            "mode": actual.controller.mode,
-            "emergencyLatched": actual.controller.emergency_latched,
-            "editingLayout": actual.controller.editing_layout,
-        }),
-    );
+    let details = serde_json::json!({
+        "requestedVisible": actual.controller.visible,
+        "nativeVisible": window.is_visible().ok(),
+        "focused": window.is_focused().ok(),
+        "mode": actual.controller.mode,
+        "emergencyLatched": actual.controller.emergency_latched,
+        "editingLayout": actual.controller.editing_layout,
+    });
+    #[cfg(windows)]
+    let details = {
+        let mut details = details;
+        details["windows"] = crate::windows_diagnostics::window_context(&window);
+        details
+    };
+    logging::record(app, "window", details);
     let _ = app.emit("reader-state", snapshot(app));
     #[cfg(any(debug_assertions, feature = "diagnostics"))]
     write_probe(app);
@@ -212,10 +215,22 @@ fn start_watch(app: AppHandle) {
                 continue;
             }
             let done = pending.clone();
+            let handle = app.clone();
             change(&app, move |state| {
                 if state.controller.needs_key_watch() {
+                    let was_visible = state.controller.visible;
                     let (all, main, any) = platform::chord(&state.bindings[0]);
                     state.controller.key_sample(all, main, any);
+                    if was_visible && !state.controller.visible {
+                        logging::record(
+                            &handle,
+                            "shortcut-watch-hide",
+                            serde_json::json!({
+                                "key": state.bindings[0].to_string(), "chordDown": all,
+                                "mainDown": main, "anyDown": any, "after": state.controller.input_flags(),
+                            }),
+                        );
+                    }
                 }
                 for (index, key) in state.bindings[1..].iter().enumerate() {
                     if state.action_held[index] && !platform::chord(key).1 {

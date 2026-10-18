@@ -8,6 +8,7 @@ import ctypes as c
 from ctypes import wintypes as w
 import itertools
 import json
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -20,6 +21,7 @@ parser.add_argument("exe", type=Path)
 parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--expect-stuck", action="store_true")
 parser.add_argument("--screenshot", type=Path)
+parser.add_argument("--check-diagnostics", action="store_true")
 args = parser.parse_args()
 
 u = c.WinDLL("user32", use_last_error=True)
@@ -279,6 +281,29 @@ try:
     check("fresh-chord-recovers", u.IsWindowVisible(overlay))
     release_all()
     check("fresh-chord-release-hides", not u.IsWindowVisible(overlay))
+
+    if args.check_diagnostics:
+        log = Path(os.environ["APPDATA"]) / "io.github.jlauice.floatleaf/logs/floatleaf.log"
+        events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+        start = next(i for i in range(len(events) - 1, -1, -1)
+                     if events[i]["event"] == "start" and events[i]["details"]["pid"] == app.pid)
+        events = events[start:]
+        presses = [event["details"] for event in events if event["event"] == "shortcut"
+                   and event["details"].get("action") == "display" and event["details"]["pressed"]]
+        check("diagnostics-configured-key-state", any(
+            e["mainDown"] and e["chordDown"] and e["after"]["visible"] for e in presses))
+        check("diagnostics-foreground-process", any(
+            e["windows"]["foreground"]["pid"] == os.getpid()
+            and e["windows"]["foreground"]["executable"].lower().startswith("python") for e in presses))
+        check("diagnostics-process-integrity", any(
+            e["windows"]["application"]["pid"] == app.pid
+            and e["windows"]["application"]["integrityRid"] is not None
+            and e["windows"]["foreground"]["integrityRid"] is not None for e in presses))
+        shown = [e["details"]["windows"] for e in events
+                 if e["event"] == "window" and e["details"]["requestedVisible"]]
+        check("diagnostics-native-overlay-state", any(
+            e["overlayVisible"] and e["overlayTopmost"] and e["overlayNoActivate"]
+            and e["lastShowError"] == 0 and e["foregroundAboveOverlay"] is False for e in shown))
 
     if not args.expect_stuck:
         u.ShowWindow(fixture, 0)

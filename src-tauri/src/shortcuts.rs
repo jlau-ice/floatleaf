@@ -74,11 +74,21 @@ pub fn add(app: &AppHandle, keys: &[Shortcut; 5]) -> Result<Vec<Shortcut>, Strin
             continue;
         }
         if let Err(error) = register(app, *key) {
+            logging::record(
+                app,
+                "shortcut-register-error",
+                serde_json::json!({"key": key.to_string(), "error": error}),
+            );
             let _ = app.global_shortcut().unregister_multiple(added.clone());
             return Err(format!(
                 "快捷键 {key} 注册失败：{error}。原快捷键保留，请换一组组合键。"
             ));
         }
+        logging::record(
+            app,
+            "shortcut-registered",
+            serde_json::json!({"key": key.to_string()}),
+        );
         added.push(*key);
     }
     Ok(added)
@@ -92,18 +102,7 @@ pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
             return;
         };
         let (all, main, any) = platform::chord(&key);
-        let details = serde_json::json!({
-            "key": key.to_string(),
-            "pressed": event.state == ShortcutState::Pressed,
-            "chordDown": all, "mainDown": main, "anyDown": any,
-        });
-        #[cfg(target_os = "macos")]
-        let details = {
-            let mut details = details;
-            details["input"] = platform::input_status();
-            details
-        };
-        logging::record(&handle, "shortcut", details);
+        let before = state.controller.input_flags();
         if index == 0 {
             state.controller.key_sample(all, main, any);
             if event.state == ShortcutState::Pressed {
@@ -126,6 +125,23 @@ pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
                 _ => {}
             }
         }
+        let action = ["display", "emergency", "previous", "next", "auto"][index];
+        let mut details = serde_json::json!({
+            "key": key.to_string(),
+            "action": action,
+            "pressed": event.state == ShortcutState::Pressed,
+            "chordDown": all, "mainDown": main, "anyDown": any,
+            "before": before, "after": state.controller.input_flags(),
+        });
+        #[cfg(target_os = "macos")]
+        {
+            details["input"] = platform::input_status();
+        }
+        #[cfg(windows)]
+        if let Some(window) = handle.get_webview_window("overlay") {
+            details["windows"] = crate::windows_diagnostics::window_context(&window);
+        }
+        logging::record(&handle, "shortcut", details);
     });
 }
 

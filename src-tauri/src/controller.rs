@@ -44,6 +44,14 @@ impl Default for Controller {
 }
 
 impl Controller {
+    pub fn input_flags(&self) -> serde_json::Value {
+        serde_json::json!({
+            "visible": self.visible, "mode": self.mode, "held": self.held,
+            "waitForAllUp": self.wait_for_all_up, "waitForMainUp": self.wait_for_main_up,
+            "emergencyLatched": self.emergency_latched,
+        })
+    }
+
     pub fn needs_key_watch(&self) -> bool {
         self.held || self.wait_for_all_up || self.wait_for_main_up
     }

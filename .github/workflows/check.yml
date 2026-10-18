@@ -60,7 +60,7 @@ jobs:
           $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
           New-Item -Path $themeKey -Force | Out-Null
           Set-ItemProperty -Path $themeKey -Name AppsUseLightTheme -Type DWord -Value 0
-          python scripts/windows-package-smoke.py (Join-Path $installDirectory 'floatleaf.exe') --output .local/windows-fixed.json --screenshot .local/windows-settings.png
+          python scripts/windows-package-smoke.py (Join-Path $installDirectory 'floatleaf.exe') --output .local/windows-fixed.json --screenshot .local/windows-settings.png --check-diagnostics
       - uses: actions/upload-artifact@v4
         if: always() && runner.os == 'Windows'
         with:

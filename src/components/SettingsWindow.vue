@@ -581,7 +581,11 @@ const ranges: {
     <details v-if="logInfo" class="storage-note">
       <summary>日志位置 · v{{ logInfo.version }}</summary>
       <p>{{ logInfo.directory }}</p>
-      <p>遇到异常后，将此文件夹中的 .log 文件发给反馈接收人即可。日志不包含小说正文。</p>
+      <p>遇到异常后，将此文件夹中的 .log 文件发给反馈接收人即可。</p>
+      <p>
+        日志记录配置的快捷键和窗口状态；Windows
+        还记录当时的前台程序名与权限级别。不记录小说正文、窗口标题、聊天、订单或普通打字内容。
+      </p>
       <p v-if="logInfo.error" class="notice error">日志不可用：{{ logInfo.error }}</p>
       <button class="secondary" :disabled="busy" @click="task(() => invoke('open_log_directory'))">
         打开日志文件夹
