@@ -1,5 +1,27 @@
 # GitHub 公开发布记录
 
+## v0.2.4
+
+[v0.2.4 权限提示试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.4) 已公开发布为 Pre-release，标签指向 `19e617ebaa3d8b30c15825bdc7725649dc48ac19`，权限提示实现为 `75cf762`。Windows 明确检测到前台进程权限更高且按键采样失败时，设置页显示原因与处理方法；恢复正常读取后清除。不自动提权、不改变显隐状态机。用户已确认 v0.2.3 同权限运行可恢复拼多多前台显示、松键隐藏和翻页，普通浮页跨权限读取限制仍保留。
+
+- [双平台源码 CI 39089252667](https://github.com/jlau-ice/floatleaf/actions/runs/39089252667)：Windows 28 项 / macOS 27 项 Rust 测试，两端各 12 项浏览器测试，环境/类型/rustfmt/Clippy/Prettier 与平台构建通过；Windows 本机构建的普通包通过 47 项原生断言。
+- [公开 EXE 回归 39090055661](https://github.com/jlau-ice/floatleaf/actions/runs/39090055661)：Windows Server 2025 实际下载安装本次公开 EXE，47 项系统合成按键、显隐/焦点/窗口样式、原生控件、标题栏像素及诊断字段断言通过。日志确认 v0.2.4、debug=false；浮页 PID 9232 与前台 python.exe PID 2916 均为高完整性 12288，不代表普通浮页对高权限程序的新提示已获原生验收。截图目视核对通过。
+- macOS DMG 只读挂载复制后实际启动 PID 22085，设置页版本、单实例、正常退出通过；ad-hoc 签名、DMG 完整性与调试探针排除通过。新包仍提示输入监控未授权，未借用旧包的后台按键结论。测试后恢复用户原已授权调试 app 与书库。
+- 版本文件变化外无业务变更；新版本的两端普通包均构建成功。macOS 同一已授权调试二进制的直接子进程 / LaunchServices 启动对照见 MACOS_BACKGROUND_INPUT.md，原始开发后台输入限制仍在。
+
+六个附件先从草稿下载，再从未登录公开 URL 下载，均与本地逐字节和 SHA-256 一致。初次草稿创建因 GitHub 不接受缩写提交号返回 422，改用完整提交号后成功，未覆盖旧版。文件在 `.local/github-release-0.2.4/`，构建、包内容、Mac 启动、CI 与公开下载证据在 `.local/release-024/`。Windows ZIP 包含安装器、复测说明、MIT 协议与安装器校验值；没有真实小说、用户日志、数据库或凭据。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| FloatLeaf_0.2.4_aarch64.dmg | 3,755,622 | `964e059873f61d907048187c70a6ec36855c7b68c1be5650981dd57987f3a1ee` |
+| FloatLeaf_0.2.4_windows-x64_trial.zip | 2,978,604 | `438ce02e4b81b96371dfc03f46ad76c0192d60197f3e6a71a35c9282963e072c` |
+| FloatLeaf_0.2.4_x64-setup.exe | 2,996,318 | `7f4f142184f001c4c1f8f715108ef2436c15843255c9c7a5c46410116376303c` |
+| LICENSE.txt | 1,065 | `f527b3b2027179390d943c50ca81edc52a78b8258ebc007288598825a207c123` |
+| Retest-Guide.txt | 2,589 | `97c404628571f3817e8ac09d215f19cc0335e1187b8e66a638d0d40867d2cbc6` |
+| SHA256SUMS.txt | 455 | `99e4fa2e507bf64240b4e171f451ca77cf59c2e8d699de69a27e4ea2a513421c` |
+
+两端安装器未正式签名，macOS 未公证；Windows 11 新提示、物理释放顺序/紧急隐藏/焦点/点击穿透及多屏休眠仍待复测，持续目标未完成。
+
 ## v0.2.3
 
 [v0.2.3 快捷键诊断试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.3) 已公开发布，标签指向应用源码 `0abb69f25ad958e1a2a0b113dcaa0f56f63eaf61`。新增 Windows 配置按键/前台进程完整性/原生窗口诊断与 macOS 输入监控引导。本版不宣称商家工作台兼容性已修复，原始开发启动的 macOS 权限限制亦未解决。
@@ -19,7 +41,7 @@
 | LICENSE.txt | 1,065 | `f527b3b2027179390d943c50ca81edc52a78b8258ebc007288598825a207c123` |
 | SHA256SUMS.txt | 455 | `5ea96f1fc9953c0356f28bf006f55263372df61125350f89540eb87a7ae14117` |
 
-安装包未正式签名，macOS ad-hoc 且未公证。新收到的 Windows 11 同学日志确认故障发生于商家工作台前台的按键采样，详情见 PDD_SHORTCUT_DIAGNOSTICS.md；待同权限对照和后续修复，不以普通 CI 通过代替用户场景。
+安装包未正式签名，macOS ad-hoc 且未公证。新收到的 Windows 11 同学日志确认故障发生于商家工作台前台的按键采样，详情见 PDD_SHORTCUT_DIAGNOSTICS.md；后续用户同权限对照确认恢复，结论见上方 v0.2.4；不以普通 CI 通过代替用户场景。
 
 ## v0.2.2
 

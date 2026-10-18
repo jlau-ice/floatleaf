@@ -30,6 +30,8 @@
 
 两次都正常启动、由调试探针正常退出。原生日志保存在 `.local/background-input/launch-direct/data/logs/` 和 `launch-services/data/logs/`。这次对照排除了重新编译、应用路径与签名变化，证明本机授权结果受到启动方式影响；不能据此断言 TCC 内部具体把权限归给了哪个父进程。没有新增物理按键测试，也没有修改权限数据库或授权终端/Codex。
 
+窗口加载完成后另行复核：直接启动 PID 22520，经真实 WebView 调用 `input_access` 仍为 false；LaunchServices 启动 PID 22579 同一路径返回 true。报告在 `launch-direct-settled/probe/ui-result.json`、`launch-services-settled/probe/ui-result.json`，汇总 `launch-comparison.json`。一次未保持父进程的启动提前结束，不计入结果。两次有效复核正常退出后已恢复原授权 app 与书库。
+
 本机后台快捷键调试采用下方文档中的 `.app` + `open` 路径。原始 `pnpm desktop:dev` 的后台输入仍未解决，不能标为已通过。
 
 历史核查：`native/macos.m` 中的 CombinedSessionState 采样自 `e6072f7`（P0）已存在，近期录制界面提交 `4fbc4a0` 没改这条采样路径。无法仅凭现有日志确定用户此前正常、现在失效的变化点；不能声称某次 UI 修改或 macOS 更新就是原因。开发进程、安装包及重新构建后的授权状态需要分别验证。
