@@ -303,6 +303,22 @@ const ranges: {
     <p v-if="error || state?.error" class="notice error" role="alert">
       {{ error || state?.error }}
     </p>
+    <aside
+      v-if="state?.shortcutBlockedBy"
+      class="notice input-permission"
+      aria-label="Windows 快捷键权限"
+    >
+      <strong>刚才的前台程序权限高于浮页</strong>
+      <p>
+        {{ state.shortcutBlockedBy }} 在前台时，浮页无法读取按键状态，显示和翻页快捷键可能无效。
+      </p>
+      <p>
+        请优先让该程序以普通权限运行。若工作需要它保持管理员权限，可先从托盘退出浮页，再由你手动选择「以管理员身份运行」浮页；结束使用后退出即可。
+      </p>
+      <p class="hint">
+        浮页不会自动提权。无需修改快捷键或关闭安全软件；切回普通程序后，成功触发快捷键会清除此提示。
+      </p>
+    </aside>
     <aside v-if="inputAccess === false" class="notice input-permission" aria-label="后台快捷键权限">
       <strong>后台快捷键需要开启输入监控</strong>
       <p>

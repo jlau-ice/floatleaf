@@ -69,3 +69,39 @@ pub fn window_context(window: &WebviewWindow) -> Value {
         "lastShowError": context.show_error,
     })
 }
+
+// A denied token query is unknown, not proof that the foreground is elevated.
+pub fn higher_integrity_foreground(context: &Value) -> Option<String> {
+    let application = context["application"]["integrityRid"].as_u64()?;
+    let foreground = context["foreground"]["integrityRid"].as_u64()?;
+    if foreground <= application {
+        return None;
+    }
+    context["foreground"]["executable"]
+        .as_str()
+        .map(str::to_owned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn warn_only_for_known_higher_foreground_integrity() {
+        let mut context = json!({
+            "application": {"integrityRid": 8192},
+            "foreground": {"integrityRid": 12288, "executable": "example.exe"},
+        });
+        assert_eq!(
+            higher_integrity_foreground(&context).as_deref(),
+            Some("example.exe")
+        );
+        context["foreground"]["integrityRid"] = Value::Null;
+        assert_eq!(higher_integrity_foreground(&context), None);
+        context["foreground"]["integrityRid"] = json!(8192);
+        assert_eq!(higher_integrity_foreground(&context), None);
+        context["foreground"]["integrityRid"] = json!(12288);
+        context["application"]["integrityRid"] = Value::Null;
+        assert_eq!(higher_integrity_foreground(&context), None);
+    }
+}

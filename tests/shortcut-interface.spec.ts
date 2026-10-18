@@ -31,6 +31,7 @@ test.beforeEach(async ({ page }) => {
       positionLocked: true,
       revision: 1,
       error: null,
+      shortcutBlockedBy: null as string | null,
       reader: { bookId: null, total: 0, anchor: 0, end: 0, ready: false },
     };
     const fixture = {
@@ -38,6 +39,11 @@ test.beforeEach(async ({ page }) => {
       failSave: false,
       inputAccess: null as boolean | null,
       permissionRequests: 0,
+      setBlockedBy(executable: string | null) {
+        state.shortcutBlockedBy = executable;
+        state.revision++;
+        callbacks.get(stateCallback)?.({ payload: structuredClone(state) });
+      },
     };
     const callbacks = new Map<number, (event: unknown) => void>();
     let nextCallback = 0;
@@ -188,4 +194,27 @@ test('registration failure keeps the recorded draft editable and gives local fee
   await expect(page.locator('.shortcut-unsaved')).toHaveText('尚未保存');
   await expect(recorder).toContainText('Ctrl + Alt + Esc');
   await expect(recorder).toBeEnabled();
+});
+
+test('Windows shortcut guidance follows runtime state without requesting elevation', async ({
+  page,
+}) => {
+  const warning = page.getByRole('complementary', { name: 'Windows 快捷键权限' });
+  await expect(warning).toHaveCount(0);
+  await page.evaluate(() => {
+    (
+      window as unknown as { shortcutFixture: { setBlockedBy(name: string | null): void } }
+    ).shortcutFixture.setBlockedBy('PddWorkbench.exe');
+  });
+  await expect(warning).toBeVisible();
+  await expect(warning).toContainText('PddWorkbench.exe');
+  await expect(warning).toContainText('先从托盘退出浮页');
+  await expect(warning).toContainText('浮页不会自动提权');
+  await expect(warning.getByRole('button')).toHaveCount(0);
+  await page.evaluate(() => {
+    (
+      window as unknown as { shortcutFixture: { setBlockedBy(name: string | null): void } }
+    ).shortcutFixture.setBlockedBy(null);
+  });
+  await expect(warning).toHaveCount(0);
 });

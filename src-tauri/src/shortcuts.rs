@@ -139,7 +139,17 @@ pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
         }
         #[cfg(windows)]
         if let Some(window) = handle.get_webview_window("overlay") {
-            details["windows"] = crate::windows_diagnostics::window_context(&window);
+            let context = crate::windows_diagnostics::window_context(&window);
+            if event.state == ShortcutState::Pressed {
+                if main {
+                    state.shortcut_blocked_by = None;
+                } else if let Some(executable) =
+                    crate::windows_diagnostics::higher_integrity_foreground(&context)
+                {
+                    state.shortcut_blocked_by = Some(executable);
+                }
+            }
+            details["windows"] = context;
         }
         logging::record(&handle, "shortcut", details);
     });

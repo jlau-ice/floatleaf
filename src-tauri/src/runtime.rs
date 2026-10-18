@@ -28,6 +28,7 @@ pub struct Snapshot {
     pub controller: Controller,
     pub placement: Option<Placement>,
     pub error: Option<String>,
+    pub shortcut_blocked_by: Option<String>,
     pub reader: Reader,
     pub settings: ReadingSettings,
 }
@@ -38,6 +39,7 @@ pub struct Runtime {
     pub action_held: [bool; 4],
     pub placement: Option<Placement>,
     pub error: Option<String>,
+    pub shortcut_blocked_by: Option<String>,
     pub reader: Reader,
     pub settings: ReadingSettings,
     last_tick: Instant,
@@ -51,6 +53,7 @@ impl Default for Runtime {
             action_held: [false; 4],
             placement: None,
             error: None,
+            shortcut_blocked_by: None,
             reader: Reader::default(),
             settings: ReadingSettings::default(),
             last_tick: Instant::now(),
@@ -91,6 +94,7 @@ pub fn snapshot(app: &AppHandle) -> Snapshot {
         controller: state.controller.clone(),
         placement: state.placement.clone(),
         error: state.error.clone(),
+        shortcut_blocked_by: state.shortcut_blocked_by.clone(),
         reader: state.reader.clone(),
         settings: state.settings.clone(),
     }
@@ -115,7 +119,10 @@ pub fn change(app: &AppHandle, update: impl FnOnce(&mut Runtime) + Send + 'stati
         if wake && let Some(watcher) = WATCHER.get() {
             watcher.unpark();
         }
-        if before.controller.revision != after.controller.revision || before.error != after.error {
+        if before.controller.revision != after.controller.revision
+            || before.error != after.error
+            || before.shortcut_blocked_by != after.shortcut_blocked_by
+        {
             apply(&handle, &after);
         }
     });

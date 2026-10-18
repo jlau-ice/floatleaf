@@ -22,8 +22,6 @@ parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--expect-stuck", action="store_true")
 parser.add_argument("--screenshot", type=Path)
 parser.add_argument("--check-diagnostics", action="store_true")
-parser.add_argument("--medium-app", action="store_true", help="Lower only the test app token to medium integrity")
-parser.add_argument("--expect-input-blocked", action="store_true", help="Assert the known medium-app/high-foreground sampling failure")
 args = parser.parse_args()
 
 u = c.WinDLL("user32", use_last_error=True)
@@ -225,96 +223,7 @@ def check_settings(main):
             for y in range(2, 28) for x in range(32, 180)))
 
 
-class MediumProcess:
-    """Test-only child with reduced integrity; never elevates or changes system policy."""
-
-    def __init__(self, exe):
-        self.kernel = c.WinDLL("kernel32", use_last_error=True)
-        security = c.WinDLL("advapi32", use_last_error=True)
-        self.kernel.GetCurrentProcess.restype = w.HANDLE
-        self.kernel.CloseHandle.argtypes = [w.HANDLE]
-        self.kernel.LocalFree.argtypes = [w.HANDLE]
-        self.kernel.GetExitCodeProcess.argtypes = [w.HANDLE, c.POINTER(w.DWORD)]
-        self.kernel.TerminateProcess.argtypes = [w.HANDLE, w.UINT]
-        self.kernel.WaitForSingleObject.argtypes = [w.HANDLE, w.DWORD]
-        security.OpenProcessToken.argtypes = [w.HANDLE, w.DWORD, c.POINTER(w.HANDLE)]
-        security.CreateRestrictedToken.argtypes = [w.HANDLE, w.DWORD, w.DWORD, w.LPVOID,
-            w.DWORD, w.LPVOID, w.DWORD, w.LPVOID, c.POINTER(w.HANDLE)]
-        security.ConvertStringSidToSidW.argtypes = [w.LPCWSTR, c.POINTER(w.LPVOID)]
-        security.SetTokenInformation.argtypes = [w.HANDLE, c.c_int, w.LPVOID, w.DWORD]
-        security.GetLengthSid.argtypes = [w.LPVOID]
-
-        class Label(c.Structure):
-            _fields_ = [("sid", w.LPVOID), ("attributes", w.DWORD)]
-
-        class Startup(c.Structure):
-            _fields_ = [("cb", w.DWORD), ("reserved", w.LPWSTR), ("desktop", w.LPWSTR),
-                        ("title", w.LPWSTR), ("x", w.DWORD), ("y", w.DWORD),
-                        ("width", w.DWORD), ("height", w.DWORD), ("charsX", w.DWORD),
-                        ("charsY", w.DWORD), ("fill", w.DWORD), ("flags", w.DWORD),
-                        ("show", w.WORD), ("reservedSize", w.WORD), ("reservedData", w.LPVOID),
-                        ("stdin", w.HANDLE), ("stdout", w.HANDLE), ("stderr", w.HANDLE)]
-
-        class ProcessInfo(c.Structure):
-            _fields_ = [("process", w.HANDLE), ("thread", w.HANDLE),
-                        ("pid", w.DWORD), ("tid", w.DWORD)]
-
-        security.CreateProcessWithTokenW.argtypes = [w.HANDLE, w.DWORD, w.LPCWSTR,
-            w.LPWSTR, w.DWORD, w.LPVOID, w.LPCWSTR, c.POINTER(Startup), c.POINTER(ProcessInfo)]
-
-        def require(ok):
-            if not ok:
-                raise c.WinError(c.get_last_error())
-
-        token, child_token, sid = w.HANDLE(), w.HANDLE(), w.LPVOID()
-        try:
-            require(security.OpenProcessToken(self.kernel.GetCurrentProcess(), 0x008B, c.byref(token)))
-            # LUA_TOKEN removes enabled administrator groups; changing only the label
-            # leaves an inconsistent admin token for WebView2 sandbox startup.
-            require(security.CreateRestrictedToken(token, 0x5, 0, None, 0, None, 0, None,
-                                                   c.byref(child_token)))
-            require(security.ConvertStringSidToSidW("S-1-16-8192", c.byref(sid)))
-            label = Label(sid, 0x20)
-            require(security.SetTokenInformation(child_token, 25, c.byref(label),
-                c.sizeof(label) + security.GetLengthSid(sid)))
-            startup, info = Startup(), ProcessInfo()
-            startup.cb = c.sizeof(startup)
-            command = c.create_unicode_buffer(subprocess.list2cmdline([str(exe.resolve())]))
-            environment = c.create_unicode_buffer("\0".join(
-                f"{key}={value}" for key, value in sorted(os.environ.items())) + "\0\0")
-            require(security.CreateProcessWithTokenW(child_token, 0, str(exe.resolve()),
-                command, 0x400, environment, None, c.byref(startup), c.byref(info)))
-            self.handle, self.pid, self.returncode = info.process, info.pid, None
-            self.kernel.CloseHandle(info.thread)
-        finally:
-            if sid:
-                self.kernel.LocalFree(sid)
-            for handle in [child_token, token]:
-                if handle:
-                    self.kernel.CloseHandle(handle)
-
-    def poll(self):
-        code = w.DWORD()
-        if not self.kernel.GetExitCodeProcess(self.handle, c.byref(code)):
-            raise c.WinError(c.get_last_error())
-        self.returncode = None if code.value == 259 else code.value
-        return self.returncode
-
-    def terminate(self):
-        if not self.kernel.TerminateProcess(self.handle, 1):
-            raise c.WinError(c.get_last_error())
-
-    def wait(self, timeout):
-        if self.kernel.WaitForSingleObject(self.handle, int(timeout * 1000)) != 0:
-            raise TimeoutError("Medium-integrity test process did not exit")
-        result = self.poll()
-        self.kernel.CloseHandle(self.handle)
-        return result
-
-
-if args.expect_input_blocked and not (args.medium_app and args.check_diagnostics):
-    parser.error("--expect-input-blocked requires --medium-app and --check-diagnostics")
-app = MediumProcess(args.exe) if args.medium_app else subprocess.Popen([str(args.exe.resolve())])
+app = subprocess.Popen([str(args.exe.resolve())])
 fixture = None
 try:
     for _ in range(300):
@@ -390,14 +299,6 @@ try:
             e["windows"]["application"]["pid"] == app.pid
             and e["windows"]["application"]["integrityRid"] is not None
             and e["windows"]["foreground"]["integrityRid"] is not None for e in presses))
-        if args.medium_app:
-            check("diagnostics-medium-app-high-foreground", bool(presses) and all(
-                e["windows"]["application"]["integrityRid"] == 8192
-                and e["windows"]["foreground"]["integrityRid"] == 12288 for e in presses))
-        if args.expect_input_blocked:
-            check("diagnostics-received-but-unsampled", bool(presses) and all(
-                not e["mainDown"] and not e["chordDown"] and not e["anyDown"]
-                and not e["after"]["visible"] for e in presses))
         shown = [e["details"]["windows"] for e in events
                  if e["event"] == "window" and e["details"]["requestedVisible"]]
         check("diagnostics-native-overlay-state", any(
@@ -413,16 +314,9 @@ try:
 
     failures = [item["name"] for item in checks if not item["passed"]]
     reproduced = "emergency-hides" in failures and any(x.startswith("release-hides-") for x in failures)
-    if args.expect_input_blocked:
-        expected_failures = {f"show-{order}" for order in itertools.permutations([CTRL, ALT, SPACE])}
-        expected_failures.update(["fresh-chord-recovers", "diagnostics-configured-key-state",
-                                  "diagnostics-native-overlay-state"])
-        passed = set(failures) == expected_failures
-    else:
-        passed = reproduced if args.expect_stuck else not failures
+    passed = reproduced if args.expect_stuck else not failures
     report = {"os": platform.platform(), "exe": args.exe.name,
-              "expectedOldBug": args.expect_stuck, "mediumApp": args.medium_app,
-              "expectedInputBlocked": args.expect_input_blocked, "passed": passed, "checks": checks,
+              "expectedOldBug": args.expect_stuck, "passed": passed, "checks": checks,
               "scope": "Synthetic system shortcuts + HWND visibility/focus/styles and settings controls; optional caption pixel checks; not physical keyboard/mouse acceptance"}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2), encoding="utf-8")

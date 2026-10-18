@@ -51,6 +51,7 @@ export interface ReaderState {
   revision: number;
   placement: { monitor: string | null; x: number; y: number } | null;
   error: string | null;
+  shortcutBlockedBy: string | null;
   settings: ReadingSettings;
   reader: {
     bookId: string | null;

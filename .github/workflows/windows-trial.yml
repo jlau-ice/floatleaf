@@ -12,15 +12,6 @@ on:
         type: boolean
         default: false
 
-      medium_app:
-        description: Run only FloatLeaf at medium integrity against the elevated CI fixture
-        type: boolean
-        default: false
-      expect_input_blocked:
-        description: Assert the known v0.2.3 cross-integrity input failure
-        type: boolean
-        default: false
-
 permissions:
   contents: read
 
@@ -48,16 +39,12 @@ jobs:
         shell: pwsh
         env:
           CHECK_DIAGNOSTICS: ${{ inputs.check_diagnostics }}
-          MEDIUM_APP: ${{ inputs.medium_app }}
-          EXPECT_INPUT_BLOCKED: ${{ inputs.expect_input_blocked }}
         run: |
           $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
           New-Item -Path $themeKey -Force | Out-Null
           Set-ItemProperty -Path $themeKey -Name AppsUseLightTheme -Type DWord -Value 0
           $diagnostics = @()
-          if ($env:CHECK_DIAGNOSTICS -eq 'true') { $diagnostics += '--check-diagnostics' }
-          if ($env:MEDIUM_APP -eq 'true') { $diagnostics += '--medium-app' }
-          if ($env:EXPECT_INPUT_BLOCKED -eq 'true') { $diagnostics += '--expect-input-blocked' }
+          if ($env:CHECK_DIAGNOSTICS -eq 'true') { $diagnostics = @('--check-diagnostics') }
           python scripts/windows-package-smoke.py $env:FLOATLEAF_EXE --output .local/windows-trial.json --screenshot .local/windows-settings.png @diagnostics
       - uses: actions/upload-artifact@v4
         if: always()
