@@ -5,7 +5,7 @@
 ## Windows 商家工作台诊断（2026-10-18）
 
 - [x] EH-01：确认紧急隐藏被组合键采样条件阻挡，新增旧逻辑失败/修复通过的三模式回归；采样不可用时仍隐藏并暂停自动阅读，保留显示/翻页和旧事件边界。
-- [ ] EH-02：v0.2.5 原生回归与交付。本机 29 项 Rust、类型/格式/Clippy、Windows 目标 Clippy、macOS debug app 构建通过；独立 macOS 物理后台按键待用户反馈，Windows 新增六项原生断言待 CI。见 `docs/EMERGENCY_INPUT_FIX.md`。
+- [ ] EH-02：v0.2.5 原生回归与交付。本机 29 项 Rust、类型/格式/Clippy、Windows 目标 Clippy、macOS debug app/no-bundle 构建通过；修复已推送 `0006b75`，CI `39091188787` 运行中。Windows 新增六项原生断言待结果；用户确认明确路径启动的已授权调试包后台显示/隐藏正常，五组按键日志一致，不能外推至新安装包。托盘已改为复用既有隐藏/暂停操作，待交付。见 `docs/EMERGENCY_INPUT_FIX.md`。
 
 - [x] WD-01：分析用户 v0.2.2 日志与前台切换对照，区分翻页冲突和主键采样方向；见 `docs/PDD_SHORTCUT_DIAGNOSTICS.md`。
 - [x] WD-02：补配置按键采样、处理前后状态、前台进程/完整性级别与原生窗口诊断；本机与 Windows 目标 Clippy 通过。

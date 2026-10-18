@@ -4,7 +4,9 @@
 
 ## 当前排查：Windows 商家工作台
 
-后续发现并修复紧急隐藏的另一边界：配置的 Pressed 已收到但组合键采样为 false 时，旧共用条件会拒绝紧急隐藏。v0.2.5 源码让该事件直接隐藏并暂停自动阅读，其余显示/翻页规则不变。本机 29 项 Rust 测试、类型/格式/Clippy、Windows 目标 Clippy 与 macOS debug app 构建通过，旧逻辑失败证据保留。当前仅修改源码，v0.2.4 公共附件不覆盖。Windows 增加普通包事件时序注入的六项原生检查，CI 待执行；macOS 独立 PID 24227、测试紧急键 Ctrl + Option + E 尚无按键结果，用户正在添加 `src-tauri/target/debug/bundle/macos/FloatLeaf.app` 的输入监控权限，等待确认后按原参数重启。暂不覆盖该调试包，原书库不变。完整记录见 `docs/EMERGENCY_INPUT_FIX.md`。
+后续发现并修复紧急隐藏的另一边界：配置的 Pressed 已收到但组合键采样为 false 时，旧共用条件会拒绝紧急隐藏。v0.2.5 源码让该事件直接隐藏并暂停自动阅读，其余显示/翻页规则不变。本机 29 项 Rust 测试、类型/格式/Clippy、Windows 目标 Clippy 与 macOS debug app/no-bundle 构建通过，旧逻辑失败证据保留。修复已推送 `0006b75`，双平台 CI `39091188787` 运行中，Windows 增加普通包事件时序注入的六项原生检查；v0.2.4 公共附件尚不覆盖。后续复查托盘也改为复用已有 `hide` 操作，统一停止自动阅读。
+
+macOS 用户添加权限后仍提示未授权，实际运行路径为旧发布包 `.local/release-024/mac-trial/FloatLeaf.app`（PID 25942）。正常退出旧包，以明确路径通过 `open` 启动其刚授权的 `src-tauri/target/debug/bundle/macos/FloatLeaf.app`（PID 26295）后权限 true、界面提示消失；用户确认后台显示和松键隐藏正常，五组物理按键日志一致。当前保留该调试包不重建，独立合成书库在 `.local/emergency-input/fixed/data`，原书库不变。临时紧急键 E 未得到有效复测，已恢复默认快捷键；此次不外推到原始开发进程或最终 0.2.5 包。完整记录见 `docs/EMERGENCY_INPUT_FIX.md` 和 `docs/MACOS_BACKGROUND_INPUT.md`。
 
 用户补充：拼多多商家工作台前台无法唤起浮页，关闭其快捷键无效，微信覆盖到前台后恢复。旧普通 v0.2.2 日志中显示/紧急隐藏注册成功、两组翻页冲突，并有多组 1～2 ms 内 Pressed/Released；不能仅归因为快捷键占用或置顶。新增仅配置快捷键与显隐时的前台进程名/PID、完整性 RID、实际按键采样、控制器前后状态和原生窗口属性日志，沿用两份 1 MiB 轮转，不记录业务内容或普通输入。版本 0.2.3 已交付，完整步骤与证据见 `docs/PDD_SHORTCUT_DIAGNOSTICS.md`。
 

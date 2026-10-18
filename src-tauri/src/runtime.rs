@@ -284,7 +284,7 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
             "recover" => geometry::recover(app, true),
             "hide" => {
                 logging::record(app, "tray-hide", serde_json::json!({}));
-                change(app, |s| s.controller.emergency_hide());
+                let _ = action(app, "hide".into());
             }
             "quit" => app.exit(0),
             _ => {}
