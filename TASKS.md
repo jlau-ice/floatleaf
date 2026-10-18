@@ -15,7 +15,7 @@
 - [x] MB-01：前后台真实按键对照，确认全局事件收到但未授权时后台主键采样为 false；保留日志与历史核查，见 `docs/MACOS_BACKGROUND_INPUT.md`。
 - [x] MB-02：补输入监控状态、明确的用户授权入口和后台采样日志；类型/格式/Clippy、27 项 Rust / 11 项浏览器测试及 macOS 测试包构建通过。
 - [x] MB-03：独立调试 `.app` 授权后后台显示、主键/Option 先松和紧急隐藏由用户实测通过，原生日志一致；见 `docs/MACOS_BACKGROUND_INPUT.md`。
-- [ ] MB-DEV：原始 `pnpm desktop:dev` 单独授权后仍报告 false，启动方式与系统权限归属尚待核查；独立调试 `.app` 已提供可用验证路径。
+- [ ] MB-DEV：原始 `pnpm desktop:dev` 单独授权后仍报告 false；已固定同一二进制验证直接子进程启动 false、`open` 启动 true，排除重新编译差异。独立调试 `.app` + `open` 是已验证的授权路径，原始开发后台输入仍未通过。
 - [x] MB-04：权限引导与诊断随 v0.2.3 两端试用包交付；macOS DMG 启动/单实例/退出通过，新包仍需核对授权，MB-DEV 与完整系统验收未完成。
 
 ## v0.2.2 打包发布（2026-10-17）

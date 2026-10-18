@@ -17,7 +17,20 @@
 
 同一个独立调试包由用户添加并开启输入监控后，重启进程 PID 14393 读到权限 true；后台全局事件的主键和完整组合键均变为 true，并有原生显示/隐藏记录。用户实测确认三项正常：先松空格隐藏、先松 Option 隐藏、紧急隐藏保持隐藏且全部松键后可恢复。证据 `.local/background-input/after-permission.json`。测试平台为 macOS 27.0.1（26A434）arm64；不代表 Windows 或其他系统场景通过。
 
-另行使用 `pnpm desktop:dev --no-watch` 验证：原始开发进程 PID 14725 未继承 `.app` 的授权。用户将 `src-tauri/target/debug/floatleaf` 单独加入输入监控并开启后，再次启动 PID 15370 仍返回 false，证据 `.local/background-input/dev-after-permission.json`。启动链与系统权限归属尚未闭环；不引导扩大终端/Codex 权限。已恢复通过实测的独立调试包供试用，原始开发进程停止。开发模式的替代验证方式见 DEVELOPMENT.md。
+另行使用 `pnpm desktop:dev --no-watch` 验证：原始开发进程 PID 14725 未继承 `.app` 的授权。用户将 `src-tauri/target/debug/floatleaf` 单独加入输入监控并开启后，再次启动 PID 15370 仍返回 false，证据 `.local/background-input/dev-after-permission.json`。后续固定同一二进制对照见下方；不引导扩大终端/Codex 权限。已恢复通过实测的独立调试包供试用，原始开发进程停止。开发模式的替代验证方式见 DEVELOPMENT.md。
+
+### 同一二进制的启动方式对照
+
+固定已获用户授权的 `.local/background-input/FloatLeaf.app`，期间不重新编译、不改授权，两次均使用独立空书库。其签名要求为 `cdhash H"aec0f7376ac09cac07dfc5cd7dbe3ad3884f3b2a"`。
+
+| 启动方式 | PID | 输入监控查询结果 |
+| --- | --- | --- |
+| 直接作为子进程执行 `FloatLeaf.app/Contents/MacOS/floatleaf` | 21368 | false |
+| `open -n --env … FloatLeaf.app`，由 LaunchServices 启动 | 21613 | true |
+
+两次都正常启动、由调试探针正常退出。原生日志保存在 `.local/background-input/launch-direct/data/logs/` 和 `launch-services/data/logs/`。这次对照排除了重新编译、应用路径与签名变化，证明本机授权结果受到启动方式影响；不能据此断言 TCC 内部具体把权限归给了哪个父进程。没有新增物理按键测试，也没有修改权限数据库或授权终端/Codex。
+
+本机后台快捷键调试采用下方文档中的 `.app` + `open` 路径。原始 `pnpm desktop:dev` 的后台输入仍未解决，不能标为已通过。
 
 历史核查：`native/macos.m` 中的 CombinedSessionState 采样自 `e6072f7`（P0）已存在，近期录制界面提交 `4fbc4a0` 没改这条采样路径。无法仅凭现有日志确定用户此前正常、现在失效的变化点；不能声称某次 UI 修改或 macOS 更新就是原因。开发进程、安装包及重新构建后的授权状态需要分别验证。
 

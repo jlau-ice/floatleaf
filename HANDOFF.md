@@ -14,13 +14,15 @@ Windows 后续进展：同学已完成上文的权限对照并确认三项恢复
 
 提示实现 `75cf762` 已推送，macOS debug/no-bundle 桌面构建通过；双平台 CI `39089252667` 已启动，仍在运行。下一轮先核对该任务，不要重复启动。当前已发布安装器仍是源码 `0abb69f` 的 v0.2.3，不含新提示。
 
+v0.2.4 发布准备：版本四处已统一，普通 Windows NSIS 与 macOS app/DMG 构建通过；Windows 解包、调试探针排除、macOS ad-hoc 签名与 DMG 校验通过。macOS 从只读 DMG 复制后实际启动 PID 22085、版本显示、单实例和正常退出通过，已恢复用户原授权调试包与书库。新包仍提示未授权，未测试其物理后台快捷键。安装器、带 MIT 协议和复测说明的 ZIP、校验文件位于 `.local/github-release-0.2.4/`；证据 `.local/release-024/`。待源码 CI 完成后公开发布并验证同一公开 Windows EXE。
+
 ## 当前排查：macOS 后台按键
 
 用户确认浮页退出前台后，微信及其他普通应用前台均无法触发显示。同机独立测试书库的真实按键对照证实：Carbon 全局 Pressed/Released 收到，输入监控权限为 false；前台主键采样 true 并显示，后台主键采样 false 并被控制器拒绝。该采样方法自 P0 `e6072f7` 已存在，近期录制按钮未改此路径；用户此前正常的变化点尚无证据，不能归因为某次 UI 改动或系统更新。
 
 已补 macOS 输入监控提示、仅用户点击才发起授权的设置入口、状态刷新及快捷键采样日志。类型/rustfmt/Clippy、27 项 Rust / 11 项浏览器测试、macOS debug/no-bundle 与 app 构建、签名校验通过；最终开发模式提示的 4 项交互回归及前端构建通过。
 
-用户已为 `.local/background-input/FloatLeaf.app` 开启权限，重启 PID 14393 返回 true；用户确认后台显示、先松空格/Option 隐藏、紧急隐藏保持隐藏且全松后恢复均正常，原生日志一致。独立书库证据在 `.local/background-input/after-permission.json`。原始 `pnpm desktop:dev --no-watch` 的二进制单独授权后，重启 PID 15370 仍返回 false（`dev-after-permission.json`），启动链权限归属尚待核查，不扩大终端/Codex 权限。已退出开发测试，恢复同一已授权 `.app` 使用原书库供试用。当前未发布新版本；源码、调试包与原始开发进程的验证范围分别记录于 `docs/MACOS_BACKGROUND_INPUT.md`。
+用户已为 `.local/background-input/FloatLeaf.app` 开启权限，重启 PID 14393 返回 true；用户确认后台显示、先松空格/Option 隐藏、紧急隐藏保持隐藏且全松后恢复均正常，原生日志一致。独立书库证据在 `.local/background-input/after-permission.json`。原始 `pnpm desktop:dev --no-watch` 的二进制单独授权后，重启 PID 15370 仍返回 false（`dev-after-permission.json`）。后续固定同一已授权 app、不重新编译或改授权的对照：直接执行内部程序 PID 21368 返回 false，`open` 正常启动 PID 21613 返回 true，两次均使用独立书库且正常退出。证据在 `launch-direct/` 与 `launch-services/`；本机已明确启动方式影响授权结果，但不推断 TCC 内部归属，不扩大终端/Codex 权限。调试后台快捷键使用 `.app` + `open`；原始开发后台输入仍待解决。已恢复原已授权 app 和原书库；源码、调试包与原始开发进程验证范围见 `docs/MACOS_BACKGROUND_INPUT.md`。
 
 ## v0.2.2 发布完成
 
