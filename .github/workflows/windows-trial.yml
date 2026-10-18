@@ -7,6 +7,10 @@ on:
         description: Published release containing the installer to verify
         required: true
         type: string
+      check_diagnostics:
+        description: Verify foreground diagnostic fields (v0.2.3 or later)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -33,11 +37,15 @@ jobs:
       - name: Check the installed app under dark system preference
         timeout-minutes: 2
         shell: pwsh
+        env:
+          CHECK_DIAGNOSTICS: ${{ inputs.check_diagnostics }}
         run: |
           $themeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
           New-Item -Path $themeKey -Force | Out-Null
           Set-ItemProperty -Path $themeKey -Name AppsUseLightTheme -Type DWord -Value 0
-          python scripts/windows-package-smoke.py $env:FLOATLEAF_EXE --output .local/windows-trial.json --screenshot .local/windows-settings.png
+          $diagnostics = @()
+          if ($env:CHECK_DIAGNOSTICS -eq 'true') { $diagnostics = @('--check-diagnostics') }
+          python scripts/windows-package-smoke.py $env:FLOATLEAF_EXE --output .local/windows-trial.json --screenshot .local/windows-settings.png @diagnostics
       - uses: actions/upload-artifact@v4
         if: always()
         with:
