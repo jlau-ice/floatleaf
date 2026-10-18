@@ -238,8 +238,8 @@ class MediumProcess:
         self.kernel.TerminateProcess.argtypes = [w.HANDLE, w.UINT]
         self.kernel.WaitForSingleObject.argtypes = [w.HANDLE, w.DWORD]
         security.OpenProcessToken.argtypes = [w.HANDLE, w.DWORD, c.POINTER(w.HANDLE)]
-        security.DuplicateTokenEx.argtypes = [w.HANDLE, w.DWORD, w.LPVOID,
-                                            c.c_int, c.c_int, c.POINTER(w.HANDLE)]
+        security.CreateRestrictedToken.argtypes = [w.HANDLE, w.DWORD, w.DWORD, w.LPVOID,
+            w.DWORD, w.LPVOID, w.DWORD, w.LPVOID, c.POINTER(w.HANDLE)]
         security.ConvertStringSidToSidW.argtypes = [w.LPCWSTR, c.POINTER(w.LPVOID)]
         security.SetTokenInformation.argtypes = [w.HANDLE, c.c_int, w.LPVOID, w.DWORD]
         security.GetLengthSid.argtypes = [w.LPVOID]
@@ -268,8 +268,11 @@ class MediumProcess:
 
         token, child_token, sid = w.HANDLE(), w.HANDLE(), w.LPVOID()
         try:
-            require(security.OpenProcessToken(self.kernel.GetCurrentProcess(), 0x000A, c.byref(token)))
-            require(security.DuplicateTokenEx(token, 0x02000000, None, 2, 1, c.byref(child_token)))
+            require(security.OpenProcessToken(self.kernel.GetCurrentProcess(), 0x008B, c.byref(token)))
+            # LUA_TOKEN removes enabled administrator groups; changing only the label
+            # leaves an inconsistent admin token for WebView2 sandbox startup.
+            require(security.CreateRestrictedToken(token, 0x5, 0, None, 0, None, 0, None,
+                                                   c.byref(child_token)))
             require(security.ConvertStringSidToSidW("S-1-16-8192", c.byref(sid)))
             label = Label(sid, 0x20)
             require(security.SetTokenInformation(child_token, 25, c.byref(label),
@@ -277,8 +280,10 @@ class MediumProcess:
             startup, info = Startup(), ProcessInfo()
             startup.cb = c.sizeof(startup)
             command = c.create_unicode_buffer(subprocess.list2cmdline([str(exe.resolve())]))
+            environment = c.create_unicode_buffer("\0".join(
+                f"{key}={value}" for key, value in sorted(os.environ.items())) + "\0\0")
             require(security.CreateProcessWithTokenW(child_token, 0, str(exe.resolve()),
-                command, 0, None, None, c.byref(startup), c.byref(info)))
+                command, 0x400, environment, None, c.byref(startup), c.byref(info)))
             self.handle, self.pid, self.returncode = info.process, info.pid, None
             self.kernel.CloseHandle(info.thread)
         finally:
