@@ -1,5 +1,26 @@
 # GitHub 公开发布记录
 
+## v0.2.3
+
+[v0.2.3 快捷键诊断试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.3) 已公开发布，标签指向应用源码 `0abb69f25ad958e1a2a0b113dcaa0f56f63eaf61`。新增 Windows 配置按键/前台进程完整性/原生窗口诊断与 macOS 输入监控引导。本版不宣称商家工作台兼容性已修复，原始开发启动的 macOS 权限限制亦未解决。
+
+- [双平台源码 CI 39087706786](https://github.com/jlau-ice/floatleaf/actions/runs/39087706786)：两端各 27 项 Rust、11 项浏览器测试，环境/类型/rustfmt/Clippy/Prettier 通过；macOS debug 构建与 Windows 普通 NSIS 构建/47 项原生回归通过。
+- [公开 EXE 回归 39088371240](https://github.com/jlau-ice/floatleaf/actions/runs/39088371240)：实际下载并安装本次公开 EXE，Windows Server 2025 的 47 项系统合成输入、显隐/焦点/窗口样式、标题栏像素及四项诊断字段断言通过。日志确认版本 0.2.3、debug=false，前台 python.exe 与浮页均为高完整性 RID 12288；这不覆盖普通权限浮页面对高权限商家工作台。原生截图目视核对通过。
+- macOS DMG 只读挂载复制后实际启动（PID 18649）、设置页 v0.2.3、第二实例退出及正常退出通过。新包仍显示需要输入监控，之后恢复此前用户已授权的独立调试 app，保留原书库与设置；不声称新包后台快捷键已获用户实测。
+
+六个公开附件通过未登录下载地址重新下载，与本地逐字节及 SHA-256 一致，证据 `.local/pdd-023/public-download/verification.json`。试用 ZIP 含 EXE、复测步骤和安装器校验值；MIT 协议另附。普通安装器不含 diagnostics feature 的文件命令入口，无用户日志、小说或数据库。构建/包校验、Mac 启动、源码和公开 EXE 报告在 `.local/pdd-023/`。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| FloatLeaf_0.2.3_aarch64.dmg | 3,754,763 | `cd806bf3019ff4cd73a6f258577c4b0d3591b6a3d81c24b791ccfa825ef8d0ed` |
+| FloatLeaf_0.2.3_x64-setup.exe | 2,994,136 | `a9cfe4a321063ccad3744227290a0d3de6ac22002848612a59d461ba413572ee` |
+| FloatLeaf_0.2.3_windows-x64_trial.zip | 2,974,729 | `c098e7815defd7f4c77ed53a096c5683b67c55fcb1562800136bdc221c185b11` |
+| Retest-Guide.txt | 1,143 | `2c95d936b43d3a31b14800057f41ba9eaa6b08e5bf7d24948682a08181d0b1f5` |
+| LICENSE.txt | 1,065 | `f527b3b2027179390d943c50ca81edc52a78b8258ebc007288598825a207c123` |
+| SHA256SUMS.txt | 455 | `5ea96f1fc9953c0356f28bf006f55263372df61125350f89540eb87a7ae14117` |
+
+安装包未正式签名，macOS ad-hoc 且未公证。新收到的 Windows 11 同学日志确认故障发生于商家工作台前台的按键采样，详情见 PDD_SHORTCUT_DIAGNOSTICS.md；待同权限对照和后续修复，不以普通 CI 通过代替用户场景。
+
 ## v0.2.2
 
 [v0.2.2 两端试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.2) 已公开发布为 Pre-release，标签指向 `344824f5e0d07232ebd1daa2147ab3b42cfe4057`，录制入口实现提交为 `4fbc4a069226899aa19c1b0f7d098582d6c39e3d`。Windows x64 / macOS Apple Silicon 版本统一为 0.2.2，新增明确的「录制快捷键」、正在录制、尚未保存与保存结果提示，包含此前标题栏、章节、隐藏及自动翻页修复。

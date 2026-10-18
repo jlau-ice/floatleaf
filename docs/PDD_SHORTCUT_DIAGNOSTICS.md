@@ -1,6 +1,6 @@
 # Windows 商家工作台前台快捷键诊断
 
-日期：2026-10-18。本轮是增加必要诊断的 v0.2.3 候选版，尚未证明商家工作台兼容性已修复。
+日期：2026-10-18。本轮已发布增加必要诊断的 v0.2.3 试用版，尚未证明商家工作台兼容性已修复。
 
 ## 用户反馈与旧日志
 
@@ -35,6 +35,24 @@ Windows 备用日志路径：`%APPDATA%\io.github.jlauice.floatleaf\logs`。本�
 
 ## 验证范围
 
-本机类型/rustfmt/Clippy、27 项 Rust 测试、前端构建/格式及 Windows 目标 release Clippy 通过。Windows 普通包原生回归增加四项断言：配置按键采样、前台进程名/PID、完整性级别、实际窗口属性；构建、远端执行和安装包状态以 HANDOFF.md 更新为准。没有商家工作台实机新日志之前，兼容性保持待验证。
+本机类型/rustfmt/Clippy、27 项 Rust 测试、前端构建/格式及 Windows 目标 release Clippy 通过。Windows 普通包原生回归增加四项断言：配置按键采样、前台进程名/PID、完整性级别、实际窗口属性；两端源码 CI `39087706786` 与公开 Windows EXE 回归 `39088371240` 通过，后者 47 项原生断言和截图/日志核验通过。CI 中测试窗口和浮页均为高完整性，不覆盖普通权限浮页面对高权限前台应用；商家工作台兼容性仍未解决。
 
 参考：[Microsoft GetAsyncKeyState](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getasynckeystate)、[RegisterHotKey](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey)、[完整性控制](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)。
+
+## v0.2.3 用户日志结论
+
+收到新日志后，确认故障发生在按键状态采样，而非快捷键注册失败：
+
+| 前台应用 | 收到 Pressed | 主键/组合键为 true | 权限证据 |
+| --- | --- | --- | --- |
+| 桌面资源管理器 | 28 | 28 | 中完整性 8192 |
+| 浏览器 | 4 | 4 | 中完整性 8192 |
+| 微信 | 16 | 16 | 中完整性 8192 |
+| PddWorkbench | 2（显示） | 0 | 高完整性 12288 |
+| pddwebworkbench | 13（翻页） | 0 | token 查询错误 5，级别未知 |
+
+浮页全程为中完整性 8192。商家工作台前台的 15 次事件，其 mainDown、chordDown、anyDown 均 false；两次显示按下后约 1 ms 即收到 Released，控制器可见状态保持 false。普通前台 48 次按下均采样正常。显示/紧急隐藏/翻页/自动阅读的五项注册均成功。
+
+这证明了“事件到达、状态采样失效、控制器拒绝显示或翻页”的路径；PddWorkbench 的高完整性与微软文档中的 UIPI 限制一致。子进程查询拒绝不能擅自解释为同样的权限级别。新日志未包含商家工作台前台紧急隐藏事件，不声称该操作已验证。
+
+下一步由同学手动做一次临时同权限对照：托盘退出浮页，再右键以管理员身份运行，仅测试显示、不同释放顺序和翻页，随后退出。此测试需要本人确认系统权限提示，不修改永久管理员配置，不关闭安全软件。结果用于确定权限因素与后续修复；不能把“运行时提高权限”当作已经完成产品兼容修复。原始日志仍保留在用户提供位置，不提交或上传。

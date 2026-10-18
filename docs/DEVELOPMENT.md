@@ -67,7 +67,7 @@ pnpm tauri build --debug --no-bundle
 
 首次编译需下载 crates 并构建系统依赖，耗时明显长于后续增量编译。编译缓存位于 src-tauri/target，前端产物位于 dist，均忽略提交。
 
-GitHub Actions 配置提供 Windows 与 macOS 检查，但只有推送远端并实际运行后才产生 CI 证据；当前不宣称 CI 已通过。Windows 安装包必须在对应环境验证，不以 macOS 结果替代。
+GitHub Actions 配置提供 Windows 与 macOS 检查，但只有推送远端并实际运行后才产生 CI 证据；实际运行结果见 GITHUB_RELEASE.md。Windows 安装包必须在对应环境验证，不以 macOS 结果替代。
 
 ## 常见问题
 
@@ -85,7 +85,7 @@ Vue/TypeScript 使用 Prettier（`pnpm format:check`），Rust 使用 rustfmt �
 
 本地小说、进度和设置写入 `floatleaf.sqlite3`；SQLite 通过 rusqlite bundled 编译进应用，不要求用户安装数据库服务。设置作为一行 JSON 字段保存在 SQLite 内，没有独立 JSON 存储文件。运行期的阅读状态由 Rust 控制器持有，前端通过 Vue 组合函数订阅，没有额外 Pinia 状态副本。
 
-`pnpm test:rust` 覆盖显示/阅读状态和 SQLite 持久化；`pnpm test:web` 通过隔离 Chrome 实测分页。后者使用本机 Chrome，CI 配置下载 Chromium。原生使用 `scripts/native-reading-smoke.mjs`，需显式开启 debug 探针，详细步骤见 P1_READ_VERIFICATION.md。CI 尚未远端运行。
+`pnpm test:rust` 覆盖显示/阅读状态和 SQLite 持久化；`pnpm test:web` 通过隔离 Chrome 实测分页。后者使用本机 Chrome，CI 配置下载 Chromium。原生使用 `scripts/native-reading-smoke.mjs`，需显式开启 debug 探针，详细步骤见 P1_READ_VERIFICATION.md。已执行的 CI 结果与验收范围见 GITHUB_RELEASE.md。
 
 ## 打包与交付验证
 
