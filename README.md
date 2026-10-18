@@ -8,13 +8,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前提供 **Windows / macOS v0.2.4 试用版（Pre-release）**。新增 Windows 前台程序权限较高时的明确提示，保留快捷键诊断日志和 macOS 输入监控引导。包含 EPUB / TXT 章节目录、自动翻页、快捷键录制、Windows 标题栏和此前隐藏修复。拼多多场景已确认是权限不一致导致按键读取失败；同权限运行可恢复，本版提供提示与处理方法，默认仍以普通权限运行。
+当前提供 **Windows / macOS v0.2.5 试用版（Pre-release）**。修复紧急隐藏收到事件但按键状态不可读时不生效的问题，并统一快捷键、设置按钮和托盘的隐藏与暂停行为。保留 Windows 前台程序权限提示、快捷键诊断日志和 macOS 输入监控引导。包含 EPUB / TXT 章节目录、自动翻页、快捷键录制、Windows 标题栏和此前隐藏修复。拼多多场景已确认是权限不一致导致按键读取失败；同权限运行可恢复，本版提供提示与处理方法，默认仍以普通权限运行。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.4/FloatLeaf_0.2.4_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.4/FloatLeaf_0.2.4_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.4/FloatLeaf_0.2.4_windows-x64_trial.zip) | 含安装程序、MIT 协议、商家工作台复测步骤和校验清单 |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.5/FloatLeaf_0.2.5_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.5/FloatLeaf_0.2.5_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.5/FloatLeaf_0.2.5_windows-x64_trial.zip) | 含安装程序、MIT 协议、商家工作台复测步骤和校验清单 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -29,7 +29,7 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 3. 按住 **Ctrl + Alt + 空格** 显示文字，松开任一组成键隐藏。Mac 的 Alt 对应 Option（⌥）。
 4. 在“文字与布局”中调整样式；需要移动窗口时，解除位置锁定并进入“编辑布局”。完成编辑后恢复鼠标穿透。
 
-macOS 后台快捷键需要输入监控权限。在「系统设置 → 隐私与安全性 → 输入监控」允许正在使用的 FloatLeaf；列表中没有时，点击「＋」添加该 `FloatLeaf.app`，然后退出并重新打开浮页。v0.2.3 起会提示缺少权限并提供设置入口。开发启动与安装包的授权不能相互代替，见 [后台快捷键说明](docs/MACOS_BACKGROUND_INPUT.md)。
+macOS 后台快捷键需要输入监控权限。在「系统设置 → 隐私与安全性 → 输入监控」允许正在使用的 FloatLeaf；列表中没有时，点击「＋」添加该 `FloatLeaf.app`，然后退出并重新打开浮页。v0.2.3 起会提示缺少权限并提供设置入口。有多份同名 app 时，先退出已有进程，再从实际授权的路径打开。开发启动与安装包的授权不能相互代替，见 [后台快捷键说明](docs/MACOS_BACKGROUND_INPUT.md)。
 
 关闭设置窗口后，浮页仍在运行。通过系统托盘或菜单栏图标重新打开设置，也可以在那里紧急隐藏或退出。
 
@@ -72,10 +72,10 @@ Windows 若仅在管理员权限的程序前台无法显示或翻页，可能是
 
 | 项目 | 当前证据 |
 | --- | --- |
-| macOS Apple Silicon | v0.2.4 DMG 校验、复制后启动、单实例与退出通过；已授权独立调试包的后台显示、两种松键顺序和紧急隐藏由用户实测通过；新包授权需另行核对 |
-| Windows x64 | v0.2.4 公开安装包在 Windows Server 2025 CI 实际安装，47 项原生断言通过；Windows 11 商家工作台由用户确认 v0.2.3 同权限运行时显示、隐藏、翻页恢复 |
-| 单元与界面测试 | 权限提示源码 CI：Windows 28 项 / macOS 27 项 Rust 测试，两端各 12 项浏览器测试及类型/格式/Clippy 通过；普通包不含调试探针 |
-| 仍待实机反馈 | v0.2.4 新权限提示、macOS 原始开发进程权限、完整组合键释放顺序、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
+| macOS Apple Silicon | v0.2.5 DMG 校验、复制后启动、单实例与退出通过；已授权独立调试包后台显示/隐藏获用户确认，先前两种松键顺序及紧急隐藏也有独立调试包证据；新包后台按键仍待授权复测 |
+| Windows x64 | v0.2.5 公开 EXE 在 Windows Server 2025 实际下载安装，53 项原生断言通过。Windows 11 商家工作台已由用户确认旧版同权限运行可恢复，新增修复仍待用户设备复测 |
+| 单元与界面测试 | 最终源码 CI：Windows 30 项 / macOS 29 项 Rust 测试，两端各 12 项浏览器测试及类型/格式/Clippy 通过；普通包不含调试探针 |
+| 仍待实机反馈 | Windows 11 权限提示与新紧急隐藏修复、macOS 原始开发进程权限、完整组合键释放顺序、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
 本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布和安装包回归证据见 [发布记录](docs/GITHUB_RELEASE.md)。[Windows 商家工作台复测](docs/PDD_SHORTCUT_DIAGNOSTICS.md) · [macOS 后台快捷键](docs/MACOS_BACKGROUND_INPUT.md)。
 

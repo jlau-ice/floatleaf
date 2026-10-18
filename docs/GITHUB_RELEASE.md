@@ -1,5 +1,27 @@
 # GitHub 公开发布记录
 
+## v0.2.5
+
+[v0.2.5 紧急隐藏修复试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.5) 已公开发布为 Pre-release，标签指向 `5c3c93ac7211fa5b9afc3662b97a313623f2b691`。收到配置的紧急隐藏 Pressed 后，即使按键采样不可用也隐藏并停止自动阅读；托盘复用已有隐藏操作。显示、翻页与旧组合键保护规则不变，没有提权或新增输入监听。
+
+- [最终源码 CI 39091533390](https://github.com/jlau-ice/floatleaf/actions/runs/39091533390)：Windows 30 项 / macOS 29 项 Rust 测试，两端各 12 项浏览器测试及环境/类型/rustfmt/Clippy/Prettier、平台构建通过。Windows Server 2025 实际安装普通包，53 项原生检查全部通过，含新增六项主键已释放时的紧急事件检查。首轮修复 CI `39091188787` 同样通过，事件日志核对主键/组合键 false 时仍隐藏、旧组合键保持隐藏、完全释放后重新触发恢复。
+- [公开 EXE 回归 39092267958](https://github.com/jlau-ice/floatleaf/actions/runs/39092267958)：Windows Server 2025 实际下载安装公开附件后，53 项原生断言全部通过，截图核对通过。日志确认 v0.2.5、debug=false，紧急事件主键/组合键 false 时仍隐藏并锁存。应用 PID 5724 与前台 python.exe PID 2520 同为高完整性 12288，此测试不覆盖跨权限。
+- macOS 从只读 DMG 复制后实际启动 PID 27467，v0.2.5 版本、单实例与正常退出通过；新包权限 false，后台物理快捷键仍待验收。随后恢复用户刚授权的调试 app（PID 27605）与原书库/快捷键，权限查询 true。已授权调试 app 的五组后台物理显示/隐藏用户反馈与日志一致，详见 MACOS_BACKGROUND_INPUT.md；不外推到新安装包或原始开发进程。
+- 两端普通包的调试探针排除、Windows x64 PE/NSIS 解包、macOS ad-hoc 签名/DMG 校验通过。NSIS 内 EXE 与构建文件仅差 Tauri 正常写入的包类型标记 `NSS` / `UNK` 三字节，不是业务代码差异。
+
+六个附件先从草稿下载，再从未登录公开 URL 下载，均与本地逐字节和 SHA-256 一致。Windows ZIP 含 EXE、复测说明、MIT 协议与校验清单；没有真实小说、用户日志或数据库。文件在 `.local/github-release-0.2.5/`，证据在 `.local/release-025/`。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| FloatLeaf_0.2.5_aarch64.dmg | 3,757,844 | `6ccde5e7b6f17ba08c5e1458c7c3a9720b399332d055f068b55741ed35f4b8ae` |
+| FloatLeaf_0.2.5_windows-x64_trial.zip | 2,977,627 | `6a1ec5b3c9d99ba8d3a7ac41f3f2b1975fec66533d85351e3be6f995fcad5b38` |
+| FloatLeaf_0.2.5_x64-setup.exe | 2,995,165 | `ca02dcd6418264643b727a03ee1d11119ad4b0a6eb5bc76e2b45124dabf044f5` |
+| LICENSE.txt | 1,065 | `f527b3b2027179390d943c50ca81edc52a78b8258ebc007288598825a207c123` |
+| Retest-Guide.txt | 2,953 | `ad9a648a70a6189454c4c60c326a7c6a99409dc4dfa5138e7fa0c9773cc94796` |
+| SHA256SUMS.txt | 455 | `d5746217a1afe57a0e41cb1bc91748ffdea68a42f6fe7ac170151a6788dc818e` |
+
+两端未正式签名，macOS 未公证。Windows CI 为同完整性进程间的合成输入和消息时序注入，不替代 Windows 11 拼多多跨权限或物理键鼠验收。整体目标、多屏/休眠/完整焦点穿透和原始开发启动权限仍未完成。修复说明见 EMERGENCY_INPUT_FIX.md。
+
 ## v0.2.4
 
 [v0.2.4 权限提示试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.4) 已公开发布为 Pre-release，标签指向 `19e617ebaa3d8b30c15825bdc7725649dc48ac19`，权限提示实现为 `75cf762`。Windows 明确检测到前台进程权限更高且按键采样失败时，设置页显示原因与处理方法；恢复正常读取后清除。不自动提权、不改变显隐状态机。用户已确认 v0.2.3 同权限运行可恢复拼多多前台显示、松键隐藏和翻页，普通浮页跨权限读取限制仍保留。

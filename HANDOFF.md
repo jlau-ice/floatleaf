@@ -1,12 +1,12 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-18。当前阶段：已公开发布 Windows x64 / macOS Apple Silicon v0.2.4 权限提示试用版，标签 `19e617e`；六个附件经未登录公开下载逐字节/哈希核验。双平台源码 CI 和公开 Windows EXE 的 47 项原生回归通过。新日志与用户同权限对照确认拼多多前台故障的权限因素：手动同权限启动后显示、松键隐藏、翻页三项正常；普通浮页跨权限读取的限制仍存在。持续目标与双平台完整验收保持未完成。
+更新日期：2026-10-18。当前阶段：已公开发布 Windows x64 / macOS Apple Silicon v0.2.5 紧急隐藏修复试用版，标签 `5c3c93a`；六附件经未登录公开下载逐字节/哈希核验。最终源码 CI 和公开 Windows EXE 的 53 项原生回归通过。本机已明确路径恢复用户刚授权的调试 app（PID 27605）与原书库/Alt+D，权限 true；已授权 app 的后台显示/松键隐藏获用户确认。原始开发子进程、新 macOS 安装包授权、Windows 11 完整实机矩阵仍未完成，持续目标保持进行中。
 
 ## 当前排查：Windows 商家工作台
 
-后续发现并修复紧急隐藏的另一边界：配置的 Pressed 已收到但组合键采样为 false 时，旧共用条件会拒绝紧急隐藏。v0.2.5 源码让该事件直接隐藏并暂停自动阅读，其余显示/翻页规则不变。本机 29 项 Rust 测试、类型/格式/Clippy、Windows 目标 Clippy 与 macOS debug app/no-bundle 构建通过，旧逻辑失败证据保留。修复已推送 `0006b75`，双平台 CI `39091188787` 运行中，Windows 增加普通包事件时序注入的六项原生检查；v0.2.4 公共附件尚不覆盖。后续复查托盘也改为复用已有 `hide` 操作，统一停止自动阅读。
+后续发现并修复紧急隐藏的另一边界：配置的 Pressed 已收到但组合键采样为 false 时，旧共用条件会拒绝紧急隐藏。v0.2.5 源码让该事件直接隐藏并暂停自动阅读，其余显示/翻页规则不变。本机 29 项 Rust 测试、类型/格式/Clippy、Windows 目标 Clippy 与 macOS debug app/no-bundle 构建通过，旧逻辑失败证据保留。修复 `0006b75` 及托盘复用 `hide` 的 `5c3c93a` 已推送。源码 CI `39091188787` / `39091533390` 两端通过：Windows 30 项 / macOS 29 项 Rust、各 12 项浏览器及类型/格式/Clippy，Windows 53 项原生检查通过。公开 v0.2.5 EXE 的 `39092267958` 同样 53 项通过，原生日志与截图核对通过。两端普通包、签名/DMG/PE/探针排除与草稿/公开下载一致性已验证，详见 `docs/GITHUB_RELEASE.md`。旧 v0.2.4 不包含本轮修复。
 
-macOS 用户添加权限后仍提示未授权，实际运行路径为旧发布包 `.local/release-024/mac-trial/FloatLeaf.app`（PID 25942）。正常退出旧包，以明确路径通过 `open` 启动其刚授权的 `src-tauri/target/debug/bundle/macos/FloatLeaf.app`（PID 26295）后权限 true、界面提示消失；用户确认后台显示和松键隐藏正常，五组物理按键日志一致。当前保留该调试包不重建，独立合成书库在 `.local/emergency-input/fixed/data`，原书库不变。临时紧急键 E 未得到有效复测，已恢复默认快捷键；此次不外推到原始开发进程或最终 0.2.5 包。完整记录见 `docs/EMERGENCY_INPUT_FIX.md` 和 `docs/MACOS_BACKGROUND_INPUT.md`。
+macOS 用户添加权限后仍提示未授权，实际运行路径为旧发布包 `.local/release-024/mac-trial/FloatLeaf.app`（PID 25942）。正常退出旧包，以明确路径通过 `open` 启动其刚授权的 `src-tauri/target/debug/bundle/macos/FloatLeaf.app`（PID 26295）后权限 true、界面提示消失；用户确认后台显示和松键隐藏正常，五组物理按键日志一致。该调试包保留不重建，独立合成书库在 `.local/emergency-input/fixed/data`。新 v0.2.5 DMG 复制后启动 PID 27467、版本/单实例/退出通过，但权限仍 false；随后明确路径恢复已授权调试包 PID 27605 与原书库/原快捷键，权限 true。临时紧急键 E 未得到有效复测，已恢复默认快捷键；此次不外推到原始开发进程或最终 0.2.5 包。完整记录见 `docs/EMERGENCY_INPUT_FIX.md` 和 `docs/MACOS_BACKGROUND_INPUT.md`。
 
 用户补充：拼多多商家工作台前台无法唤起浮页，关闭其快捷键无效，微信覆盖到前台后恢复。旧普通 v0.2.2 日志中显示/紧急隐藏注册成功、两组翻页冲突，并有多组 1～2 ms 内 Pressed/Released；不能仅归因为快捷键占用或置顶。新增仅配置快捷键与显隐时的前台进程名/PID、完整性 RID、实际按键采样、控制器前后状态和原生窗口属性日志，沿用两份 1 MiB 轮转，不记录业务内容或普通输入。版本 0.2.3 已交付，完整步骤与证据见 `docs/PDD_SHORTCUT_DIAGNOSTICS.md`。
 

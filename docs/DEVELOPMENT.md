@@ -40,6 +40,8 @@ pnpm tauri build --debug --bundles app
 open src-tauri/target/debug/bundle/macos/FloatLeaf.app
 ```
 
+若本机有多份同名 app，先从菜单栏退出已有浮页，再按上面的明确路径打开；已有实例会接收新启动请求，不能只凭 Dock 图标判断运行的是哪一份。
+
 在「系统设置 → 隐私与安全性 → 输入监控」中允许实际运行的 `FloatLeaf.app`；列表没有时点击「＋」，按 `Command + Shift + G` 输入该 app 的绝对路径并添加。退出、重新打开后，核对浮页的授权状态并测试后台按住/松键。不要因此给终端或 Codex 开启权限，也不要修改系统权限数据库。调试包默认使用本机书库；自动化需按现有诊断方式传入独立 `FLOATLEAF_DATA_DIR`，避免混入真实小说。
 
 开发模式提示会说明这一限制；打包版提示添加实际使用的 `.app`。重新编译或换启动方式后，以当前进程的权限提示和后台实测为准。本机证据及仍待验证项见 [后台快捷键说明](MACOS_BACKGROUND_INPUT.md)。
