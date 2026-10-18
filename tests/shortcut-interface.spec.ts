@@ -33,7 +33,12 @@ test.beforeEach(async ({ page }) => {
       error: null,
       reader: { bookId: null, total: 0, anchor: 0, end: 0, ready: false },
     };
-    const fixture = { saves: [] as (typeof settings)[], failSave: false };
+    const fixture = {
+      saves: [] as (typeof settings)[],
+      failSave: false,
+      inputAccess: null as boolean | null,
+      permissionRequests: 0,
+    };
     const callbacks = new Map<number, (event: unknown) => void>();
     let nextCallback = 0;
     let stateCallback = 0;
@@ -54,6 +59,8 @@ test.beforeEach(async ({ page }) => {
           if (command === 'data_directory') return '/test-data';
           if (command === 'log_info')
             return { directory: '/test-data/logs', version: 'test', error: null };
+          if (command === 'input_access') return fixture.inputAccess;
+          if (command === 'open_input_settings') fixture.permissionRequests++;
           if (command === 'save_settings') {
             fixture.saves.push(args.settings as typeof settings);
             if (fixture.failSave) throw '组合键已被占用，原快捷键保留，请换一组。';
@@ -68,6 +75,43 @@ test.beforeEach(async ({ page }) => {
   });
   await page.goto('/');
   await page.getByRole('button', { name: '快捷键', exact: true }).click();
+});
+
+test('background permission is requested only by the user and denial keeps the guidance visible', async ({
+  page,
+}) => {
+  const permission = page.getByRole('complementary', { name: '后台快捷键权限' });
+  await expect(permission).toHaveCount(0); // Windows has no macOS permission requirement.
+  await page.evaluate(() => {
+    (
+      window as unknown as { shortcutFixture: { inputAccess: boolean | null } }
+    ).shortcutFixture.inputAccess = false;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await expect(permission).toBeVisible();
+  await expect(permission).toContainText('切换到其他软件');
+  await expect(permission).toContainText('当前是开发模式');
+  await expect(permission).toContainText('独立调试');
+  const requests = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { shortcutFixture: { permissionRequests: number } }).shortcutFixture
+          .permissionRequests,
+    );
+  expect(await requests()).toBe(0);
+  await page.getByRole('button', { name: '设置输入监控', exact: true }).click();
+  expect(await requests()).toBe(1);
+  await page.getByRole('button', { name: '重新检查', exact: true }).click();
+  await expect(permission).toBeVisible();
+  await page.evaluate(() => {
+    (
+      window as unknown as { shortcutFixture: { inputAccess: boolean } }
+    ).shortcutFixture.inputAccess = true;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await expect(permission).toHaveCount(0);
+  await expect(page.getByText('输入监控已开启；可在其他软件前台使用快捷键。')).toBeVisible();
+  expect(await requests()).toBe(1);
 });
 
 test('recording is explicit and a captured shortcut only takes effect after saving', async ({

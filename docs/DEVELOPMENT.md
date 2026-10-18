@@ -27,6 +27,23 @@ pnpm desktop:dev
 
 项目 pnpm 的桌面和 cargo 脚本会为子进程添加 ~/.cargo/bin，因此运行这些脚本不依赖 shell 配置。直接运行 rustup/cargo 时需要 source 上述环境文件，或自行配置 PATH。脚本尊重自定义 CARGO_HOME。
 
+### macOS 后台快捷键授权
+
+`pnpm desktop:dev` 运行 `src-tauri/target/debug/floatleaf`，不是打包后的 `FloatLeaf.app`。本机已实测：为调试 `.app` 授权后，原始开发进程仍返回未授权，不能用安装包的开关判断开发进程状态。
+
+本机进一步将该原始二进制单独加入输入监控并由用户开启，重启 `pnpm desktop:dev` 后仍返回未授权。因此不能把“开关已打开”当作开发进程获准读取后台按键的证明，也不能承诺添加此文件即可解决。启动链与系统权限归属尚待进一步核查；本轮没有给终端或 Codex 扩大权限。
+
+界面开发继续使用 `pnpm desktop:dev`。需要验收后台快捷键时，先退出开发进程，再使用独立调试包：
+
+```bash
+pnpm tauri build --debug --bundles app
+open src-tauri/target/debug/bundle/macos/FloatLeaf.app
+```
+
+在「系统设置 → 隐私与安全性 → 输入监控」中允许实际运行的 `FloatLeaf.app`；列表没有时点击「＋」，按 `Command + Shift + G` 输入该 app 的绝对路径并添加。退出、重新打开后，核对浮页的授权状态并测试后台按住/松键。不要因此给终端或 Codex 开启权限，也不要修改系统权限数据库。调试包默认使用本机书库；自动化需按现有诊断方式传入独立 `FLOATLEAF_DATA_DIR`，避免混入真实小说。
+
+开发模式提示会说明这一限制；打包版提示添加实际使用的 `.app`。重新编译或换启动方式后，以当前进程的权限提示和后台实测为准。本机证据及仍待验证项见 [后台快捷键说明](MACOS_BACKGROUND_INPUT.md)。
+
 ## 新 Windows 开发机
 
 安装 Node 22.22.3 和 pnpm 10.33.4、Visual Studio Build Tools 的 C++ 桌面开发工作负载及 Windows SDK、WebView2 Runtime，并使用官方 rustup 安装 MSVC 工具链。重新打开终端后，在仓库运行以下命令：

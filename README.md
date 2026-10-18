@@ -29,6 +29,8 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 3. 按住 **Ctrl + Alt + 空格** 显示文字，松开任一组成键隐藏。Mac 的 Alt 对应 Option（⌥）。
 4. 在“文字与布局”中调整样式；需要移动窗口时，解除位置锁定并进入“编辑布局”。完成编辑后恢复鼠标穿透。
 
+macOS 后台快捷键需要输入监控权限。在「系统设置 → 隐私与安全性 → 输入监控」允许正在使用的 FloatLeaf；列表中没有时，点击「＋」添加该 `FloatLeaf.app`，然后退出并重新打开浮页。当前源码会提示缺少权限并提供设置入口，公开 v0.2.2 需手动进入系统设置。开发启动与安装包的授权不能相互代替，见 [后台快捷键说明](docs/MACOS_BACKGROUND_INPUT.md)。
+
 关闭设置窗口后，浮页仍在运行。通过系统托盘或菜单栏图标重新打开设置，也可以在那里紧急隐藏或退出。
 
 v0.1.1 起，设置页底部提供“日志位置 → 打开日志文件夹”。复现异常后可发送其中的 `.log` 文件，日志不含小说正文或普通打字内容。Windows 备用路径为 `%APPDATA%\io.github.jlauice.floatleaf\logs`，详细步骤见 [复测说明](docs/RELEASE_v0.1.1.md)。

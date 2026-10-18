@@ -76,6 +76,8 @@ pub fn run() {
             commands::data_directory,
             commands::log_info,
             commands::open_log_directory,
+            commands::input_access,
+            commands::open_input_settings,
             commands::import_book,
             commands::book_chapters,
             commands::select_chapter,

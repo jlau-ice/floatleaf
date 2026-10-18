@@ -1,6 +1,14 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-17。当前阶段：已公开发布 Windows x64 / macOS Apple Silicon v0.2.2 试用版，加入明确的快捷键录制入口与保存反馈，包含此前 EPUB/TXT 章节、自动翻页控制、Windows 标题栏和隐藏修复。六个发布附件已公开下载并与本地逐字节/哈希核验。持续目标尚未完成，用户设备的章节兼容性、物理键鼠与完整系统验收仍待反馈。
+更新日期：2026-10-18。当前阶段：已公开发布 Windows x64 / macOS Apple Silicon v0.2.2 试用版，加入明确的快捷键录制入口与保存反馈，包含此前 EPUB/TXT 章节、自动翻页控制、Windows 标题栏和隐藏修复。六个发布附件已公开下载并与本地逐字节/哈希核验。持续目标尚未完成，用户设备的章节兼容性、物理键鼠与完整系统验收仍待反馈。
+
+## 当前排查：macOS 后台按键
+
+用户确认浮页退出前台后，微信及其他普通应用前台均无法触发显示。同机独立测试书库的真实按键对照证实：Carbon 全局 Pressed/Released 收到，输入监控权限为 false；前台主键采样 true 并显示，后台主键采样 false 并被控制器拒绝。该采样方法自 P0 `e6072f7` 已存在，近期录制按钮未改此路径；用户此前正常的变化点尚无证据，不能归因为某次 UI 改动或系统更新。
+
+已补 macOS 输入监控提示、仅用户点击才发起授权的设置入口、状态刷新及快捷键采样日志。类型/rustfmt/Clippy、27 项 Rust / 11 项浏览器测试、macOS debug/no-bundle 与 app 构建、签名校验通过；最终开发模式提示的 4 项交互回归及前端构建通过。
+
+用户已为 `.local/background-input/FloatLeaf.app` 开启权限，重启 PID 14393 返回 true；用户确认后台显示、先松空格/Option 隐藏、紧急隐藏保持隐藏且全松后恢复均正常，原生日志一致。独立书库证据在 `.local/background-input/after-permission.json`。原始 `pnpm desktop:dev --no-watch` 的二进制单独授权后，重启 PID 15370 仍返回 false（`dev-after-permission.json`），启动链权限归属尚待核查，不扩大终端/Codex 权限。已退出开发测试，恢复同一已授权 `.app` 使用原书库供试用。当前未发布新版本；源码、调试包与原始开发进程的验证范围分别记录于 `docs/MACOS_BACKGROUND_INPUT.md`。
 
 ## v0.2.2 发布完成
 

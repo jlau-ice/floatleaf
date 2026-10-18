@@ -92,6 +92,16 @@ async function saveShortcuts() {
 const removing = ref('');
 const dataDirectory = ref('');
 const logInfo = ref<{ directory: string; version: string; error: string | null }>();
+const inputAccess = ref<boolean | null>(null);
+const development = import.meta.env.DEV;
+async function refreshInputAccess() {
+  if (!desktop) return;
+  try {
+    inputAccess.value = await invoke<boolean | null>('input_access');
+  } catch (e) {
+    error.value = String(e);
+  }
+}
 const importPath = ref('');
 const importDialog = ref<HTMLDialogElement>();
 let importRequest = 0;
@@ -150,6 +160,8 @@ async function refresh() {
 }
 onMounted(async () => {
   if (!desktop) return;
+  window.addEventListener('focus', refreshInputAccess);
+  await refreshInputAccess();
   try {
     const stop = await listen('library-changed', () => {
       refresh().catch((e) => (error.value = String(e)));
@@ -168,6 +180,7 @@ onMounted(async () => {
 });
 onUnmounted(() => {
   alive = false;
+  window.removeEventListener('focus', refreshInputAccess);
   unlisten?.();
 });
 async function task(work: () => Promise<unknown>) {
@@ -290,6 +303,24 @@ const ranges: {
     <p v-if="error || state?.error" class="notice error" role="alert">
       {{ error || state?.error }}
     </p>
+    <aside v-if="inputAccess === false" class="notice input-permission" aria-label="后台快捷键权限">
+      <strong>后台快捷键需要开启输入监控</strong>
+      <p>
+        未开启时，切换到其他软件后可能无法显示或判断松键。请在系统设置中允许浮页，然后退出并重新打开浮页。
+      </p>
+      <p v-if="development" class="hint">
+        当前是开发模式，权限可能受启动方式影响。若开启后仍提示未授权，请用独立调试 FloatLeaf.app
+        复测；构建与授权步骤见项目开发指南。
+      </p>
+      <p v-else class="hint">列表里没有浮页时，点击「＋」添加你正在使用的 FloatLeaf.app。</p>
+      <p class="hint">仅检查已设置的快捷键，不记录聊天、密码或普通打字内容。</p>
+      <div class="actions">
+        <button :disabled="busy" @click="task(() => invoke('open_input_settings'))">
+          设置输入监控
+        </button>
+        <button class="secondary" @click="refreshInputAccess">重新检查</button>
+      </div>
+    </aside>
     <nav class="tabs" aria-label="设置页面">
       <button :aria-selected="activeTab === 'library'" @click="activeTab = 'library'">
         我的书架 <span>{{ shelf?.books.length ?? 0 }}</span></button
@@ -444,6 +475,7 @@ const ranges: {
     </section>
     <section v-else-if="shortcutDraft" class="shortcut-settings">
       <h2>录制你的快捷键</h2>
+      <p v-if="inputAccess === true" class="hint">输入监控已开启；可在其他软件前台使用快捷键。</p>
       <p id="shortcut-instructions" class="hint">
         点击「录制快捷键」→ 按下组合键 → 保存。录制时按 Esc 取消，按 Tab 离开。
       </p>

@@ -72,6 +72,47 @@ fn down(code: u16) -> bool {
     unsafe { fl_key_down(code) }
 }
 
+pub fn input_monitoring_allowed() -> Option<bool> {
+    #[cfg(target_os = "macos")]
+    {
+        unsafe extern "C" {
+            fn fl_input_monitoring_allowed() -> bool;
+        }
+        Some(unsafe { fl_input_monitoring_allowed() })
+    }
+    #[cfg(windows)]
+    None
+}
+
+pub fn open_input_settings() -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        unsafe extern "C" {
+            fn fl_open_input_settings() -> bool;
+        }
+        if unsafe { fl_open_input_settings() } {
+            Ok(())
+        } else {
+            Err("无法打开系统设置，请手动进入「隐私与安全性 → 输入监控」开启浮页。".into())
+        }
+    }
+    #[cfg(windows)]
+    Err("Windows 无需设置 macOS 输入监控权限。".into())
+}
+
+#[cfg(target_os = "macos")]
+pub fn input_status() -> serde_json::Value {
+    unsafe extern "C" {
+        fn fl_application_active() -> bool;
+    }
+    unsafe {
+        serde_json::json!({
+            "inputMonitoringAllowed": input_monitoring_allowed(),
+            "applicationActive": fl_application_active(),
+        })
+    }
+}
+
 pub fn choose_book(window: &WebviewWindow) -> Result<Option<String>, String> {
     unsafe extern "C" {
         fn fl_choose_book(window: *mut c_void) -> *mut std::ffi::c_char;

@@ -85,20 +85,25 @@ pub fn add(app: &AppHandle, keys: &[Shortcut; 5]) -> Result<Vec<Shortcut>, Strin
 }
 
 pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
-    logging::record(
-        app,
-        "shortcut",
-        serde_json::json!({
-            "key": shortcut.to_string(),
-            "pressed": event.state == ShortcutState::Pressed,
-        }),
-    );
     let key = *shortcut;
+    let handle = app.clone();
     runtime::change(app, move |state| {
         let Some(index) = state.bindings.iter().position(|s| *s == key) else {
             return;
         };
         let (all, main, any) = platform::chord(&key);
+        let details = serde_json::json!({
+            "key": key.to_string(),
+            "pressed": event.state == ShortcutState::Pressed,
+            "chordDown": all, "mainDown": main, "anyDown": any,
+        });
+        #[cfg(target_os = "macos")]
+        let details = {
+            let mut details = details;
+            details["input"] = platform::input_status();
+            details
+        };
+        logging::record(&handle, "shortcut", details);
         if index == 0 {
             state.controller.key_sample(all, main, any);
             if event.state == ShortcutState::Pressed {
@@ -125,6 +130,8 @@ pub fn handle(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
 }
 
 pub fn setup(app: &AppHandle) {
+    #[cfg(target_os = "macos")]
+    logging::record(app, "input-status", platform::input_status());
     let keys = app.state::<runtime::Shared>().lock().unwrap().bindings;
     // Keep independently available actions usable even if one key is occupied.
     let mut errors = Vec::new();

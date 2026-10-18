@@ -107,6 +107,18 @@ pub fn open_log_directory(app: AppHandle, window: WebviewWindow) -> Result<(), S
     logging::open_directory(&app)
 }
 
+#[tauri::command]
+pub fn input_access(window: WebviewWindow) -> Result<Option<bool>, String> {
+    main_only(&window)?;
+    Ok(platform::input_monitoring_allowed())
+}
+
+#[tauri::command]
+pub fn open_input_settings(window: WebviewWindow) -> Result<(), String> {
+    main_only(&window)?;
+    platform::open_input_settings()
+}
+
 pub fn select_core(app: &AppHandle, id: &str) -> Result<(), String> {
     let (book, text) = with_store(app, |store| {
         let text = store.select(id)?;

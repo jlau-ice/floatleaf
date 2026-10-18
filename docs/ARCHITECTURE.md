@@ -46,6 +46,8 @@ macOS 完全透明已启用 Tauri 的 macOSPrivateApi，当前发布策略为独
 
 Tauri capabilities 按窗口和实际功能最小化。原生功能由 Rust 命令承载，不向悬浮文字窗口开放任意文件或 shell 能力。小说按文本处理，不执行导入内容中的 HTML 或脚本。
 
+macOS 通过 `CGPreflightListenEventAccess` 查询输入监控授权；未授权时设置窗口提示后台按键状态可能不可用，仅用户点击入口才调用 `CGRequestListenEventAccess` 并打开系统设置。只采样配置的组合键，不记录普通输入；不因缺少权限跳过旧事件或紧急隐藏检查。调试包和原始开发进程的权限分别验证，见 MACOS_BACKGROUND_INPUT.md。
+
 窗口与插件配置变更后同时检查开发和打包构建。业务能力测试使用桌面程序；`pnpm dev` 只是网页预览。
 
 ## 存储决定（2026-10-17）

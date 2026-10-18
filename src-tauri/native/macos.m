@@ -14,6 +14,16 @@ bool fl_key_down(unsigned short code) {
     return CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, code);
 }
 
+bool fl_input_monitoring_allowed(void) { return CGPreflightListenEventAccess(); }
+bool fl_application_active(void) { return NSApp.active; }
+
+// Called only when the user chooses the permission button in settings.
+bool fl_open_input_settings(void) {
+    CGRequestListenEventAccess();
+    return [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:
+        @"x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"]];
+}
+
 void fl_watch_session(void *raw, void (*hide)(void), void (*displays)(void)) {
     (void)raw;
     static NSMutableArray *tokens;
