@@ -35,6 +35,21 @@ pub fn style_settings(window: &WebviewWindow) -> Result<(), String> {
 }
 
 /// Must run on the event thread. Never calls activate/set_focus.
+#[cfg(windows)]
+pub fn capture_protection(window: &WebviewWindow, enabled: bool) -> Result<(), String> {
+    unsafe extern "C" {
+        fn fl_capture_protection(window: *mut c_void, enabled: bool) -> u32;
+    }
+    let error = unsafe { fl_capture_protection(raw_window(window)?, enabled) };
+    if error != 0 {
+        return Err(format!(
+            "截图/录屏保护设置失败（Windows 错误 {error}），已隐藏阅读窗口。需要 Windows 10 2004 或更新版本；可关闭保护后重试。"
+        ));
+    }
+    Ok(())
+}
+
+/// Must run on the event thread. Never calls activate/set_focus.
 pub fn show(window: &WebviewWindow) -> Result<(), String> {
     unsafe {
         fl_show(raw_window(window)?);

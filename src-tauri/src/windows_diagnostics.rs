@@ -40,6 +40,8 @@ struct WindowContext {
     overlay_cloaked: u32,
     show_error: u32,
     cloak_result: i32,
+    capture_affinity: u32,
+    capture_error: u32,
 }
 
 pub fn window_context(window: &WebviewWindow) -> Value {
@@ -67,6 +69,8 @@ pub fn window_context(window: &WebviewWindow) -> Value {
         "overlayCloaked": (context.cloak_result >= 0).then_some(context.overlay_cloaked != 0),
         "foregroundAboveOverlay": (context.foreground_above_overlay >= 0).then_some(context.foreground_above_overlay == 1),
         "lastShowError": context.show_error,
+        "captureAffinity": (context.capture_error == 0).then_some(context.capture_affinity),
+        "captureError": context.capture_error,
     })
 }
 

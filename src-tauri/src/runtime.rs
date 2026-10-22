@@ -24,6 +24,7 @@ static WATCHER: OnceLock<std::thread::Thread> = OnceLock::new();
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
+    pub capture_protection_supported: bool,
     #[serde(flatten)]
     pub controller: Controller,
     pub placement: Option<Placement>,
@@ -91,6 +92,7 @@ pub fn snapshot(app: &AppHandle) -> Snapshot {
     let shared = app.state::<Shared>();
     let state = shared.lock().unwrap();
     Snapshot {
+        capture_protection_supported: cfg!(windows),
         controller: state.controller.clone(),
         placement: state.placement.clone(),
         error: state.error.clone(),
@@ -134,6 +136,8 @@ fn apply(app: &AppHandle, state: &Snapshot) {
     };
     let apply_window = || -> Result<(), String> {
         geometry::apply(app, &window)?;
+        #[cfg(windows)]
+        platform::capture_protection(&window, state.settings.capture_protection)?;
         window
             .set_ignore_cursor_events(!state.controller.editing_layout)
             .map_err(|e| e.to_string())?;
@@ -162,6 +166,7 @@ fn apply(app: &AppHandle, state: &Snapshot) {
         "mode": actual.controller.mode,
         "emergencyLatched": actual.controller.emergency_latched,
         "editingLayout": actual.controller.editing_layout,
+        "captureProtection": actual.settings.capture_protection,
     });
     #[cfg(windows)]
     let details = {

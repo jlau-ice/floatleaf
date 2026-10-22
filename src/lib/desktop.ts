@@ -22,6 +22,7 @@ export interface ReadingSettings {
   intervalSeconds: number;
   mode: 'hold' | 'toggle' | 'pinned';
   positionLocked: boolean;
+  captureProtection: boolean;
   shortcuts: Bindings;
 }
 export interface Book {
@@ -43,6 +44,7 @@ export interface Library {
   settings: ReadingSettings;
 }
 export interface ReaderState {
+  captureProtectionSupported: boolean;
   mode: 'hold' | 'toggle' | 'pinned';
   visible: boolean;
   emergencyLatched: boolean;

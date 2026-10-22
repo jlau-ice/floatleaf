@@ -355,6 +355,7 @@ mod tests {
             font_size: 36.0,
             lines: 12,
             interval_seconds: 17,
+            capture_protection: true,
             ..ReadingSettings::default()
         };
         store.set_settings(settings.clone()).unwrap();
@@ -428,6 +429,7 @@ mod tests {
             Default::default()
         );
         assert_eq!(store.library().unwrap().settings.font_size, 24.0);
+        assert!(!store.library().unwrap().settings.capture_protection);
     }
     #[test]
     fn surrogate_boundaries_and_end_are_validated() {

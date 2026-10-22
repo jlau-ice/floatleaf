@@ -580,6 +580,26 @@ const ranges: {
           </button>
         </div>
       </div>
+      <div v-if="state?.captureProtectionSupported" class="row capture-protection">
+        <div>
+          <h2>截图 / 录屏保护</h2>
+          <p id="capture-protection-hint">
+            开启后，在支持的截图、录屏与屏幕共享中排除悬浮阅读窗口。仅限 Windows 10 2004
+            及以上；设置页不受保护。不能保证所有捕获工具都有效，首次使用请先试截一次。
+          </p>
+        </div>
+        <button
+          class="secondary"
+          role="switch"
+          aria-label="截图 / 录屏保护"
+          aria-describedby="capture-protection-hint"
+          :aria-checked="state.settings.captureProtection"
+          :disabled="!desktop || busy"
+          @click="save({ captureProtection: !state.settings.captureProtection })"
+        >
+          {{ state.settings.captureProtection ? '已开启' : '已关闭' }}
+        </button>
+      </div>
     </section>
     <footer>
       <span class="status-dot" :class="{ visible: state?.visible }" /><span role="status">{{
@@ -930,6 +950,14 @@ input[type='color'] {
   font-size: 10px;
   color: #70806f;
   overflow-wrap: anywhere;
+}
+.capture-protection p {
+  max-width: 560px;
+  line-height: 1.8;
+}
+.capture-protection button[aria-checked='true'] {
+  background: #203b32;
+  color: #faf9f2;
 }
 .storage-note summary {
   cursor: pointer;

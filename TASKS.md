@@ -2,6 +2,13 @@
 
 状态：`[ ]` 未完成，`[x]` 已完成。只在验收条件满足并记录证据后勾选。编译通过、桌面启动成功与双平台体验验收分开记录。
 
+## Windows 截图 / 录屏保护（2026-10-22）
+
+- [x] CAP-01：同步另一端 main 到 `227f275`，保留 v0.2.6 图标与发布流程。增加 Windows 阅读窗口保护开关、SQLite 默认/持久化、WDA_EXCLUDEFROMCAPTURE 原生调用与读回、失败隐藏及日志字段；不改变 macOS 保护范围，不伪称 WebView2 支持自有 DXGI 交换链标志。
+- [x] CAP-02：环境、前端构建、类型/rustfmt/Clippy、29 项 Rust / 13 项浏览器测试、格式与 macOS debug/no-bundle/app 构建通过。实际启动隔离书库的 macOS app，WKWebView 平台范围核对与原生自动阅读五项回归通过；旧库与开启保存测试覆盖新增字段。
+- [ ] CAP-03：Windows 普通安装包关闭/开启/关闭的真实捕获像素、读回标志、焦点、松键/紧急隐藏回归及包交付；实测后补齐记录。
+- [ ] CAP-04：Windows 11 截图工具、OBS/会议软件不同捕获方式与显示中直接切换开关实机验收，步骤见 `docs/CAPTURE_PROTECTION.md`。完整双平台验收仍未完成。
+
 ## macOS 菜单栏素材（2026-10-22）
 
 - [x] ICON-01：使用用户提供的白色 SVG，裁剪透明留白且保留全部路径；导出 44 × 44 RGBA PNG，macOS 菜单栏通过 `include_image!` 与 `icon_as_template(true)` 使用独立单色模板。应用图标及其他平台托盘沿用原素材。

@@ -16,6 +16,7 @@ test.beforeEach(async ({ page }) => {
       intervalSeconds: 8,
       mode: 'hold',
       positionLocked: true,
+      captureProtection: false,
       shortcuts: {
         display: 'Control+Alt+Space',
         emergency: 'Control+Alt+Escape',
@@ -25,6 +26,7 @@ test.beforeEach(async ({ page }) => {
       },
     };
     const state = {
+      captureProtectionSupported: true,
       settings,
       mode: 'hold',
       visible: false,
@@ -39,6 +41,11 @@ test.beforeEach(async ({ page }) => {
       failSave: false,
       inputAccess: null as boolean | null,
       permissionRequests: 0,
+      setCaptureSupport(supported: boolean) {
+        state.captureProtectionSupported = supported;
+        state.revision++;
+        callbacks.get(stateCallback)?.({ payload: structuredClone(state) });
+      },
       setBlockedBy(executable: string | null) {
         state.shortcutBlockedBy = executable;
         state.revision++;
@@ -68,9 +75,11 @@ test.beforeEach(async ({ page }) => {
           if (command === 'input_access') return fixture.inputAccess;
           if (command === 'open_input_settings') fixture.permissionRequests++;
           if (command === 'save_settings') {
-            fixture.saves.push(args.settings as typeof settings);
+            // IPC serializes nested Vue proxies before Rust receives settings.
+            const saved = JSON.parse(JSON.stringify(args.settings)) as typeof settings;
+            fixture.saves.push(saved);
             if (fixture.failSave) throw '组合键已被占用，原快捷键保留，请换一组。';
-            state.settings = args.settings as typeof settings;
+            state.settings = saved;
             state.revision++;
             callbacks.get(stateCallback)?.({ payload: structuredClone(state) });
           }
@@ -81,6 +90,39 @@ test.beforeEach(async ({ page }) => {
   });
   await page.goto('/');
   await page.getByRole('button', { name: '快捷键', exact: true }).click();
+});
+
+test('capture protection saves through the normal settings command and is Windows only', async ({
+  page,
+}) => {
+  const toggle = page.getByRole('switch', { name: '截图 / 录屏保护', exact: true });
+  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  await expect(page.locator('#capture-protection-hint')).toContainText('设置页不受保护');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: '固定', exact: true }).click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  expect(
+    await page.evaluate(() =>
+      (
+        window as unknown as {
+          shortcutFixture: { saves: { captureProtection: boolean; mode: string }[] };
+        }
+      ).shortcutFixture.saves.map((s) => [s.captureProtection, s.mode]),
+    ),
+  ).toEqual([
+    [true, 'hold'],
+    [true, 'pinned'],
+    [false, 'pinned'],
+  ]);
+  await page.evaluate(() =>
+    (
+      window as unknown as { shortcutFixture: { setCaptureSupport(supported: boolean): void } }
+    ).shortcutFixture.setCaptureSupport(false),
+  );
+  await expect(toggle).toHaveCount(0);
 });
 
 test('background permission is requested only by the user and denial keeps the guidance visible', async ({

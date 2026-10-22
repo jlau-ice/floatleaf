@@ -36,6 +36,18 @@ void fl_hide(void *raw) {
 }
 bool fl_key_down(unsigned short code) { return (GetAsyncKeyState(code) & 0x8000) != 0; }
 
+// Tao discards SetWindowDisplayAffinity errors. Check the result here so a
+// requested protection failure never leaves the reader visibly unprotected.
+DWORD fl_capture_protection(void *raw, bool enabled) {
+    HWND window = (HWND)raw;
+    DWORD desired = enabled ? WDA_EXCLUDEFROMCAPTURE : WDA_NONE;
+    DWORD actual = 0;
+    if (GetWindowDisplayAffinity(window, &actual) && actual == desired) return ERROR_SUCCESS;
+    if (!SetWindowDisplayAffinity(window, desired)) return GetLastError();
+    if (!GetWindowDisplayAffinity(window, &actual)) return GetLastError();
+    return actual == desired ? ERROR_SUCCESS : ERROR_NOT_SUPPORTED;
+}
+
 typedef struct {
     DWORD pid, integrity_rid, query_error, token_error, image_error;
     wchar_t executable[260];
@@ -49,6 +61,7 @@ typedef struct {
     int foreground_rect_valid, overlay_rect_valid, overlay_visible, foreground_above_overlay;
     DWORD overlay_cloaked, show_error;
     HRESULT cloak_result;
+    DWORD capture_affinity, capture_error;
 } FlWindowContext;
 
 static void process_info(DWORD pid, FlProcessInfo *info) {
@@ -93,6 +106,7 @@ void fl_window_context(void *raw, FlWindowContext *context) {
     context->overlay_visible = IsWindowVisible(overlay);
     context->cloak_result = DwmGetWindowAttribute(overlay, DWMWA_CLOAKED, &context->overlay_cloaked, sizeof(DWORD));
     context->show_error = last_show_error;
+    if (!GetWindowDisplayAffinity(overlay, &context->capture_affinity)) context->capture_error = GetLastError();
     context->foreground_above_overlay = -1;
     if (context->overlay_visible && foreground) {
         context->foreground_above_overlay = 0;

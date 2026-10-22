@@ -1,7 +1,8 @@
 """Run against an ordinary packaged EXE on an interactive Windows desktop.
 
 Uses only synthetic shortcut input and native HWND queries. No debug IPC,
-novels, user settings changes, or third-party automation dependencies.
+novels or third-party automation dependencies. The optional capture test seeds
+an empty CI-only SQLite library, then restores its settings and removes the fixture.
 """
 import argparse
 import ctypes as c
@@ -13,6 +14,7 @@ from pathlib import Path
 import platform
 import subprocess
 import struct
+import sqlite3
 import time
 import zlib
 
@@ -23,6 +25,7 @@ parser.add_argument("--expect-stuck", action="store_true")
 parser.add_argument("--screenshot", type=Path)
 parser.add_argument("--check-diagnostics", action="store_true")
 parser.add_argument("--check-emergency-without-key", action="store_true")
+parser.add_argument("--check-capture-protection", action="store_true")
 args = parser.parse_args()
 
 u = c.WinDLL("user32", use_last_error=True)
@@ -35,6 +38,7 @@ u.IsWindowVisible.argtypes = [w.HWND]
 u.GetForegroundWindow.restype = w.HWND
 u.SetWindowPos.argtypes = [w.HWND, w.HWND, c.c_int, c.c_int, c.c_int, c.c_int, w.UINT]
 u.GetWindowLongW.argtypes = [w.HWND, c.c_int]
+u.GetWindowDisplayAffinity.argtypes = [w.HWND, c.POINTER(w.DWORD)]
 u.ShowWindow.argtypes = [w.HWND, c.c_int]
 u.ShowWindowAsync.argtypes = [w.HWND, c.c_int]
 u.IsIconic.argtypes = [w.HWND]
@@ -136,6 +140,19 @@ def find_window(pid, name):
     return next((hwnd for hwnd, title in app_windows(pid) if title == name), None)
 
 
+def wait_for_app():
+    for _ in range(300):
+        overlay = find_window(app.pid, "FloatLeaf 阅读")
+        main = find_window(app.pid, "浮页 FloatLeaf")
+        if overlay and (args.expect_stuck or main):
+            wait(2)
+            return overlay, main
+        if app.poll() is not None:
+            raise RuntimeError(f"App exited before creating its overlay: {app.returncode}")
+        wait(0.1)
+    raise RuntimeError(f"App windows not ready: {app_windows(app.pid)}; exit={app.poll()}")
+
+
 def current_log_events(pid):
     log = Path(os.environ["APPDATA"]) / "io.github.jlauice.floatleaf/logs/floatleaf.log"
     events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
@@ -163,6 +180,7 @@ def post_emergency_without_key(pid):
 
 
 checks = []
+captures = []
 
 
 def check(name, value):
@@ -198,7 +216,8 @@ def capture_settings(main, path):
     header = c.create_string_buffer(struct.pack("<IiiHHIIiiII", 40, width, -height, 1, 32,
                                                 0, len(pixels), 0, 0, 0, 0) + bytes(4))
     try:
-        if not gdi.BitBlt(canvas, 0, 0, width, height, screen, rect.left, rect.top, 0x00CC0020):
+        # CAPTUREBLT includes layered windows: the unprotected overlay is a positive control.
+        if not gdi.BitBlt(canvas, 0, 0, width, height, screen, rect.left, rect.top, 0x40CC0020):
             raise RuntimeError("Settings screenshot BitBlt failed")
         gdi.SelectObject(canvas, previous)
         if gdi.GetDIBits(screen, bitmap, 0, height, pixels, header, 0) != height:
@@ -251,20 +270,79 @@ def check_settings(main):
             for y in range(2, 28) for x in range(32, 180)))
 
 
+def check_capture_protection():
+    global app
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        raise RuntimeError("Capture fixtures are restricted to an empty GitHub Actions library")
+    release_all()
+    app.terminate()
+    app.wait(timeout=10)
+    database = Path(os.environ["APPDATA"]) / "io.github.jlauice.floatleaf/floatleaf.sqlite3"
+    with sqlite3.connect(database) as db:
+        if db.execute("SELECT COUNT(*) FROM books").fetchone()[0]:
+            raise RuntimeError("Capture test requires an empty library")
+        original = db.execute("SELECT settings FROM app_state WHERE id=1").fetchone()[0]
+        content = "FLOATLEAF CAPTURE TEST 0123456789"
+        db.execute("INSERT INTO books VALUES (?,?,?,?,?,?,?)",
+                   ("capture-fixture", "Capture fixture", "UTF-8", content, len(content), 0, 0))
+    try:
+        for index, enabled in enumerate([False, True, False]):
+            label = f"capture-{index}-{'on' if enabled else 'off'}"
+            settings = json.loads(original)
+            settings.update(captureProtection=enabled, color="#ff00ff", textOpacity=1,
+                            backgroundOpacity=0.8, fontSize=32, lines=2, mode="hold")
+            with sqlite3.connect(database) as db:
+                db.execute("UPDATE app_state SET settings=?, current_book_id=? WHERE id=1",
+                           (json.dumps(settings), "capture-fixture"))
+            app = subprocess.Popen([str(args.exe.resolve())])
+            overlay, main = wait_for_app()
+            u.PostMessageW(main, 0x0010, 0, 0)
+            u.SetWindowPos(fixture, -1, 50, 50, 900, 600, 0x0050)
+            click(100, 110)
+            u.SetWindowPos(overlay, -1, 180, 160, 0, 0, 0x0011)  # no resize/activate
+            wait(1)
+            baseline, _ = capture_settings(overlay, args.output.with_name(f"windows-{label}-hidden.png"))
+            press_display()
+            wait(1)
+            pixels, _ = capture_settings(overlay, args.output.with_name(f"windows-{label}-shown.png"))
+            affinity = w.DWORD()
+            ok = u.GetWindowDisplayAffinity(overlay, c.byref(affinity))
+            check(f"{label}-affinity", ok and affinity.value == (0x11 if enabled else 0))
+            check(f"{label}-native-visible", u.IsWindowVisible(overlay))
+            check(f"{label}-no-focus", u.GetForegroundWindow() == fixture)
+            check(f"{label}-clickthrough", u.GetWindowLongW(overlay, -20) & 0x08000028 == 0x08000028)
+            magenta = sum(r > 160 and g < 100 and b > 160
+                          for r, g, b in zip(pixels[0::3], pixels[1::3], pixels[2::3]))
+            matching = sum(a == b for a, b in zip(baseline, pixels)) / len(baseline)
+            measurement = {"capture": label, "magentaPixels": magenta,
+                           "backgroundMatch": matching, "affinity": affinity.value}
+            captures.append(measurement)
+            print(json.dumps(measurement), flush=True)
+            check(f"{label}-captured-pixels", magenta == 0 and matching > 0.999 if enabled else magenta > 100)
+            key(ALT, False)
+            wait()
+            check(f"{label}-release-hides", not u.IsWindowVisible(overlay))
+            release_all()
+            press_display()
+            key(ESC)
+            wait()
+            check(f"{label}-emergency-hides", not u.IsWindowVisible(overlay))
+            release_all()
+            app.terminate()
+            app.wait(timeout=10)
+    finally:
+        if app.poll() is None:
+            app.terminate()
+            app.wait(timeout=10)
+        with sqlite3.connect(database) as db:
+            db.execute("UPDATE app_state SET settings=?, current_book_id=NULL WHERE id=1", (original,))
+            db.execute("DELETE FROM books WHERE id='capture-fixture'")
+
+
 app = subprocess.Popen([str(args.exe.resolve())])
 fixture = None
 try:
-    for _ in range(300):
-        overlay = find_window(app.pid, "FloatLeaf 阅读")
-        main = find_window(app.pid, "浮页 FloatLeaf")
-        if overlay and (args.expect_stuck or main):
-            break
-        if app.poll() is not None:
-            raise RuntimeError(f"App exited before creating its overlay: {app.returncode}")
-        wait(0.1)
-    else:
-        raise RuntimeError(f"App windows not ready: {app_windows(app.pid)}; exit={app.poll()}")
-    wait(2)
+    overlay, main = wait_for_app()
     fixture = u.CreateWindowExW(0, "EDIT", "FloatLeaf regression input fixture",
                                 0x00CF0000, 50, 50, 640, 480, None, None, None, None)
     if not fixture:
@@ -357,12 +435,15 @@ try:
         wait()
         check("settings-close-hides-keeps-app", not u.IsWindowVisible(main) and app.poll() is None)
 
+    if args.check_capture_protection:
+        check_capture_protection()
+
     failures = [item["name"] for item in checks if not item["passed"]]
     reproduced = "emergency-hides" in failures and any(x.startswith("release-hides-") for x in failures)
     passed = reproduced if args.expect_stuck else not failures
     report = {"os": platform.platform(), "exe": args.exe.name,
-              "expectedOldBug": args.expect_stuck, "passed": passed, "checks": checks,
-              "scope": "Synthetic system shortcuts + HWND visibility/focus/styles and settings controls; optional caption pixels and posted emergency WM_HOTKEY with main key up; not physical keyboard/mouse or cross-integrity acceptance"}
+              "expectedOldBug": args.expect_stuck, "passed": passed, "checks": checks, "captures": captures,
+              "scope": "Synthetic system shortcuts + HWND visibility/focus/styles and settings controls; optional capture affinity and GDI CAPTUREBLT pixel comparisons, caption pixels and posted emergency WM_HOTKEY; not physical keyboard/mouse, all capture APIs or cross-integrity acceptance"}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))

@@ -1,5 +1,11 @@
 # FloatLeaf 开发交接
 
+## 正在交付：Windows 截图 / 录屏保护（2026-10-22）
+
+本机 main 已快进到另一端 `227f275`，工作区原先干净，v0.2.6 菜单栏与自动发布更新保留。新增默认关闭的阅读窗口保护选项，存于现有 SQLite 设置；Windows 原生 WDA_EXCLUDEFROMCAPTURE 设置/读回失败走隐藏与错误提示，日志含期望值/实际 affinity/系统错误。仅保护 overlay，设置页仍可截图，macOS 不显示开关。DXGI DISPLAY_ONLY 需要自有交换链，当前 WebView2 路线未实现该标志，详情及限制见 `docs/CAPTURE_PROTECTION.md`。
+
+本机 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm test:rust`（29 项）、`pnpm test:web`（13 项）、`pnpm format:check`、`pnpm tauri build --debug --no-bundle` 与 debug app 构建已通过。实际启动隔离书库的 macOS app，WKWebView 确认不显示 Windows 开关，原生自动阅读五项回归通过；结果在 `.local/capture-protection/mac-probe/`，测试后正常退出。没有用户书库或系统权限变更。版本准备为 0.2.7，当前公开下载仍为 0.2.6。Windows 普通包 GDI/CAPTUREBLT 捕获正反对照已接入现有 CI，待运行；完整实机矩阵不随之勾选。下一步：提交并运行 Windows 原生捕获验证，补齐证据与交付记录。
+
 更新日期：2026-10-22。菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。v0.2.6 两端试用版已公开发布，标签 `2d24437`；双平台 CI、Windows 53 项原生检查和六附件公开下载核验通过。README 开头已加入 LINUX DO 社区致意，下载入口更新为 v0.2.6。菜单栏主题与完整系统体验仍待实机反馈。
 
 此前发布状态（2026-10-18）：已公开发布 Windows x64 / macOS Apple Silicon v0.2.5 紧急隐藏修复试用版，标签 `5c3c93a`；六附件经未登录公开下载逐字节/哈希核验。最终源码 CI 和公开 Windows EXE 的 53 项原生回归通过。当时已明确路径恢复用户刚授权的调试 app（PID 27605）与原书库/Alt+D，权限 true；已授权 app 的后台显示/松键隐藏获用户确认。原始开发子进程、新 macOS 安装包授权、Windows 11 完整实机矩阵仍未完成，持续目标保持进行中。

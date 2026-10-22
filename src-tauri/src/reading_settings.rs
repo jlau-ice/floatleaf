@@ -16,6 +16,7 @@ pub struct ReadingSettings {
     pub interval_seconds: u32,
     pub mode: DisplayMode,
     pub position_locked: bool,
+    pub capture_protection: bool,
     pub shortcuts: crate::shortcuts::Bindings,
 }
 impl Default for ReadingSettings {
@@ -33,6 +34,7 @@ impl Default for ReadingSettings {
             interval_seconds: 8,
             mode: DisplayMode::Hold,
             position_locked: true,
+            capture_protection: false,
             shortcuts: Default::default(),
         }
     }
