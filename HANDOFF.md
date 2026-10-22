@@ -2,9 +2,11 @@
 
 ## 正在交付：Windows 截图 / 录屏保护（2026-10-22）
 
-本机 main 已快进到另一端 `227f275`，工作区原先干净，v0.2.6 菜单栏与自动发布更新保留。新增默认关闭的阅读窗口保护选项，存于现有 SQLite 设置；Windows 原生 WDA_EXCLUDEFROMCAPTURE 设置/读回失败走隐藏与错误提示，日志含期望值/实际 affinity/系统错误。仅保护 overlay，设置页仍可截图，macOS 不显示开关。DXGI DISPLAY_ONLY 需要自有交换链，当前 WebView2 路线未实现该标志，详情及限制见 `docs/CAPTURE_PROTECTION.md`。
+本机 main 已快进到另一端 `227f275`，工作区原先干净，v0.2.6 菜单栏与自动发布更新保留。新增默认关闭的阅读窗口保护选项，存于现有 SQLite 设置；Windows 原生 WDA_EXCLUDEFROMCAPTURE 设置失败或成功读回的值不符时走隐藏与错误提示，日志含期望值/实际 affinity/系统错误。仅保护 overlay，设置页仍可截图，macOS 不显示开关。DXGI DISPLAY_ONLY 需要自有交换链，当前 WebView2 路线未实现该标志，详情及限制见 `docs/CAPTURE_PROTECTION.md`。
 
 本机 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm test:rust`（29 项）、`pnpm test:web`（13 项）、`pnpm format:check`、`pnpm tauri build --debug --no-bundle` 与 debug app 构建已通过。实际启动隔离书库的 macOS app，WKWebView 确认不显示 Windows 开关，原生自动阅读五项回归通过；结果在 `.local/capture-protection/mac-probe/`，测试后正常退出。没有用户书库或系统权限变更。版本准备为 0.2.7，当前公开下载仍为 0.2.6。Windows 普通包 GDI/CAPTUREBLT 捕获正反对照已接入现有 CI，待运行；完整实机矩阵不随之勾选。下一步：提交并运行 Windows 原生捕获验证，补齐证据与交付记录。
+
+实现复核补充：Tao 编辑布局会移除分层样式，而 GetWindowDisplayAffinity 仅支持分层窗口；已调整为样式更新后设置保护，只把设置失败/成功读回但值不符视为失败，查询受限单独记入日志。Windows 目标 release/all-targets Clippy 通过；原生像素与布局组合继续由 Windows 验证，不以接口推断勾选实机。
 
 更新日期：2026-10-22。菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。v0.2.6 两端试用版已公开发布，标签 `2d24437`；双平台 CI、Windows 53 项原生检查和六附件公开下载核验通过。README 开头已加入 LINUX DO 社区致意，下载入口更新为 v0.2.6。菜单栏主题与完整系统体验仍待实机反馈。
 

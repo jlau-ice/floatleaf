@@ -44,8 +44,10 @@ DWORD fl_capture_protection(void *raw, bool enabled) {
     DWORD actual = 0;
     if (GetWindowDisplayAffinity(window, &actual) && actual == desired) return ERROR_SUCCESS;
     if (!SetWindowDisplayAffinity(window, desired)) return GetLastError();
-    if (!GetWindowDisplayAffinity(window, &actual)) return GetLastError();
-    return actual == desired ? ERROR_SUCCESS : ERROR_NOT_SUPPORTED;
+    // GetWindowDisplayAffinity requires WS_EX_LAYERED, which Tao removes in
+    // layout editing mode. SetWindowDisplayAffinity itself has no such restriction.
+    if (GetWindowDisplayAffinity(window, &actual) && actual != desired) return ERROR_NOT_SUPPORTED;
+    return ERROR_SUCCESS;
 }
 
 typedef struct {

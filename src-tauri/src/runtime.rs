@@ -136,13 +136,14 @@ fn apply(app: &AppHandle, state: &Snapshot) {
     };
     let apply_window = || -> Result<(), String> {
         geometry::apply(app, &window)?;
-        #[cfg(windows)]
-        platform::capture_protection(&window, state.settings.capture_protection)?;
         window
             .set_ignore_cursor_events(!state.controller.editing_layout)
             .map_err(|e| e.to_string())?;
         // Even edit mode never accepts keyboard focus. Dragging is explicitly initiated.
         window.set_focusable(false).map_err(|e| e.to_string())?;
+        // Apply after Tao updates styles when entering/leaving layout editing.
+        #[cfg(windows)]
+        platform::capture_protection(&window, state.settings.capture_protection)?;
         if state.controller.visible {
             platform::show(&window)?;
         } else {

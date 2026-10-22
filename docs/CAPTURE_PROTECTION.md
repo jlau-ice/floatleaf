@@ -12,11 +12,12 @@
 
 - `ReadingSettings.capture_protection` 默认 false，旧数据库缺少该字段时沿用 false；没有增加表或独立配置文件。
 - Rust 在每次应用阅读窗口状态、显示窗口之前，调用当前进程拥有的顶层 overlay HWND 的 `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`；关闭时恢复 `WDA_NONE`。`GetWindowDisplayAffinity` 已与期望一致时不重复设置。
-- 锁定依赖 Tao 0.37.1 的 `set_content_protection` 会丢弃原生调用错误，因此这里复用项目现有 C/Rust 平台桥，核对 API 返回值和读回值。失败进入现有窗口错误路径：隐藏、锁住旧按键事件并向设置页报告 Windows 错误码。不会把保护失败当成成功继续显示。
+- 锁定依赖 Tao 0.37.1 的 `set_content_protection` 会丢弃原生调用错误，因此这里复用项目现有 C/Rust 平台桥，核对设置返回值和可读回的值。设置失败或读回不一致进入现有窗口错误路径：隐藏、锁住旧按键事件并向设置页报告 Windows 错误码。不会把保护设置失败当成成功继续显示。
+- 应用保护在 Tao 完成鼠标/焦点样式调整后执行。进入布局编辑时 Tao 移除 `WS_EX_LAYERED`；微软的查询接口要求分层窗口，因此读回可能失败。这不等于设置失败：`SetWindowDisplayAffinity` 的成功返回仍有效，查询失败在日志中记录为未知；不会仅因编辑状态下无法查询而锁住布局。读回成功时仍核对期望值。
 - 窗口日志包含期望值 `captureProtection`；Windows 诊断包含 `captureAffinity`（17 表示排除捕获、0 表示关闭，查询失败为 null）与 `captureError`。日志不记录截图像素或正文。
 - 当前 Wry 0.57.0 通过 WebView2 的 `ICoreWebView2Controller` 渲染，没有由 FloatLeaf 创建和持有的 DXGI 交换链。`DXGI_SWAP_CHAIN_FLAG_DISPLAY_ONLY` 是创建/调整交换链的参数，不能设置到 HWND，也不能通过叠加一个空白 DirectX 窗口来保护原 WebView。本次没有设置或声称支持这个标志；若未来替换阅读渲染器为自有 DirectX 交换链，需要单独设计与验证。
 
-微软说明：[SetWindowDisplayAffinity](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity)、[DXGI_SWAP_CHAIN_FLAG](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/ne-dxgi-dxgi_swap_chain_flag)。旧版 Windows 会将排除标志按 `WDA_MONITOR` 处理，不能据此承诺完整排除；支持下限保持 Windows 10 2004。
+微软说明：[SetWindowDisplayAffinity](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity)、[GetWindowDisplayAffinity 的分层窗口限制](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowdisplayaffinity)、[DXGI_SWAP_CHAIN_FLAG](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/ne-dxgi-dxgi_swap_chain_flag)。旧版 Windows 会将排除标志按 `WDA_MONITOR` 处理，不能据此承诺完整排除；支持下限保持 Windows 10 2004。
 
 ## 自动检查
 

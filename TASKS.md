@@ -8,6 +8,7 @@
 - [x] CAP-02：环境、前端构建、类型/rustfmt/Clippy、29 项 Rust / 13 项浏览器测试、格式与 macOS debug/no-bundle/app 构建通过。实际启动隔离书库的 macOS app，WKWebView 平台范围核对与原生自动阅读五项回归通过；旧库与开启保存测试覆盖新增字段。
 - [ ] CAP-03：Windows 普通安装包关闭/开启/关闭的真实捕获像素、读回标志、焦点、松键/紧急隐藏回归及包交付；实测后补齐记录。
 - [ ] CAP-04：Windows 11 截图工具、OBS/会议软件不同捕获方式与显示中直接切换开关实机验收，步骤见 `docs/CAPTURE_PROTECTION.md`。完整双平台验收仍未完成。
+- [x] CAP-05：核对 Tao 布局编辑的 WS_EX_LAYERED 变化与微软 GetWindowDisplayAffinity 查询限制；在样式更新后应用保护，查询失败不冒充设置失败，避免无故锁住编辑；保留设置失败隐藏和查询错误日志。
 
 ## macOS 菜单栏素材（2026-10-22）
 
