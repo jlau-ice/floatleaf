@@ -1,5 +1,27 @@
 # GitHub 公开发布记录
 
+## v0.2.6
+
+[v0.2.6 菜单栏图标试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.6) 于北京时间 2026-10-22 18:41 公开为 Pre-release，标签指向 `2d24437bcb49e997a46dc00ccbfe1584cfdb969d`。macOS 菜单栏改用用户提供、裁去留白的单色 SVG 所生成的独立透明 PNG，并启用系统模板着色；Dock/应用图标和 Windows 托盘图标沿用原素材。README 开头新增 LINUX DO 社区致意。阅读逻辑与 SQLite 格式未改变。
+
+- [标签 CI 39763224518](https://github.com/jlau-ice/floatleaf/actions/runs/39763224518)：macOS 29 项 / Windows 30 项 Rust 测试，两端各 12 项浏览器测试与 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm format:check` 全部通过；macOS 普通 app/DMG 和 Windows 普通 NSIS 构建成功。
+- Windows Server 2025（10.0.26100）安装本次 EXE 后，53 项原生断言全部通过，包含显隐/焦点、设置窗口、诊断字段与紧急隐藏边界。随后上传该安装器，草稿下载与产物逐字节一致；公开下载 SHA-256 与发布清单、GitHub 附件摘要一致。
+- macOS CI 和本机公开下载副本均通过 `hdiutil verify` 与 `codesign --verify --deep --strict`。只读挂载核对版本 0.2.6、arm64 架构、ad-hoc 签名及调试探针入口排除后卸载；为保留用户正在使用的调试 app，本轮未启动发布 app。
+- 本机通过官方 rustup 安装 Rust 1.99.1/rustfmt/Clippy，nvm 使用 Node 22.22.3，pnpm 10.33.4。环境/构建/类型/格式/Clippy、`pnpm tauri build --debug --no-bundle` 和 debug app 构建/签名验证通过；`pnpm desktop:dev --no-watch` 及明确路径调试 app 均实际启动。设置窗口已查看；正在使用的调试包是在版本提升前构建的 0.2.5，已含新图标，未被发布包覆盖。
+
+六附件由标签工作流在双平台检查成功后整理，先创建草稿、上传、下载逐字节及 SHA-256 核验，再公开发布。公开后本机未登录下载全部附件，大小、GitHub 摘要和 SHA256SUMS 均一致；Windows ZIP 的 CRC、四项内容及嵌入 EXE/说明/协议字节一致。说明与 MIT 协议另与仓库文件核对一致。证据保存在忽略目录 `.local/release-026/`，安装包未纳入 Git。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| FloatLeaf_0.2.6_aarch64.dmg | 3,772,287 | `9b753d57b5e3f9f9399b9501e9205bdaa655e16ce9300df154ef544778619bf5` |
+| FloatLeaf_0.2.6_windows-x64_trial.zip | 2,961,154 | `4f57814491603ba836209ae705833453946361f305021dc0f71525c8e324538a` |
+| FloatLeaf_0.2.6_x64-setup.exe | 2,979,088 | `6532f0b3aa47b62fb3f392f7001dd1f579a3c77d62bf4767baffc0b0c9ded636` |
+| LICENSE.txt | 1,065 | `f527b3b2027179390d943c50ca81edc52a78b8258ebc007288598825a207c123` |
+| Retest-Guide.txt | 2,309 | `1cc57d435ed3848ad359a5e71bc87f65e43b53ffcd8606219dce9c94b6e96473` |
+| SHA256SUMS.txt | 455 | `ce3af49727ea72c0a2f2b4dcabb1c5b211720a6a38d89a9e60f8e60d290d92c4` |
+
+两端未正式签名，macOS 未公证。菜单栏浅/深背景、选中状态和点击菜单，以及新包后台快捷键/焦点/穿透仍待用户实测；Windows Server 合成输入不能代替 Windows 11 商家工作台跨权限、多屏、休眠与完整物理验收。此次图标更新需要重新打包；README 和发布结果记录只提交推送，不另升版本。
+
 ## v0.2.5
 
 [v0.2.5 紧急隐藏修复试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.5) 已公开发布为 Pre-release，标签指向 `5c3c93ac7211fa5b9afc3662b97a313623f2b691`。收到配置的紧急隐藏 Pressed 后，即使按键采样不可用也隐藏并停止自动阅读；托盘复用已有隐藏操作。显示、翻页与旧组合键保护规则不变，没有提权或新增输入监听。

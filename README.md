@@ -10,13 +10,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前提供 **Windows / macOS v0.2.5 试用版（Pre-release）**。修复紧急隐藏收到事件但按键状态不可读时不生效的问题，并统一快捷键、设置按钮和托盘的隐藏与暂停行为。保留 Windows 前台程序权限提示、快捷键诊断日志和 macOS 输入监控引导。包含 EPUB / TXT 章节目录、自动翻页、快捷键录制、Windows 标题栏和此前隐藏修复。拼多多场景已确认是权限不一致导致按键读取失败；同权限运行可恢复，本版提供提示与处理方法，默认仍以普通权限运行。
+当前提供 **Windows / macOS v0.2.6 试用版（Pre-release）**。本次将 macOS 顶部菜单栏换成独立的单色「书页与叶子」图标，由系统按背景着色。保留 EPUB / TXT 章节目录、自动翻页、快捷键录制、紧急隐藏修复，以及 Windows 前台程序权限提示和 macOS 输入监控引导。阅读逻辑与本地书库格式没有变化。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.5/FloatLeaf_0.2.5_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.5/FloatLeaf_0.2.5_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.5/FloatLeaf_0.2.5_windows-x64_trial.zip) | 含安装程序、MIT 协议、商家工作台复测步骤和校验清单 |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.6/FloatLeaf_0.2.6_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.6/FloatLeaf_0.2.6_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.6/FloatLeaf_0.2.6_windows-x64_trial.zip) | 含安装程序、MIT 协议、试用说明和校验清单 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -74,10 +74,10 @@ Windows 若仅在管理员权限的程序前台无法显示或翻页，可能是
 
 | 项目 | 当前证据 |
 | --- | --- |
-| macOS Apple Silicon | v0.2.5 DMG 校验、复制后启动、单实例与退出通过；已授权独立调试包后台显示/隐藏获用户确认，先前两种松键顺序及紧急隐藏也有独立调试包证据；新包后台按键仍待授权复测 |
-| Windows x64 | v0.2.5 公开 EXE 在 Windows Server 2025 实际下载安装，53 项原生断言通过。Windows 11 商家工作台已由用户确认旧版同权限运行可恢复，新增修复仍待用户设备复测 |
-| 单元与界面测试 | 最终源码 CI：Windows 30 项 / macOS 29 项 Rust 测试，两端各 12 项浏览器测试及类型/格式/Clippy 通过；普通包不含调试探针 |
-| 仍待实机反馈 | Windows 11 权限提示与新紧急隐藏修复、macOS 原始开发进程权限、完整组合键释放顺序、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
+| macOS Apple Silicon | v0.2.6 DMG 完整性、arm64 架构、版本与 ad-hoc 签名校验通过；包含新图标的本地调试 app 已启动并查看设置窗口。发布包的菜单栏深浅背景、选中状态、点击菜单和后台按键仍待实测 |
+| Windows x64 | v0.2.6 同一 EXE 在 Windows Server 2025 安装后，53 项原生断言通过；公开下载与发布产物校验一致。Windows 11 商家工作台已由用户确认旧版同权限运行可恢复，本版仍待用户设备复测 |
+| 单元与界面测试 | v0.2.6 标签 CI：Windows 30 项 / macOS 29 项 Rust 测试，两端各 12 项浏览器测试及类型/格式/Clippy 通过；两端普通安装包构建成功 |
+| 仍待实机反馈 | macOS 菜单栏主题和原始开发进程权限、Windows 11 权限提示与紧急隐藏修复、完整组合键释放顺序、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
 
 本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布和安装包回归证据见 [发布记录](docs/GITHUB_RELEASE.md)。[Windows 商家工作台复测](docs/PDD_SHORTCUT_DIAGNOSTICS.md) · [macOS 后台快捷键](docs/MACOS_BACKGROUND_INPUT.md)。
 

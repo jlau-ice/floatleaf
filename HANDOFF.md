@@ -1,6 +1,6 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-22。菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。正在准备 v0.2.6 两端试用发布，README 开头已加入 LINUX DO 社区致意；发布结果待 GitHub CI 和附件核验。
+更新日期：2026-10-22。菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。v0.2.6 两端试用版已公开发布，标签 `2d24437`；双平台 CI、Windows 53 项原生检查和六附件公开下载核验通过。README 开头已加入 LINUX DO 社区致意，下载入口更新为 v0.2.6。菜单栏主题与完整系统体验仍待实机反馈。
 
 此前发布状态（2026-10-18）：已公开发布 Windows x64 / macOS Apple Silicon v0.2.5 紧急隐藏修复试用版，标签 `5c3c93a`；六附件经未登录公开下载逐字节/哈希核验。最终源码 CI 和公开 Windows EXE 的 53 项原生回归通过。当时已明确路径恢复用户刚授权的调试 app（PID 27605）与原书库/Alt+D，权限 true；已授权 app 的后台显示/松键隐藏获用户确认。原始开发子进程、新 macOS 安装包授权、Windows 11 完整实机矩阵仍未完成，持续目标保持进行中。
 
@@ -13,9 +13,14 @@
 - 已实测：`pnpm desktop:dev --no-watch` 编译并启动后正常停止；再打开明确路径 `src-tauri/target/debug/bundle/macos/FloatLeaf.app`，设置窗口可见，运行 PID 21826。用户开始操作后停止界面接管，保留该调试 app 供使用；其版本仍为 0.2.5，不随后续源码版本变更自动更新。
 - 待实测：菜单栏浅/深背景、选中状态和点击菜单，以及新包后台按键/焦点/穿透仍待用户反馈。本轮没有 Windows 11 实机证据，不改变完整系统验收状态。
 
-## v0.2.6 发布准备
+## v0.2.6 发布结果
 
 版本四处统一为 0.2.6，发布说明 `docs/RELEASE_v0.2.6.md`。Check 工作流在版本标签上构建 macOS 普通 app/DMG 与 Windows 普通 NSIS，保留双平台测试和 Windows 原生安装回归；仅在两端成功后，由单独的 release job 使用 `contents: write` 创建草稿、上传六附件、下载核对哈希/字节再公开为 Pre-release。常规检查 job 仍只有 `contents: read`。`scripts/package-release.py` 核对版本与两端安装包，生成试用 ZIP 和 SHA256SUMS。发布期间不重建用户正在使用的调试 app。
+
+- [发布页](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.6) 于北京时间 2026-10-22 18:41 公开，`draft=false`、`prerelease=true`；标签指向 `2d24437bcb49e997a46dc00ccbfe1584cfdb969d`。
+- [标签 CI 39763224518](https://github.com/jlau-ice/floatleaf/actions/runs/39763224518) 两端及 release job 全部成功。`pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm format:check`、Rust（macOS 29 / Windows 30 项）与浏览器（各 12 项）测试通过；普通 DMG/NSIS 构建通过，Windows Server 2025 安装该 EXE 后 53 项原生断言通过。
+- 六附件先在 CI 从草稿下载逐字节/哈希核对，公开后本机再以未登录 URL 下载，大小、GitHub SHA-256 与清单一致；Windows ZIP 的 CRC、四项内容及所含 EXE 字节一致。公开 DMG 通过 `hdiutil verify`、只读挂载、0.2.6/arm64 核对、`codesign --verify --deep --strict` 和调试探针排除；未启动发布 app，保留用户正在使用的调试 app。
+- 证据在忽略目录 `.local/release-026/`，文件与哈希见 `docs/GITHUB_RELEASE.md`。本次 README 和交付记录作为文档提交推送，不再新增版本；菜单栏实际深浅背景/选中/点击及 Windows 11 等验收保持待办。
 
 ## 当前排查：Windows 商家工作台
 

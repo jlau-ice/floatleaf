@@ -9,7 +9,7 @@
 - [x] ICON-03：用户授权安装 rustup/Rust 1.99.1、rustfmt/Clippy 和 nvm Node 22.22.3；环境、类型/格式/Clippy、debug/no-bundle 和 debug app 构建、签名校验通过；开发进程和本地 `.app` 均启动成功，设置窗口已查看，保留调试 app 供使用。
 - [ ] ICON-04：macOS 菜单栏深浅背景、选中状态及点击菜单实测；后台物理快捷键、Windows 11 等完整系统验收仍待用户反馈。
 - [x] R026-01：版本统一 0.2.6，README 开头加入 LINUX DO 社区致意；准备说明、双平台标签构建和通过后发布流程。
-- [ ] R026-02：v0.2.6 双平台 CI、普通安装包及六附件公开下载核验，完成 GitHub Pre-release 与源码推送。
+- [x] R026-02：v0.2.6 GitHub Pre-release 与源码交付；标签 `2d24437`，CI `39763224518` 两端通过（Windows 30 / macOS 29 项 Rust，各 12 项浏览器），Windows 安装同一 EXE 后 53 项原生断言通过。普通 DMG/NSIS、Mac 签名/镜像/版本/架构与六附件公开下载 SHA-256、ZIP 内容核验通过；README 下载入口、发布记录与交接同步。详见 `docs/GITHUB_RELEASE.md`。
 
 ## Windows 商家工作台诊断（2026-10-18）
 
