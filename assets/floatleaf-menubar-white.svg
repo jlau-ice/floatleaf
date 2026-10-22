@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="161" height="224" viewBox="40 17 161 224" fill="none">
+  <!-- 裁去原始 256 × 256 画布留白，保留完整描边与透明背景。 -->
+  <g stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M67 25H150L193 68V214C193 225 185 233 174 233H67C56 233 48 225 48 214V44C48 33 56 25 67 25Z" stroke-width="13"/>
+    <path d="M150 27V60C150 66 155 71 161 71H191" stroke-width="12"/>
+    <path d="M79 111H149M79 135H128" stroke-width="12"/>
+    <path d="M104 201C109 162 138 151 168 157C166 188 146 207 114 203" stroke-width="10"/>
+    <path d="M92 215C109 192 128 178 155 167" stroke-width="10"/>
+  </g>
+</svg>

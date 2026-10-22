@@ -289,6 +289,14 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
             "quit" => app.exit(0),
             _ => {}
         });
+    #[cfg(target_os = "macos")]
+    {
+        // 菜单栏独立使用透明单色模板，由 macOS 按背景和选中状态着色。
+        tray = tray
+            .icon(tauri::include_image!("icons/menubar-template.png"))
+            .icon_as_template(true);
+    }
+    #[cfg(not(target_os = "macos"))]
     if let Some(icon) = app.default_window_icon() {
         tray = tray.icon(icon.clone());
     }

@@ -1,6 +1,21 @@
 # FloatLeaf 开发交接
 
-更新日期：2026-10-18。当前阶段：已公开发布 Windows x64 / macOS Apple Silicon v0.2.5 紧急隐藏修复试用版，标签 `5c3c93a`；六附件经未登录公开下载逐字节/哈希核验。最终源码 CI 和公开 Windows EXE 的 53 项原生回归通过。本机已明确路径恢复用户刚授权的调试 app（PID 27605）与原书库/Alt+D，权限 true；已授权 app 的后台显示/松键隐藏获用户确认。原始开发子进程、新 macOS 安装包授权、Windows 11 完整实机矩阵仍未完成，持续目标保持进行中。
+更新日期：2026-10-22。菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。正在准备 v0.2.6 两端试用发布，README 开头已加入 LINUX DO 社区致意；发布结果待 GitHub CI 和附件核验。
+
+此前发布状态（2026-10-18）：已公开发布 Windows x64 / macOS Apple Silicon v0.2.5 紧急隐藏修复试用版，标签 `5c3c93a`；六附件经未登录公开下载逐字节/哈希核验。最终源码 CI 和公开 Windows EXE 的 53 项原生回归通过。当时已明确路径恢复用户刚授权的调试 app（PID 27605）与原书库/Alt+D，权限 true；已授权 app 的后台显示/松键隐藏获用户确认。原始开发子进程、新 macOS 安装包授权、Windows 11 完整实机矩阵仍未完成，持续目标保持进行中。
+
+## macOS 菜单栏素材（2026-10-22）
+
+- 已实现：`assets/floatleaf-menubar-white.svg` 来自用户提供的同名素材，原路径/描边不变，画布从 `0 0 256 256` 裁为 `40 17 161 224`。`src-tauri/icons/menubar-template.png` 为 44 × 44 透明 RGBA，SVG 等比渲染为 26 × 36 后居中；图形像素边界为 x=9..34、y=4..39，保留显示留白。`runtime.rs` 仅在 macOS 使用此 PNG 并启用模板着色；其他平台托盘及 Dock/安装包图标不变。
+- 已验证：通过 Sharp 0.35.5 检查 SVG 全部 path 与原文件一致、PNG 无彩色像素且描边未触边，目视核对深浅背景素材预览。证据位于忽略提交的 `.local/menubar-icon/`；预览是素材示意，不是原生菜单栏截图。
+- 工具链：首次缺少 Rust 的检查已在用户授权安装后补齐。官方 rustup 1.29.2 安装 Rust 1.99.1、rustfmt、Clippy 到 `~/.cargo` / `~/.rustup`，使用 `--no-modify-path`，未修改全局 shell 配置；nvm 安装并使用 `.nvmrc` 的 Node 22.22.3，pnpm 10.33.4。依赖按锁文件安装。
+- 已编译：`pnpm env:check`、`pnpm build`、`pnpm check`（含 Clippy all-targets）、`pnpm format:check`、`pnpm tauri build --debug --no-bundle`、`pnpm tauri build --debug --bundles app` 和 `codesign --verify --deep --strict` 全部通过。
+- 已实测：`pnpm desktop:dev --no-watch` 编译并启动后正常停止；再打开明确路径 `src-tauri/target/debug/bundle/macos/FloatLeaf.app`，设置窗口可见，运行 PID 21826。用户开始操作后停止界面接管，保留该调试 app 供使用；其版本仍为 0.2.5，不随后续源码版本变更自动更新。
+- 待实测：菜单栏浅/深背景、选中状态和点击菜单，以及新包后台按键/焦点/穿透仍待用户反馈。本轮没有 Windows 11 实机证据，不改变完整系统验收状态。
+
+## v0.2.6 发布准备
+
+版本四处统一为 0.2.6，发布说明 `docs/RELEASE_v0.2.6.md`。Check 工作流在版本标签上构建 macOS 普通 app/DMG 与 Windows 普通 NSIS，保留双平台测试和 Windows 原生安装回归；仅在两端成功后，由单独的 release job 使用 `contents: write` 创建草稿、上传六附件、下载核对哈希/字节再公开为 Pre-release。常规检查 job 仍只有 `contents: read`。`scripts/package-release.py` 核对版本与两端安装包，生成试用 ZIP 和 SHA256SUMS。发布期间不重建用户正在使用的调试 app。
 
 ## 当前排查：Windows 商家工作台
 

@@ -32,8 +32,21 @@ jobs:
       - run: pnpm test:rust
       - run: pnpm exec playwright install chromium
       - run: pnpm test:web
-      - if: runner.os == 'macOS'
+      - if: runner.os == 'macOS' && !startsWith(github.ref, 'refs/tags/v')
         run: pnpm tauri build --debug --no-bundle
+      - name: Build macOS trial for a version tag
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/v')
+        run: pnpm tauri build --bundles app,dmg
+      - name: Verify macOS package
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          codesign --verify --deep --strict src-tauri/target/release/bundle/macos/FloatLeaf.app
+          hdiutil verify src-tauri/target/release/bundle/dmg/*.dmg
+          strings src-tauri/target/release/bundle/macos/FloatLeaf.app/Contents/MacOS/floatleaf > "$RUNNER_TEMP/floatleaf-strings.txt"
+          if grep -qE 'FLOATLEAF_(PROBE|DATA)_DIR' "$RUNNER_TEMP/floatleaf-strings.txt"; then
+            echo 'Release app contains diagnostic entry points'
+            exit 1
+          fi
       - name: Reproduce v0.1.0 packaged Windows hide bug
         if: runner.os == 'Windows'
         shell: pwsh
@@ -74,3 +87,40 @@ jobs:
         with:
           name: windows-runtime-logs
           path: ~/AppData/Roaming/io.github.jlauice.floatleaf/logs/*.log
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: trial-installer-${{ runner.os }}
+          if-no-files-found: error
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: trial-installer-*
+          merge-multiple: true
+          path: installers
+      - name: Prepare trial files and checksums
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/package-release.py "$RELEASE_TAG" installers release
+      - name: Upload, verify, and publish trial
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" release/* --verify-tag --draft --prerelease --latest=false \
+            --title "FloatLeaf $RELEASE_TAG · 试用版" --notes-file "docs/RELEASE_${RELEASE_TAG}.md"
+          gh release download "$RELEASE_TAG" --dir downloaded
+          (cd downloaded && sha256sum --check SHA256SUMS.txt)
+          for asset in release/*; do cmp "$asset" "downloaded/$(basename "$asset")"; done
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false
