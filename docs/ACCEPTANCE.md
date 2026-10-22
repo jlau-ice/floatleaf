@@ -24,7 +24,7 @@ P0～P3 的功能实现、本机原生回归与 macOS 试用包已完成。分�
 | A18 | 旧 TXT 书库升级保留进度与设置 | 跨平台 Rust 升级测试，用户设备待测 | SQLite 升级/重复启动测试通过；用户书库兼容性待反馈 |
 | A19 | 设置标题栏配色与原生窗口控制 | v0.2.2 Server 2025 CI 配色像素、最小化/最大化/恢复/关闭通过；Windows 11 实机缩放、悬停、贴靠待测 | 本轮无外观改动；debug 构建通过 |
 | A20 | 明确录制入口、取消、保存结果与新组合键 | 3 项新增浏览器交互回归通过；Windows 11 实际入口与物理触发待测 | 真实 WKWebView 点击聚焦、DOM 事件录制、Rust 注册及 SQLite 保存通过；物理按键待测 |
-| A21 | 截图/录屏保护、关闭恢复、重启保存与不同捕获方式 | 已实现 WDA_EXCLUDEFROMCAPTURE；原生像素回归和 Windows 11 手工验收待本次补齐，见 CAPTURE_PROTECTION.md | 不提供防截图开关，不声称支持 |
+| A21 | 截图/录屏保护、关闭恢复、重启保存与不同捕获方式 | v0.2.7 Server 2025 普通包的 GDI/CAPTUREBLT 像素、标志、重启读取回归通过；Windows 11 实际工具与显示中切换/编辑组合待测，见 CAPTURE_PROTECTION.md | 不提供防截图开关，不声称支持 |
 
 2026-10-18：macOS 未授权时前台可显示、后台主键采样 false；同一独立调试 `.app` 获用户授权后，后台显示、空格/Option 先松和紧急隐藏实测通过。原始开发进程即使单独添加权限，重启后仍返回 false，此限制未解决；详见 [MACOS_BACKGROUND_INPUT.md](MACOS_BACKGROUND_INPUT.md)。焦点连续性、点击穿透和其他未测场景不随之勾选。
 
@@ -97,3 +97,9 @@ macOS v0.2.4 DMG 复制后启动、单实例、退出与包校验通过；新包
 最终源码 `5c3c93a` 的 CI `39091533390` 两端通过：Windows 30 项 / macOS 29 项 Rust 测试、各 12 项浏览器测试和类型/格式/Clippy。Windows Server 2025 的源码构建安装包及公开 EXE（`39092267958`）均通过 53 项原生断言；新增六项用已注册 WM_HOTKEY 消息在紧急主键已释放时测试实际隐藏、焦点保持、采样证据、旧组合键保护和新组合键恢复。公开包日志 v0.2.5、debug=false，应用与前台均为高完整性，不能替代 Windows 11 跨权限与物理键鼠验证。
 
 macOS 新 DMG 复制后启动、版本、单实例与退出通过，但新包权限仍未开启。明确路径运行刚授权调试 app 后，用户确认后台显示/松键隐藏正常，五组物理事件日志一致；原始开发子进程与最终新安装包仍单独待测。两端六附件公开下载字节/哈希核验一致，见 GITHUB_RELEASE.md 和 EMERGENCY_INPUT_FIX.md。
+
+## v0.2.7 截图 / 录屏保护
+
+最终标签 `77e2d34` 的 [CI 39806219953](https://github.com/jlau-ice/floatleaf/actions/runs/39806219953) 两端通过，Windows 30 / macOS 29 项 Rust、各 13 项浏览器和环境/类型/格式/Clippy，以及普通 DMG/NSIS 构建成功。Windows Server 2025 10.0.26100 实际安装后 74 项原生断言通过；保护关闭/开启/关闭的捕获文字像素为 4082/0/4082，开启后截图与隐藏时背景完全一致，原生窗口仍可见且保持前台焦点，松键/紧急隐藏通过。使用合成输入与 GDI CAPTUREBLT，仅覆盖该捕获路径，不等于 Windows 11、OBS/会议、Desktop Duplication/WGC 或布局编辑组合完整实测。
+
+两端六附件公开下载与发布清单/GitHub 摘要核验一致。Mac 公开 DMG 静态包检查通过，本轮隔离调试 app 的真实 WKWebView 平台范围和自动阅读回归通过；最终普通 Mac 包未启动验收。详见 CAPTURE_PROTECTION.md 与 GITHUB_RELEASE.md。整体持续目标及其他未测项保持待办。

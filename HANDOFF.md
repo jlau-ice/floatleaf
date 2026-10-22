@@ -1,14 +1,16 @@
 # FloatLeaf 开发交接
 
-## 正在交付：Windows 截图 / 录屏保护（2026-10-22）
+## 已交付：Windows 截图 / 录屏保护（2026-10-22）
 
-本机 main 已快进到另一端 `227f275`，工作区原先干净，v0.2.6 菜单栏与自动发布更新保留。新增默认关闭的阅读窗口保护选项，存于现有 SQLite 设置；Windows 原生 WDA_EXCLUDEFROMCAPTURE 设置失败或成功读回的值不符时走隐藏与错误提示，日志含期望值/实际 affinity/系统错误。仅保护 overlay，设置页仍可截图，macOS 不显示开关。DXGI DISPLAY_ONLY 需要自有交换链，当前 WebView2 路线未实现该标志，详情及限制见 `docs/CAPTURE_PROTECTION.md`。
+本机 main 从另一端 `227f275` 快进接续，保留 v0.2.6 图标及发布流程。新增默认关闭、保存到 SQLite 的 Windows 保护开关；WDA_EXCLUDEFROMCAPTURE 仅作用于 overlay，设置页仍可截图，macOS 不显示该开关。设置失败或可读回值不符时隐藏并提示，诊断日志含期望/实际 affinity/错误。Tao 编辑布局移除分层样式，因此保护在样式更新后应用，查询受限记录为未知，不冒充设置失败。DXGI DISPLAY_ONLY 需要自有交换链，当前 WebView2 未实现该标志。详细边界见 `docs/CAPTURE_PROTECTION.md`。
 
-本机 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm test:rust`（29 项）、`pnpm test:web`（13 项）、`pnpm format:check`、`pnpm tauri build --debug --no-bundle` 与 debug app 构建已通过。实际启动隔离书库的 macOS app，WKWebView 确认不显示 Windows 开关，原生自动阅读五项回归通过；结果在 `.local/capture-protection/mac-probe/`，测试后正常退出。没有用户书库或系统权限变更。版本准备为 0.2.7，当前公开下载仍为 0.2.6。Windows 普通包 GDI/CAPTUREBLT 捕获正反对照已接入现有 CI，待运行；完整实机矩阵不随之勾选。下一步：提交并运行 Windows 原生捕获验证，补齐证据与交付记录。
+- 实现提交 `b287f28`，布局样式修正 `77e2d34`；v0.2.7 标签指向后者。公开时间北京时间 2026-10-22 23:48；[试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.7)。
+- 首轮 CI `39803675860` 与最终标签 CI `39806219953` 均通过：Windows 30 / macOS 29 项 Rust、两端各 13 项浏览器、环境/构建/类型/格式/Clippy。最终普通 Windows EXE 安装后 74 项原生检查通过：捕获关闭/开启/关闭的洋红色文字像素为 4082/0/4082，开启时背景一致率 100%，affinity 为 0/17/0；窗口仍显示且不抢焦点，松键与紧急隐藏通过。最终截图已目视核对，日志 v0.2.7、debug=false、无 window-error。
+- 本机还完成 `pnpm env:check`、`pnpm build`、`pnpm check`、`pnpm test:rust`、`pnpm test:web`、`pnpm format:check`、debug/no-bundle/app 构建及 Windows 目标 release/all-targets Clippy。真实 macOS 隔离调试 app 中，WKWebView 平台能力/隐藏入口和原生自动阅读五项通过，测试后正常退出；未改变用户书库或系统权限。该调试 app 在升版本前构建，显示版本 0.2.6；不冒充最终 macOS 发布包实测。
+- 最终两端普通包已发布，CI 从草稿下载逐字节核对后公开。本机再次未登录下载六附件，与 GitHub SHA-256 / SHA256SUMS 一致；ZIP CRC/内容/嵌入 EXE、协议与说明字节一致。公开 Mac DMG 的只读挂载、版本/arm64、ad-hoc 签名/镜像及调试入口排除通过，未启动该普通包。证据 `.local/release-027/` 和 `.local/capture-protection/`，完整哈希在 `docs/GITHUB_RELEASE.md`。
+- 下一步：用户 Windows 11 设备分别验收截图工具、OBS/会议的具体捕获方式，显示中直接切换保护与编辑布局组合，以及原有完整键鼠、多屏/休眠矩阵。不能把 GDI/CI 结果泛化为所有捕获工具，更不能声称 macOS 防截图已实现。持续产品目标仍未完成。
 
-实现复核补充：Tao 编辑布局会移除分层样式，而 GetWindowDisplayAffinity 仅支持分层窗口；已调整为样式更新后设置保护，只把设置失败/成功读回但值不符视为失败，查询受限单独记入日志。Windows 目标 release/all-targets Clippy 通过；原生像素与布局组合继续由 Windows 验证，不以接口推断勾选实机。
-
-更新日期：2026-10-22。菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。v0.2.6 两端试用版已公开发布，标签 `2d24437`；双平台 CI、Windows 53 项原生检查和六附件公开下载核验通过。README 开头已加入 LINUX DO 社区致意，下载入口更新为 v0.2.6。菜单栏主题与完整系统体验仍待实机反馈。
+上一阶段（2026-10-22）：菜单栏单色素材已接入，本机工具链、检查和调试 app 构建/启动已完成。v0.2.6 两端试用版已公开发布，标签 `2d24437`；双平台 CI、Windows 53 项原生检查和六附件公开下载核验通过。README 开头已加入 LINUX DO 社区致意，下载入口更新为 v0.2.6。菜单栏主题与完整系统体验仍待实机反馈。
 
 此前发布状态（2026-10-18）：已公开发布 Windows x64 / macOS Apple Silicon v0.2.5 紧急隐藏修复试用版，标签 `5c3c93a`；六附件经未登录公开下载逐字节/哈希核验。最终源码 CI 和公开 Windows EXE 的 53 项原生回归通过。当时已明确路径恢复用户刚授权的调试 app（PID 27605）与原书库/Alt+D，权限 true；已授权 app 的后台显示/松键隐藏获用户确认。原始开发子进程、新 macOS 安装包授权、Windows 11 完整实机矩阵仍未完成，持续目标保持进行中。
 

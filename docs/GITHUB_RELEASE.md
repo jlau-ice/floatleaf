@@ -1,5 +1,27 @@
 # GitHub 公开发布记录
 
+## v0.2.7
+
+[v0.2.7 截图 / 录屏保护试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.7) 于北京时间 2026-10-22 23:48 公开，`draft=false`、`prerelease=true`。标签 `77e2d34dc778c2f67d6ffe1bdc0393a871e142b4`，功能提交 `b287f28`，其后的布局样式修正包含在标签内。仅 Windows 悬浮阅读窗口启用 WDA_EXCLUDEFROMCAPTURE，默认关闭、SQLite 保存；设置页及 macOS 不受保护，没有接入 DXGI DISPLAY_ONLY。边界见 CAPTURE_PROTECTION.md。
+
+- [最终标签 CI 39806219953](https://github.com/jlau-ice/floatleaf/actions/runs/39806219953)：macOS 29 / Windows 30 项 Rust、各 13 项浏览器、环境/构建/类型/格式/Clippy 全通过，普通 app/DMG 与 NSIS 构建通过。首轮源码 CI `39803675860` 同样通过。
+- Windows Server 2025 10.0.26100 实际安装本次普通 EXE 后 74 项断言通过，包含原有 53 项和 21 项保护回归。GDI BitBlt/CAPTUREBLT 关闭/开启/关闭捕获到的合成文字像素 4082/0/4082；开启时与隐藏时背景逐字节一致，窗口仍可见、不抢焦点，松键与紧急隐藏正常。最终截图目视检查通过；日志为 v0.2.7、debug=false，无窗口错误。它不代表所有捕获软件或 Windows 11 物理验收。
+- CI 在两端成功后生成六附件，从草稿下载逐字节及 SHA-256 核对，再公开。本机再次从未登录公开 URL 下载全部文件，大小、GitHub 摘要、SHA256SUMS 一致；ZIP 的 CRC、四项内容与嵌入 EXE/说明/协议字节一致。网络曾出现 EOF/TLS 断开，重试成功后才记录通过；未覆盖旧版本。
+- 公开 macOS DMG 只读挂载后版本 0.2.7、arm64、`codesign --verify --deep --strict`、`hdiutil verify` 及调试探针排除通过，随后卸载。本轮实际桌面测试用隔离调试 app（版本提升前的 0.2.6），WKWebView 入口范围和自动阅读回归通过；最终普通 Mac 包未启动，不冒充物理按键或捕获验收。
+
+证据 `.local/release-027/` 与 `.local/capture-protection/`；只把不含用户信息的两张合成文字捕获图收入 docs/evidence。没有提交安装器、数据库、真实小说或日志。
+
+| 文件 | 字节数 | SHA-256 |
+| --- | --- | --- |
+| FloatLeaf_0.2.7_aarch64.dmg | 3,770,076 | `c9b6adfbb22108411238d0549f3ee7e63c7811a03af22df9a2ef738aee8fb4fb` |
+| FloatLeaf_0.2.7_windows-x64_trial.zip | 2,962,815 | `7c2402aa270d03e6e1fca964991905caeda0797f61d87630858674415ec6f598` |
+| FloatLeaf_0.2.7_x64-setup.exe | 2,980,616 | `6c5436ff0c9379b1a831c68033d27ad4ec8f0222226d1ff843eb995f161c0236` |
+| LICENSE.txt | 1,065 | `f527b3b2027179390d943c50ca81edc52a78b8258ebc007288598825a207c123` |
+| Retest-Guide.txt | 2,611 | `952e96136257680e78d8652eaa74616f6fecac7dd0e552b46baf21be2d5c2582` |
+| SHA256SUMS.txt | 455 | `edec339ec3e78b4e6a6133b9b68d3884ddad545cf572cbe567d94720fd67cad1` |
+
+两端未正式签名，macOS ad-hoc 且未公证。Windows 11 各截图/OBS/会议捕获方式、显示中切换保护/编辑布局组合，以及完整键鼠、跨权限、多屏/休眠仍待反馈。README/试用说明/任务/验收记录随后同步到 main，不另升版本。
+
 ## v0.2.6
 
 [v0.2.6 菜单栏图标试用版](https://github.com/jlau-ice/floatleaf/releases/tag/v0.2.6) 于北京时间 2026-10-22 18:41 公开为 Pre-release，标签指向 `2d24437bcb49e997a46dc00ccbfe1584cfdb969d`。macOS 菜单栏改用用户提供、裁去留白的单色 SVG 所生成的独立透明 PNG，并启用系统模板着色；Dock/应用图标和 Windows 托盘图标沿用原素材。README 开头新增 LINUX DO 社区致意。阅读逻辑与 SQLite 格式未改变。

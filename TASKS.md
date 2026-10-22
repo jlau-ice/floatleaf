@@ -6,7 +6,7 @@
 
 - [x] CAP-01：同步另一端 main 到 `227f275`，保留 v0.2.6 图标与发布流程。增加 Windows 阅读窗口保护开关、SQLite 默认/持久化、WDA_EXCLUDEFROMCAPTURE 原生调用与读回、失败隐藏及日志字段；不改变 macOS 保护范围，不伪称 WebView2 支持自有 DXGI 交换链标志。
 - [x] CAP-02：环境、前端构建、类型/rustfmt/Clippy、29 项 Rust / 13 项浏览器测试、格式与 macOS debug/no-bundle/app 构建通过。实际启动隔离书库的 macOS app，WKWebView 平台范围核对与原生自动阅读五项回归通过；旧库与开启保存测试覆盖新增字段。
-- [ ] CAP-03：Windows 普通安装包关闭/开启/关闭的真实捕获像素、读回标志、焦点、松键/紧急隐藏回归及包交付；实测后补齐记录。
+- [x] CAP-03：最终 `77e2d34` 的标签 CI `39806219953` 两端通过；Windows Server 2025 实装普通包 74 项断言通过，关闭/开启/关闭捕获文字像素 4082 → 0 → 4082、开启后背景一致率 100%，焦点/松键/紧急隐藏通过。v0.2.7 两端试用包已公开，六附件未登录下载哈希/ZIP 校验及 macOS 镜像/签名检查通过，见 GITHUB_RELEASE.md。
 - [ ] CAP-04：Windows 11 截图工具、OBS/会议软件不同捕获方式与显示中直接切换开关实机验收，步骤见 `docs/CAPTURE_PROTECTION.md`。完整双平台验收仍未完成。
 - [x] CAP-05：核对 Tao 布局编辑的 WS_EX_LAYERED 变化与微软 GetWindowDisplayAffinity 查询限制；在样式更新后应用保护，查询失败不冒充设置失败，避免无故锁住编辑；保留设置失败隐藏和查询错误日志。
 

@@ -1,6 +1,6 @@
 # 浮页使用说明
 
-浮页把本地 EPUB / TXT 小说显示在桌面上。书籍与进度保存在本机 SQLite，不需要账号或数据库服务。当前有 Apple Silicon macOS 与 Windows x64 试用构建；Windows 为交叉构建，尚待实机反馈。双平台实测范围见验收矩阵，面向试用者的简版说明见 TRIAL_GUIDE.md。
+浮页把本地 EPUB / TXT 小说显示在桌面上。书籍与进度保存在本机 SQLite，不需要账号或数据库服务。提供 Apple Silicon macOS 与 Windows x64 试用构建；双平台 CI 和 Windows Server 原生回归的具体范围见验收矩阵，Windows 11 等实际设备仍待反馈。面向试用者的简版说明见 TRIAL_GUIDE.md。
 
 ## 开始阅读
 

@@ -28,7 +28,17 @@
 
 ## 当前验证记录
 
-2026-10-22：本机环境、前端构建、类型检查、rustfmt、Clippy、29 项 Rust / 13 项浏览器测试、格式检查及 macOS debug/no-bundle 和 debug app 构建通过。实际启动隔离书库的 macOS app，WKWebView 确认平台能力为 false、无 Windows 开关；既有自动阅读原生回归的隐藏开关、间隔 SQLite 保存、隐藏冻结、显示推进、再次隐藏暂停共五项通过。证据 `.local/capture-protection/mac-probe/`；不算 macOS 捕获保护或新增物理按键验收。Windows 普通安装包的捕获像素回归已接入 CI，实际结果待本次运行后补充。
+2026-10-22：本机环境、前端构建、类型检查、rustfmt、Clippy、29 项 Rust / 13 项浏览器测试、格式检查及 macOS debug/no-bundle 和 debug app 构建通过。实际启动隔离书库的 macOS app，WKWebView 确认平台能力为 false、无 Windows 开关；既有自动阅读原生回归的隐藏开关、间隔 SQLite 保存、隐藏冻结、显示推进、再次隐藏暂停共五项通过。证据 `.local/capture-protection/mac-probe/`；不算 macOS 捕获保护或新增物理按键验收。首轮源码 `b287f28` 的双平台 CI [39803675860](https://github.com/jlau-ice/floatleaf/actions/runs/39803675860) 已通过（Windows 30 / macOS 29 项 Rust、各 13 项浏览器）。Windows Server 2025 10.0.26100 实际安装普通 EXE 后 74 项原生检查通过：关闭时捕获到 4082 个洋红色文字像素，开启后为 0，背景逐字节一致率 100%，关闭后恢复 4082；对应 affinity 为 0 → 17 → 0，原生窗口均可见且不抢焦点。截图已目视核对，日志 debug=false 且无窗口错误；证据 `.local/capture-protection/first-windows/`。最终 `77e2d34` 的标签 CI [39806219953](https://github.com/jlau-ice/floatleaf/actions/runs/39806219953) 两端和自动发布全部通过，Windows 74 项及上述像素数/背景比例再次一致。最终截图已目视核对，日志 v0.2.7、debug=false、无窗口错误。公开六附件 SHA-256 与 ZIP 内容核验通过，详见 [发布记录](GITHUB_RELEASE.md)；最终证据 `.local/release-027/`。
+
+下面来自最终普通 EXE 在 Windows Server 2025 的实际 GDI 捕获，内容为自行编写的测试文字。开启保护时，原生阅读窗口仍处于可见状态；白色是背后的测试窗口，不是把阅读窗隐藏后的截图。
+
+关闭保护：
+
+![关闭保护，捕获到合成文字](evidence/windows-capture-off-0.2.7.png)
+
+开启保护：
+
+![开启保护，捕获结果仅有背后窗口](evidence/windows-capture-on-0.2.7.png)
 
 ## Windows 11 手工复测
 

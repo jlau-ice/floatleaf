@@ -10,13 +10,13 @@ FloatLeaf 使用 Tauri 2、Vue 3、TypeScript 和 Rust，支持 macOS 与 Window
 
 ## 下载与安装
 
-当前提供 **Windows / macOS v0.2.6 试用版（Pre-release）**。本次将 macOS 顶部菜单栏换成独立的单色「书页与叶子」图标，由系统按背景着色。保留 EPUB / TXT 章节目录、自动翻页、快捷键录制、紧急隐藏修复，以及 Windows 前台程序权限提示和 macOS 输入监控引导。阅读逻辑与本地书库格式没有变化。
+当前提供 **Windows / macOS v0.2.7 试用版（Pre-release）**。新增 Windows「截图 / 录屏保护」开关，使用 WDA_EXCLUDEFROMCAPTURE 排除悬浮阅读窗口；默认关闭，设置页仍可截图，需 Windows 10 2004 或以上。保留 v0.2.6 菜单栏图标、EPUB / TXT 章节、自动翻页、快捷键与紧急隐藏。具体捕获工具需分别验证，详见 [保护范围与试用步骤](docs/CAPTURE_PROTECTION.md)。
 
 | 平台 | 下载 | 安装方法 |
 | --- | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.6/FloatLeaf_0.2.6_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
-| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.6/FloatLeaf_0.2.6_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
-| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.6/FloatLeaf_0.2.6_windows-x64_trial.zip) | 含安装程序、MIT 协议、试用说明和校验清单 |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.7/FloatLeaf_0.2.7_aarch64.dmg) | 退出旧版，打开 DMG，将 FloatLeaf 拖到“应用程序” |
+| Windows · x64 | [下载安装程序](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.7/FloatLeaf_0.2.7_x64-setup.exe) | 先从托盘退出旧版，再运行 EXE；无需删除书库 |
+| Windows · 复测资料 | [下载试用 ZIP](https://github.com/jlau-ice/floatleaf/releases/download/v0.2.7/FloatLeaf_0.2.7_windows-x64_trial.zip) | 含安装程序、MIT 协议、试用说明和校验清单 |
 
 [全部版本与校验文件](https://github.com/jlau-ice/floatleaf/releases) · [试用说明](docs/TRIAL_GUIDE.md) · [完整使用说明](docs/USER_GUIDE.md)
 
@@ -48,6 +48,7 @@ Windows 若仅在管理员权限的程序前台无法显示或翻页，可能是
 - **翻页间隔**：阅读按钮旁可设 2～60 秒并自动保存；按住模式隐藏时也能开关自动翻页，显示后继续计时。
 - **文字排版**：字体、字号、颜色、文字与背景透明度、行高、字间距、宽度和完整行数可调。
 - **独立进度**：每本书分别保存阅读位置，重排后保留锚点；导入后移动原文件 不影响阅读。
+- **截图 / 录屏保护（Windows）**：设置底部开启，只保护悬浮阅读窗口，选择保存在 SQLite；系统设置失败会隐藏并提示。不需要管理员权限，不保证所有捕获方式有效；macOS 暂不提供。
 - **桌面控制**：自定义快捷键、紧急隐藏、鼠标穿透、拖动与调整尺寸、托盘找回窗口位置和单实例运行。
 
 上述功能已实现，系统行为的实测范围见下方“验证状态”。当前不支持 PDF、MOBI、AZW3、加密正文、扫描图片书、云同步或自动更新。
@@ -74,10 +75,10 @@ Windows 若仅在管理员权限的程序前台无法显示或翻页，可能是
 
 | 项目 | 当前证据 |
 | --- | --- |
-| macOS Apple Silicon | v0.2.6 DMG 完整性、arm64 架构、版本与 ad-hoc 签名校验通过；包含新图标的本地调试 app 已启动并查看设置窗口。发布包的菜单栏深浅背景、选中状态、点击菜单和后台按键仍待实测 |
-| Windows x64 | v0.2.6 同一 EXE 在 Windows Server 2025 安装后，53 项原生断言通过；公开下载与发布产物校验一致。Windows 11 商家工作台已由用户确认旧版同权限运行可恢复，本版仍待用户设备复测 |
-| 单元与界面测试 | v0.2.6 标签 CI：Windows 30 项 / macOS 29 项 Rust 测试，两端各 12 项浏览器测试及类型/格式/Clippy 通过；两端普通安装包构建成功 |
-| 仍待实机反馈 | macOS 菜单栏主题和原始开发进程权限、Windows 11 权限提示与紧急隐藏修复、完整组合键释放顺序、输入焦点、点击穿透、锁屏 / 休眠、多屏 / 缩放与全屏场景 |
+| macOS Apple Silicon | v0.2.7 DMG 完整性、arm64、版本、ad-hoc 签名与调试探针排除通过；本轮隔离调试 app 实际启动，平台入口与原生自动阅读回归通过。新发布包后台物理按键仍待实测 |
+| Windows x64 | v0.2.7 同一 EXE 在 Windows Server 2025 安装后，74 项原生断言通过；保护关闭 → 开启 → 关闭的 GDI/CAPTUREBLT 实际像素对照通过。公开附件 SHA-256 核验一致 |
+| 单元与界面测试 | v0.2.7 标签 CI：Windows 30 项 / macOS 29 项 Rust 测试，两端各 13 项浏览器测试及类型/格式/Clippy 通过；普通 DMG/NSIS 构建成功 |
+| 仍待实机反馈 | Windows 11 各截图/OBS/会议共享模式、显示中切换保护与编辑布局组合；以及两端完整物理键鼠、跨权限、多屏/休眠/全屏和 macOS 权限/菜单栏场景 |
 
 本版本用于试用反馈，尚未完成双平台验收。编译成功和窗口属性检查不能代替真实键鼠测试；性能测量的范围和限制见 [性能记录](docs/PERFORMANCE.md)，完整进度见 [验收矩阵](docs/ACCEPTANCE.md)。[章节与 EPUB 验证](docs/CHAPTERS_EPUB.md)。公开发布和安装包回归证据见 [发布记录](docs/GITHUB_RELEASE.md)。[Windows 商家工作台复测](docs/PDD_SHORTCUT_DIAGNOSTICS.md) · [macOS 后台快捷键](docs/MACOS_BACKGROUND_INPUT.md)。
 
